@@ -1,0 +1,10 @@
+name = "ToQUIO"
+uuid = "c8c7c8a1-01ab-43fa-b80d-8804f80d4aae"
+authors = ["Pedro Maciel Xavier <mail@pedro.ϵλ>", "Albert Lee <lee4382@purdue.edu>"]
+version = "0.1.0"
+
+[deps]
+MathOptInterface = "b8f27783-ece8-5eb3-8dc8-9495eed66fee"
+
+[compat]
+MathOptInterface = "1"
