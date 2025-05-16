@@ -1,4 +1,6 @@
 [deps]
+Gurobi = "2e9cd046-0924-5485-92f1-d5272153d98b"
 JuMP = "4076af6c-e467-56ae-b986-b466b2749572"
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+ToQUIO = "c8c7c8a1-01ab-43fa-b80d-8804f80d4aae"

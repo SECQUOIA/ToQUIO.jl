@@ -159,10 +159,12 @@ function to_quio(::Type{T}, varmap::Function, source::MOI.ModelLike; ϵ = one(T)
 
     cl, cu = get_constraint_bounds(T, A_ie, l, u)
 
-    sb   = b_ie - cu
+    sb   = b_ie - cl
 
     x, _ = MOI.add_constrained_variables(target, MOI.Interval{T}.(l, u))
+    MOI.add_constraints(target, x, MOI.Integer())
     s, _ = MOI.add_constrained_variables(target, MOI.Interval{T}.(zero(T), sb)) # slack variables s_i ≥ 0
+    MOI.add_constraints(target, s, MOI.Integer())
 
     p_eq = A_eq * x - b_eq
     p_ie = A_ie * x - b_ie + s
@@ -179,10 +181,12 @@ function to_quio(::Type{T}, varmap::Function, source::MOI.ModelLike; ϵ = one(T)
         MOI.get(source, MOI.ObjectiveSense()),
     )
 
+    @show obj = f + X + Y
+
     MOI.set(
         target,
         MOI.ObjectiveFunction{SQF{T}}(),
-        f + X + Y,
+        obj,
     )
 
     return target
