@@ -1,6 +1,7 @@
 mutable struct Optimizer{T,O<:Maybe{MOI.AbstractOptimizer}} <: MOI.AbstractOptimizer
     inner::O
-    model::QUIOModel
+    source_model::MOI.ModelLike
+    target_model::QUIOModel
 end
 
 function Optimizer{T}() where {T}
@@ -16,21 +17,22 @@ end
 Optimizer(args...; kws...) = Optimizer{Float64}(args...; kws...)
 
 function MOI.is_empty(solver::Optimizer{T}) where {T}
-    return MOI.is_empty(solver.model)
+    return MOI.is_empty(solver.source_model)
 end
 
 function MOI.empty!(solver::Optimizer{T}) where {T}
-    MOI.empty!(solver.model)
+    MOI.empty!(solver.source_model)
 
     return nothing
 end
 
 function MOI.optimize!(solver::Optimizer{T}, model::MOI.ModelLike) where {T}
-    solver.model = to_quio(T, vi -> vi.value, model)::QUIOModel
+    solver.source_model = model
+    solver.target_model = to_quio(T, vi -> vi.value, solver.source_model)::QUIOModel
 
-    MOI.optimize!(solver.inner, solver.model)
+    MOI.optimize!(solver.inner, solver.target_model)
 
-    return (MOIU.identity_index_map(model), false)
+    return (MOIU.identity_index_map(solver.source_model), false)
 end
 
 MOI.supports(::Optimizer{T}, ::MOI.ObjectiveFunction{F}) where {T,F<:Union{SAF{T},SQF{T}}}= true
