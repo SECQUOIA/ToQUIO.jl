@@ -3,12 +3,15 @@ using Revise
 using Random
 using JuMP
 using ToQUIO
-using Gurobi
+
+using AmplNLWriter
+using Bonmin_jll
+const Bonmin_Optimizer = () -> AmplNLWriter.Optimizer(Bonmin_jll.amplexe)
 
 Random.seed!(0)
 
 m = 1 # number of equalities
-k = 1 # number of inequalities
+k = 2 # number of inequalities
 n = 4 # number of variables
 
 A = rand(-3:3, m, n)
@@ -27,20 +30,26 @@ model = Model()
 @constraint(model, A * x .== b)
 @constraint(model, C * x .<= d)
 
-set_optimizer(model, () -> ToQUIO.Optimizer(Gurobi.Optimizer))
+set_optimizer(model, () -> ToQUIO.Optimizer(Bonmin_Optimizer))
 
 optimize!(model)
 
 print(model)
 
-print(unsafe_backend(model).model)
+@show termination_status(model)
 
-@show MOI.get.(unsafe_backend(model).inner, MOI.VariablePrimal(), MOI.VariableIndex.(1:5))
-@show MOI.get(unsafe_backend(model).inner, MOI.ObjectiveValue())
+if result_count(model) > 0
+    @show objective_value(model)
+    @show value.(x)
+end
 
-set_optimizer(model, Gurobi.Optimizer)
+set_optimizer(model, Bonmin_Optimizer)
 
 optimize!(model)
 
-@show objective_value(model)
-value.(x)
+@show termination_status(model)
+
+if result_count(model) > 0
+    @show objective_value(model)
+    @show value.(x)
+end
