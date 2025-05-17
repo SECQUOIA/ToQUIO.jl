@@ -121,9 +121,9 @@ function get_constraint_bounds(T, A, l, u)
     return (δl, δu)
 end
 
-function get_sensibility(A, b)
+function get_sensibility(A::AbstractMatrix{T}, b::AbstractVector{T}) where {T}
     if all(isinteger, A) && all(isinteger, b)
-        return ones(T, m)
+        return ones(T, length(b))
     else
         error("Constraint coefficients must be integer")
     end
@@ -155,18 +155,19 @@ function to_quio(::Type{T}, varmap::Function, source::MOI.ModelLike; ϵ = one(T)
     ε_ie = get_sensibility(A_ie, b_ie)
 
     # Compute Penalties!
-    @show ρ_eq = (Δ ./ ε_eq) .+ ϵ
-    @show ρ_ie = (Δ ./ ε_ie) .+ ϵ
+    # TODO: Store penalties for analysis
+    ρ_eq = (Δ ./ ε_eq) .+ ϵ
+    ρ_ie = (Δ ./ ε_ie) .+ ϵ
 
     target = QUIOModel{T}()
 
     cl, cu = get_constraint_bounds(T, A_ie, l, u)
-
-    sb   = b_ie - cl
+    sb     = b_ie - cl # Calculate slack bounds
 
     x, _ = MOI.add_constrained_variables(target, MOI.Interval{T}.(l, u))
     MOI.add_constraints(target, x, MOI.Integer())
-    s, _ = MOI.add_constrained_variables(target, MOI.Interval{T}.(zero(T), sb)) # slack variables s_i ≥ 0
+    
+    s, _ = MOI.add_constrained_variables(target, MOI.Interval{T}.(zero(T), sb)) # slack variables 0 ≤ s_i ≤ sb_i
     MOI.add_constraints(target, s, MOI.Integer())
 
     p_eq = A_eq * x - b_eq

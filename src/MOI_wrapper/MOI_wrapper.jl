@@ -7,10 +7,11 @@ function Optimizer{T}() where {T}
     return Optimizer{T,Nothing}(optimizer, QUIOModel{T}())
 end
 
-function Optimizer{T}(::Type{O}) where {T,O<:MOI.AbstractOptimizer}
-    return Optimizer{T,O}(O(), QUIOModel{T}())
-end
+function Optimizer{T}(callable::Any) where {T}
+    optimizer = callable()
 
+    return Optimizer{T,typeof(optimizer)}(optimizer, QUIOModel{T}())
+end
 
 Optimizer(args...; kws...) = Optimizer{Float64}(args...; kws...)
 
@@ -38,3 +39,6 @@ MOI.supports_constraint(::Optimizer{T}, ::Type{VI}, ::Type{<:Union{EQ{T},LT{T},G
 MOI.supports_constraint(::Optimizer{T}, ::Type{VI}, ::Type{<:Union{MOI.ZeroOne,MOI.Integer}}) where {T} = true
 
 MOI.supports_constraint(::Optimizer{T}, ::Type{<:Union{SAF{T}}}, ::Type{<:Union{EQ{T},LT{T},GT{T}}}) where {T} = true
+
+include("attributes/model.jl")
+include("attributes/results.jl")
