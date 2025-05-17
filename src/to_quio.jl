@@ -121,12 +121,18 @@ function get_constraint_bounds(T, A, l, u)
     return (δl, δu)
 end
 
+function get_sensibility(A, b)
+    if all(isinteger, A) && all(isinteger, b)
+        return ones(T, m)
+    else
+        error("Constraint coefficients must be integer")
+    end
+end
+
 @doc raw"""
     varmap : VI -> Int
 """
 function to_quio(::Type{T}, varmap::Function, source::MOI.ModelLike; ϵ = one(T)) where {T}
-    n = MOI.get(source, MOI.NumberOfVariables())
-
     # opt f(x)
     #  st A_eq x = b_eq
     #     A_lt x ≤ b_lt
@@ -145,11 +151,8 @@ function to_quio(::Type{T}, varmap::Function, source::MOI.ModelLike; ϵ = one(T)
     A_gt, b_gt = get_gt_matrices(T, varmap, source)
     A_ie, b_ie = [A_lt; -A_gt], [b_lt; -b_gt]
 
-    m = length(b_eq) # number of equalities
-    k = length(b_ie) # number of inequalities
-
-    ε_eq = ones(T, m) # get_eq_sensibilities(A_eq, b_eq)
-    ε_ie = ones(T, k) # get_ie_sensibilities(A_ie, b_ie)
+    ε_eq = get_sensibility(A_eq, b_eq)
+    ε_ie = get_sensibility(A_ie, b_ie)
 
     # Compute Penalties!
     @show ρ_eq = (Δ ./ ε_eq) .+ ϵ
@@ -169,19 +172,26 @@ function to_quio(::Type{T}, varmap::Function, source::MOI.ModelLike; ϵ = one(T)
     p_eq = A_eq * x - b_eq
     p_ie = A_ie * x - b_ie + s
 
-    X = ρ_eq' * (p_eq .* p_eq)
-    Y = ρ_ie' * (p_ie .* p_ie)
+    g = ρ_eq' * (p_eq .* p_eq)
+    h = ρ_ie' * (p_ie .* p_ie)
 
-    # NOTE: We currently only support minimization
-    @assert MOI.get(source, MOI.ObjectiveSense()) === MOI.MIN_SENSE
+    if MOI.get(source, MOI.ObjectiveSense()) === MOI.MAX_SENSE
+        MOI.set(
+            target,
+            MOI.ObjectiveSense(),
+            MOI.MAX_SENSE,
+        )
 
-    MOI.set(
-        target,
-        MOI.ObjectiveSense(),
-        MOI.get(source, MOI.ObjectiveSense()),
-    )
+        obj = f - (g + h)
+    else # minimization or feasibility
+        MOI.set(
+            target,
+            MOI.ObjectiveSense(),
+            MOI.MIN_SENSE,
+        )
 
-    @show obj = f + X + Y
+        obj = f + (g + h)
+    end
 
     MOI.set(
         target,
