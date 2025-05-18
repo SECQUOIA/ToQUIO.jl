@@ -1,27 +1,27 @@
 mutable struct Optimizer{T,O<:Maybe{MOI.AbstractOptimizer}} <: MOI.AbstractOptimizer
     inner::O
-    source_model::MOI.ModelLike
-    target_model::QUIOModel
+    source_model::Maybe{MOI.ModelLike}
+    target_model::Maybe{QUIOModel}
 end
 
-function Optimizer{T}() where {T}
-    return Optimizer{T,Nothing}(optimizer, QUIOModel{T}())
-end
+Optimizer{T}() where {T} = Optimizer{T,Nothing}(nothing, nothing, nothing)
 
 function Optimizer{T}(callable::Any) where {T}
     optimizer = callable()
 
-    return Optimizer{T,typeof(optimizer)}(optimizer, QUIOModel{T}())
+    return Optimizer{T,typeof(optimizer)}(optimizer, nothing, nothing)
 end
 
 Optimizer(args...; kws...) = Optimizer{Float64}(args...; kws...)
 
 function MOI.is_empty(solver::Optimizer{T}) where {T}
-    return MOI.is_empty(solver.source_model)
+    return isnothing(solver.source_model) || MOI.is_empty(solver.source_model)
 end
 
 function MOI.empty!(solver::Optimizer{T}) where {T}
-    MOI.empty!(solver.source_model)
+    isnothing(solver.inner) || MOI.empty!(solver.inner)
+    isnothing(solver.source_model) || MOI.empty!(solver.source_model)
+    isnothing(solver.target_model) || MOI.empty!(solver.target_model)
 
     return nothing
 end

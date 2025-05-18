@@ -1,5 +1,4 @@
 using Test
-using Revise
 using Random
 using JuMP
 using ToQUIO
