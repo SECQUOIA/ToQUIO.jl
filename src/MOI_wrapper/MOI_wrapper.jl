@@ -2,14 +2,15 @@ mutable struct Optimizer{T,O<:Maybe{MOI.AbstractOptimizer}} <: MOI.AbstractOptim
     inner::O
     source_model::Maybe{MOI.ModelLike}
     target_model::Maybe{QUIOModel}
+    data::Dict{Symbol,Any}
 end
 
-Optimizer{T}() where {T} = Optimizer{T,Nothing}(nothing, nothing, nothing)
+Optimizer{T}() where {T} = Optimizer{T,Nothing}(nothing, nothing, nothing, Dict{Symbol,Any}())
 
 function Optimizer{T}(callable::Any) where {T}
     optimizer = callable()
 
-    return Optimizer{T,typeof(optimizer)}(optimizer, nothing, nothing)
+    return Optimizer{T,typeof(optimizer)}(optimizer, nothing, nothing, Dict{Symbol,Any}())
 end
 
 Optimizer(args...; kws...) = Optimizer{Float64}(args...; kws...)
@@ -32,12 +33,13 @@ include("attributes/reformulation.jl")
 
 function MOI.optimize!(solver::Optimizer{T}, model::MOI.ModelLike) where {T}
     solver.source_model = model
-    solver.target_model = to_quio(
+
+    solver.target_model, solver.data = to_quio(
         T,
         vi -> vi.value, # varmap : VI -> Int
         ci -> ci.value, # conmap : CI{F,S} -> Int
         solver.source_model,
-    )::QUIOModel
+    )
 
     if !isnothing(solver.inner)
         MOI.optimize!(solver.inner, solver.target_model)

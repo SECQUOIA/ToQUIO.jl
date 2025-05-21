@@ -4,7 +4,9 @@ authors = ["Pedro Maciel Xavier <mail@pedro.ϵλ>", "Albert Lee <lee4382@purdue.
 version = "0.1.0"
 
 [deps]
+LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 MathOptInterface = "b8f27783-ece8-5eb3-8dc8-9495eed66fee"
 
 [compat]
+LinearAlgebra = "1.11.0"
 MathOptInterface = "1"
