@@ -132,7 +132,7 @@ end
 @doc raw"""
     varmap : VI -> Int
 """
-function to_quio(::Type{T}, varmap::Function, source::MOI.ModelLike; ϵ = one(T)) where {T}
+function to_quio(::Type{T}, varmap::Function, conmap::Function, source::MOI.ModelLike; ϵ = one(T)) where {T}
     # opt f(x)
     #  st A_eq x = b_eq
     #     A_lt x ≤ b_lt
@@ -146,18 +146,24 @@ function to_quio(::Type{T}, varmap::Function, source::MOI.ModelLike; ϵ = one(T)
 
     Δ = get_objective_delta(varmap, f, l, u)
 
-    A_eq, b_eq = get_eq_matrices(T, varmap, source)
-    A_lt, b_lt = get_lt_matrices(T, varmap, source)
-    A_gt, b_gt = get_gt_matrices(T, varmap, source)
-    A_ie, b_ie = [A_lt; -A_gt], [b_lt; -b_gt]
+    A_eq, b_eq = get_eq_matrices(T, varmap, conmap, source)
+    A_lt, b_lt = get_lt_matrices(T, varmap, conmap, source)
+    A_gt, b_gt = get_gt_matrices(T, varmap, conmap, source)
+    A_ie, b_ie = T[A_lt; -A_gt], T[b_lt; -b_gt]
+
+    θ_eq = get_eq_penalty_hints(T, conmap, source)
+    θ_lt = get_lt_penalty_hints(T, conmap, source)
+    θ_gt = get_gt_penalty_hints(T, conmap, source)
+    θ_ie = Maybe{T}[θ_lt; θ_gt]
 
     ε_eq = get_sensibility(A_eq, b_eq)
     ε_ie = get_sensibility(A_ie, b_ie)
 
     # Compute Penalties!
     # TODO: Store penalties for analysis
-    ρ_eq = (Δ ./ ε_eq) .+ ϵ
-    ρ_ie = (Δ ./ ε_ie) .+ ϵ
+    # NOTE: This gives priority to user-defined penalties.
+    ρ_eq = something.(θ_eq, (Δ ./ ε_eq) .+ ϵ)
+    ρ_ie = something.(θ_ie, (Δ ./ ε_ie) .+ ϵ)
 
     target = QUIOModel{T}()
 
@@ -170,6 +176,7 @@ function to_quio(::Type{T}, varmap::Function, source::MOI.ModelLike; ϵ = one(T)
     s, _ = MOI.add_constrained_variables(target, MOI.Interval{T}.(zero(T), sb)) # slack variables 0 ≤ s_i ≤ sb_i
     MOI.add_constraints(target, s, MOI.Integer())
 
+    # Construct Penalty terms
     p_eq = A_eq * x - b_eq
     p_ie = A_ie * x - b_ie + s
 
@@ -203,7 +210,7 @@ function to_quio(::Type{T}, varmap::Function, source::MOI.ModelLike; ϵ = one(T)
     return target
 end
 
-function get_eq_matrices(::Type{T}, varmap, source) where {T}
+function get_eq_matrices(::Type{T}, varmap::Function, conmap::Function, source) where {T}
     F = SAF{T}
     S = EQ{T}
 
@@ -213,25 +220,44 @@ function get_eq_matrices(::Type{T}, varmap, source) where {T}
     A = zeros(T, m, n)
     b = zeros(T, m)
 
-    for (i, ci) in enumerate(MOI.get(source, MOI.ListOfConstraintIndices{F,S}()))
-        fi = MOI.get(source, MOI.ConstraintFunction(), ci)
-        si = MOI.get(source, MOI.ConstraintSet(), ci)
+    for ci in MOI.get(source, MOI.ListOfConstraintIndices{F,S}())
+        f = MOI.get(source, MOI.ConstraintFunction(), ci)
+        s = MOI.get(source, MOI.ConstraintSet(), ci)
+        i = conmap(ci)
 
-        for t in fi.terms
-            v = t.variable::VI
-            c = t.coefficient::T
-            j = varmap(v)
+        for t in f.terms
+            vi = t.variable::VI
+            c  = t.coefficient::T
+            j  = varmap(vi)
 
             A[i, j] = c
         end
 
-        b[i] = si.value - fi.constant
+        b[i] = s.value - f.constant
     end
 
     return (A, b)
 end
 
-function get_lt_matrices(::Type{T}, varmap, source) where {T}
+function get_penalty_hints(::Type{T}, ::Type{F}, ::Type{S}, conmap, source) where {T,F,S}
+    m = MOI.get(source, MOI.NumberOfConstraints{F,S}())
+
+    θ = fill!(Vector{Maybe{T}}(undef, m), nothing)
+
+    for ci in MOI.get(source, MOI.ListOfConstraintIndices{F,S}())
+        i = conmap(ci)
+
+        θ[i] = MOI.get(source, ConstraintPenaltyHint(), ci)
+    end
+
+    return θ
+end
+
+get_eq_penalty_hints(::Type{T}, conmap, source) where {T} = get_penalty_hints(T, SAF{T}, EQ{T}, conmap, source)
+get_lt_penalty_hints(::Type{T}, conmap, source) where {T} = get_penalty_hints(T, SAF{T}, LT{T}, conmap, source)
+get_gt_penalty_hints(::Type{T}, conmap, source) where {T} = get_penalty_hints(T, SAF{T}, GT{T}, conmap, source)
+
+function get_lt_matrices(::Type{T}, varmap::Function, conmap::Function, source) where {T}
     F = SAF{T}
     S = LT{T}
 
@@ -241,25 +267,26 @@ function get_lt_matrices(::Type{T}, varmap, source) where {T}
     A = zeros(T, m, n)
     b = zeros(T, m)
 
-    for (i, ci) in enumerate(MOI.get(source, MOI.ListOfConstraintIndices{F,S}()))
-        fi = MOI.get(source, MOI.ConstraintFunction(), ci)
-        si = MOI.get(source, MOI.ConstraintSet(), ci)
+    for ci in MOI.get(source, MOI.ListOfConstraintIndices{F,S}())
+        f = MOI.get(source, MOI.ConstraintFunction(), ci)
+        s = MOI.get(source, MOI.ConstraintSet(), ci)
+        i = conmap(ci)
 
-        for t in fi.terms
-            v = t.variable::VI
-            c = t.coefficient::T
-            j = varmap(v)
+        for t in f.terms
+            vi = t.variable::VI
+            c  = t.coefficient::T
+            j  = varmap(vi)
 
             A[i, j] = c
         end
 
-        b[i] = si.upper - fi.constant
+        b[i] = s.upper - f.constant
     end
 
     return (A, b)
 end
 
-function get_gt_matrices(::Type{T}, varmap, source) where {T}
+function get_gt_matrices(::Type{T}, varmap::Function, conmap::Function, source) where {T}
     F = SAF{T}
     S = GT{T}
 
@@ -269,19 +296,20 @@ function get_gt_matrices(::Type{T}, varmap, source) where {T}
     A = zeros(T, m, n)
     b = zeros(T, m)
 
-    for (i, ci) in enumerate(MOI.get(source, MOI.ListOfConstraintIndices{F,S}()))
-        fi = MOI.get(source, MOI.ConstraintFunction(), ci)
-        si = MOI.get(source, MOI.ConstraintSet(), ci)
+    for ci in MOI.get(source, MOI.ListOfConstraintIndices{F,S}())
+        f = MOI.get(source, MOI.ConstraintFunction(), ci)
+        s = MOI.get(source, MOI.ConstraintSet(), ci)
+        i = conmap(ci)
 
-        for t in fi.terms
-            v = t.variable::VI
-            c = t.coefficient::T
-            j = varmap(v)
+        for t in f.terms
+            vi = t.variable::VI
+            c  = t.coefficient::T
+            j  = varmap(vi)
 
             A[i, j] = c
         end
 
-        b[i] = si.upper - fi.constant
+        b[i] = s.upper - f.constant
     end
 
     return (A, b)

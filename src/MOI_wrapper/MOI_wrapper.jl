@@ -26,11 +26,22 @@ function MOI.empty!(solver::Optimizer{T}) where {T}
     return nothing
 end
 
+include("attributes/model.jl")
+include("attributes/results.jl")
+include("attributes/reformulation.jl")
+
 function MOI.optimize!(solver::Optimizer{T}, model::MOI.ModelLike) where {T}
     solver.source_model = model
-    solver.target_model = to_quio(T, vi -> vi.value, solver.source_model)::QUIOModel
+    solver.target_model = to_quio(
+        T,
+        vi -> vi.value, # varmap : VI -> Int
+        ci -> ci.value, # conmap : CI{F,S} -> Int
+        solver.source_model,
+    )::QUIOModel
 
-    MOI.optimize!(solver.inner, solver.target_model)
+    if !isnothing(solver.inner)
+        MOI.optimize!(solver.inner, solver.target_model)
+    end
 
     return (MOIU.identity_index_map(solver.source_model), false)
 end
@@ -41,6 +52,3 @@ MOI.supports_constraint(::Optimizer{T}, ::Type{VI}, ::Type{<:Union{EQ{T},LT{T},G
 MOI.supports_constraint(::Optimizer{T}, ::Type{VI}, ::Type{<:Union{MOI.ZeroOne,MOI.Integer}}) where {T} = true
 
 MOI.supports_constraint(::Optimizer{T}, ::Type{<:Union{SAF{T}}}, ::Type{<:Union{EQ{T},LT{T},GT{T}}}) where {T} = true
-
-include("attributes/model.jl")
-include("attributes/results.jl")
