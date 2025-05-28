@@ -5,7 +5,9 @@ mutable struct Optimizer{T,O<:Maybe{MOI.AbstractOptimizer}} <: MOI.AbstractOptim
     data::Dict{Symbol,Any}
 end
 
-Optimizer{T}() where {T} = Optimizer{T,Nothing}(nothing, nothing, nothing, Dict{Symbol,Any}())
+function Optimizer{T}(::Nothing = nothing) where {T}
+    return Optimizer{T,Nothing}(nothing, nothing, nothing, Dict{Symbol,Any}())
+end
 
 function Optimizer{T}(callable::Any) where {T}
     optimizer = callable()
