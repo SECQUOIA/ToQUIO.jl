@@ -30,3 +30,8 @@ struct ConstraintPenaltyHint <: ConstraintReformulationAttribute end
 abstract type VariableReformulationAttribute <: MOI.AbstractConstraintAttribute end
 
 MOI.supports(solver::Optimizer{T}, ::A, ::Type{VI}) where {T,A<:VariableReformulationAttribute} = true
+
+@doc raw"""
+    VariableEncodingMethod
+"""
+struct VariableEncodingMethod <: VariableReformulationAttribute end

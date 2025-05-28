@@ -171,6 +171,8 @@ function get_sensibility(A::AbstractMatrix{T}, b::AbstractVector{T}) where {T}
     end
 end
 
+include("encoding.jl")
+
 @doc raw"""
     varmap : VI -> Int
 """
@@ -245,43 +247,24 @@ function to_quio(::Type{T}, varmap::Function, conmap::Function, source::MOI.Mode
     z = VI[x; s]
     
     # Construct Penalty terms
-    # F = (x' Q x + ℓ' x + β) + ρ_eq' * (A_eq x - b_eq)' (A_eq x - b_eq) + ρ_ie' * (A_ie x + s - b_ie)' (A_ie x + s - b_ie)
-    #   = (x' Q x + ℓ' x + β)
-    #   + [x' A_eq' D_eq A_eq x - 2 A_eq D_eq b_eq x + b_eq D_eq b_eq]
-    #   + [x' A_ie' D_ie A_ie x - 2 A_ie D_ie b_ie x + b_ie D_ie b_ie + x' A_ie' D_ie s + s' A_ie D_ie x + s' D_ie s - 2 s' D_ie b_ie]
-    # => [x s] G [x s] = 
-    #    [x] [Q + A_eq' D_eq A_eq | ] [x]
-    #    [s] [                    | ] [s]
-
     Gxx = Q + A_eq' * D_eq * A_eq + A_ie' * D_ie * A_ie
     Gxs = A_ie' * D_ie
     Gsx = D_ie * A_ie
     Gss = D_ie
 
-    Gx = [Gxx;; Gxs]
-    Gs = [Gsx;; Gss]
+    G = [[Gxx;; Gxs]; [Gsx;; Gss]] 
 
-    G  = [Gx; Gs] 
+    gx = ℓ - 2 * A' * D * b
+    gs = -2 * D_ie  * b_ie
 
-    g = [
-        ℓ - 2 * A' * D * b;
-          - 2 * D_ie  * b_ie
-    ]
+    g = [gx; gs]
 
     γ = b' * D * b + β
-
-    # p_eq = A_eq * x - b_eq
-    # p_ie = A_ie * x - b_ie + s
-
-    # g = ρ_eq' * (p_eq .* p_eq)
-    # h = ρ_ie' * (p_ie .* p_ie)
-
-    obj = z' * G * z + g' * z + γ
 
     MOI.set(
         target,
         MOI.ObjectiveFunction{SQF{T}}(),
-        obj,
+        z' * G * z + g' * z + γ,
     )
 
     data = Dict{Symbol,Any}(
