@@ -285,6 +285,7 @@ function to_quio(::Type{T}, varmap::Function, conmap::Function, source::MOI.Mode
     )
 
     data = Dict{Symbol,Any}(
+        :n => length(z) # dimension
         :Q => G, # quadratic terms
         :L => g, # linear terms
         :c => γ, # constant term
