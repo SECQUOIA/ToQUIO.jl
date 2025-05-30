@@ -290,6 +290,8 @@ function to_quio(::Type{T}, varmap::Function, conmap::Function, source::MOI.Mode
         :L => g, # linear terms
         :c => γ, # constant term
         :D => D, #
+        :l => T[l; zeros(T, length(s))], # lower
+        :u => T[u; sb],                  # upper
     )
 
     return (target, data)
