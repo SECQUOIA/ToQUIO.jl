@@ -58,3 +58,6 @@ function test_example(;
     return nothing
 end
 
+# Include tests that verify documentation examples work
+include("test_examples.jl")
+
