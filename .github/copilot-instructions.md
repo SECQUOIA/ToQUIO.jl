@@ -92,7 +92,11 @@ const CI{F,S} = MOI.ConstraintIndex{F,S}
 
 ### Penalty Calculation
 ```julia
-# Priority: user-defined > auto-calculated
+# Priority: user-defined hints over auto-calculated penalties
+# θ: user-defined penalty hints (Maybe{T} vector)
+# Δ: objective delta (bound difference)
+# ε: constraint sensibility
+# ϵ: epsilon tolerance
 ρ = something.(θ, (Δ ./ ε) .+ ϵ)
 ```
 
