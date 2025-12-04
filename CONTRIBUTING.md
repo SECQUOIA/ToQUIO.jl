@@ -285,31 +285,27 @@ Requirements:
 
 ### Key Components
 
+The ToQUIO architecture follows a pipeline where JuMP models are reformulated into QUIO format and optionally solved:
+
+1. **JuMP Model**: User-defined optimization problem with constraints
+2. **ToQUIO.Optimizer**: MOI wrapper that handles the reformulation
+3. **to_quio()**: Core reformulation function that converts constrained problems to QUIO
+4. **QUIOModel**: Reformulated problem containing only bounds and integer constraints
+5. **Backend Solver**: Optional QUIO-specialized solver for the reformulated problem
+
+**Data Flow:**
 ```
-┌─────────────────┐
-│   JuMP Model    │
-└────────┬────────┘
-         │
-         ▼
-┌─────────────────┐
-│ ToQUIO.Optimizer│  (MOI_wrapper.jl)
-└────────┬────────┘
-         │
-         ▼
-┌─────────────────┐
-│   to_quio()     │  (to_quio.jl)
-│  Reformulation  │
-└────────┬────────┘
-         │
-         ▼
-┌─────────────────┐
-│  QUIOModel      │  (QUIO_model.jl)
-└────────┬────────┘
-         │
-         ▼
-┌─────────────────┐
-│ Backend Solver  │  (Optional)
-└─────────────────┘
+User defines problem in JuMP
+    ↓
+ToQUIO.Optimizer receives MOI model
+    ↓
+to_quio() reformulates to QUIO format
+    ↓
+QUIOModel created with quadratic objective
+    ↓
+Optional: Backend solver optimizes QUIO problem
+    ↓
+Results returned to user
 ```
 
 ### Reformulation Process

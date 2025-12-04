@@ -310,19 +310,21 @@ Computes sensibility factors for penalty computation.
 
 ## Type Aliases
 
-For convenience, ToQUIO defines several type aliases:
+For convenience and readability, ToQUIO defines several type aliases to shorten commonly-used MathOptInterface types. These aliases make the code more concise while maintaining type safety and enable type-generic programming across different numeric types.
 
 ```julia
-const MOIU    = MOI.Utilities
-const VI      = MOI.VariableIndex
-const CI{F,S} = MOI.ConstraintIndex{F,S}
-const EQ{T}   = MOI.EqualTo{T}
-const LT{T}   = MOI.LessThan{T}
-const GT{T}   = MOI.GreaterThan{T}
-const SAF{T}  = MOI.ScalarAffineFunction{T}
-const SQF{T}  = MOI.ScalarQuadraticFunction{T}
-const Maybe{T} = Union{T,Nothing}
+const MOIU    = MOI.Utilities              # MOI utility functions
+const VI      = MOI.VariableIndex          # Variable index type
+const CI{F,S} = MOI.ConstraintIndex{F,S}   # Constraint index (function F in set S)
+const EQ{T}   = MOI.EqualTo{T}             # Equality constraint set
+const LT{T}   = MOI.LessThan{T}            # Less-than constraint set
+const GT{T}   = MOI.GreaterThan{T}         # Greater-than constraint set
+const SAF{T}  = MOI.ScalarAffineFunction{T}   # Affine (linear) function
+const SQF{T}  = MOI.ScalarQuadraticFunction{T} # Quadratic function
+const Maybe{T} = Union{T,Nothing}          # Optional type (value or nothing)
 ```
+
+These aliases are particularly useful when writing type signatures for functions that handle different constraint and function types, reducing verbosity while maintaining full type information for Julia's type system and multiple dispatch.
 
 ## QUIOModel
 

@@ -56,24 +56,26 @@ println("Solution: ", value.(x))
 
 ### Using with a QUIO Solver Backend
 
-ToQUIO can reformulate your problem and pass it to a specialized QUIO solver:
+ToQUIO can reformulate your problem and pass it to a specialized QUIO solver. Note that you need to provide your own QUIO solver - ToQUIO only performs the reformulation.
 
 ```julia
 using JuMP
 using ToQUIO
-# using YourQUIOSolver  # Replace with your preferred QUIO solver
+# using QUBOSolver  # Example: Replace with your preferred QUIO/QUBO solver
+# Common options include quantum annealers, simulated annealing, or other QUIO-specialized solvers
 
 # Define constraints
 A = [0 2 4; 5 3 5]
 b = [1, 5]
 
 # Create model with ToQUIO wrapping a backend solver
-model = Model(() -> ToQUIO.Optimizer(() -> YourQUIOSolver.Optimizer()))
+# Replace QUBOSolver.Optimizer() with your actual solver
+model = Model(() -> ToQUIO.Optimizer(() -> QUBOSolver.Optimizer()))
 
 @variable(model, -5 <= x[1:3] <= 10, Int)
 @objective(model, Min, sum(x))
 
-# Add equality and inequality constraints
+# Add equality constraints
 @constraint(model, A * x .== b)
 
 optimize!(model)
