@@ -59,7 +59,7 @@ To quadratic unconstrained form using penalty methods and slack variables.
 
 - Implement required MOI methods: `get`, `set`, `supports`, `optimize!`, `is_empty`, `empty!`
 - Support scalar affine and quadratic functions: `SAF{T}`, `SQF{T}`
-- Support constraint sets: `EqualTo`, `LessThan`, `GreaterThan`, `Interval`
+- Support constraint sets: `MOI.EqualTo`, `MOI.LessThan`, `MOI.GreaterThan`, `MOI.Interval`
 - Support integer variables: `MOI.Integer`
 
 ### Type Handling
@@ -93,10 +93,10 @@ const CI{F,S} = MOI.ConstraintIndex{F,S}
 ### Penalty Calculation
 ```julia
 # Priority: user-defined hints over auto-calculated penalties
-# θ: user-defined penalty hints (Maybe{T} vector)
-# Δ: objective delta (bound difference)
-# ε: constraint sensibility
-# ϵ: epsilon tolerance
+# θ (theta): user-defined penalty hints (Maybe{T} vector)
+# Δ (Delta): objective delta (bound difference)
+# ε (epsilon): constraint sensitivity
+# ϵ (epsilon_tolerance): epsilon tolerance
 ρ = something.(θ, (Δ ./ ε) .+ ϵ)
 ```
 
