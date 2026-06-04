@@ -6,6 +6,11 @@ const TEST_PROJECT_DEPS = Dict(
     "ToQUIO" => "c8c7c8a1-01ab-43fa-b80d-8804f80d4aae",
 )
 
+const DOCS_PROJECT_DEPS = Dict(
+    "Documenter" => "e30172f5-a6a5-5a46-863b-614d45cd2de4",
+    "ToQUIO" => "c8c7c8a1-01ab-43fa-b80d-8804f80d4aae",
+)
+
 const SUPPORTED_JULIA_VERSIONS = ("1.10", "1")
 
 function normalized_yaml_scalar(value::AbstractString)
@@ -156,6 +161,36 @@ end
     @test occursin("julia-actions/setup-julia", ci_config)
     @test occursin("julia-actions/julia-runtest", ci_config)
     @test ci_julia_versions(ci_config) == collect(SUPPORTED_JULIA_VERSIONS)
+end
+
+@testset "Documentation environment policy" begin
+    project = TOML.parsefile(joinpath(pkgdir(ToQUIO), "docs", "Project.toml"))
+
+    @test project["deps"] == DOCS_PROJECT_DEPS
+    @test project["compat"]["Documenter"] == "1"
+    @test project["compat"]["julia"] == first(SUPPORTED_JULIA_VERSIONS)
+
+    make_jl = read(joinpath(pkgdir(ToQUIO), "docs", "make.jl"), String)
+    @test occursin("--skip-deploy", make_jl)
+    @test occursin("deploydocs", make_jl)
+    @test occursin("push_preview = false", make_jl)
+end
+
+@testset "Documentation workflow policy" begin
+    docs_workflow = joinpath(pkgdir(ToQUIO), ".github", "workflows", "documentation.yml")
+    @test isfile(docs_workflow)
+
+    docs_config = read(docs_workflow, String)
+    @test occursin(r"(?m)^\s*pull_request\s*:", docs_config)
+    @test occursin(r"(?m)^\s*workflow_dispatch\s*:", docs_config)
+    @test occursin("actions/checkout@v6", docs_config)
+    @test occursin("julia-actions/setup-julia@v3", docs_config)
+    @test occursin("github.event_name == 'pull_request'", docs_config)
+    @test occursin("github.event_name != 'pull_request'", docs_config)
+    @test occursin(r"(?m)^\s*group: docs-deploy\s*$", docs_config)
+    @test occursin(r"(?m)^\s*cancel-in-progress: false\s*$", docs_config)
+    @test occursin(r"(?m)^\s*run: julia --project=docs docs/make\.jl --skip-deploy\s*$", docs_config)
+    @test occursin(r"(?m)^\s*run: julia --project=docs docs/make\.jl\s*$", docs_config)
 end
 
 @testset "CI Julia version detection" begin

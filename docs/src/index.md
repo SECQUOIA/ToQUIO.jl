@@ -5,25 +5,25 @@ Welcome to the ToQUIO.jl documentation! This directory contains detailed documen
 ## Documentation Index
 
 ### For Users
-- **[Main README](../README.md)** - Start here for overview, installation, and basic usage
+- **[Main README](https://github.com/SECQUOIA/ToQUIO.jl/blob/main/README.md)** - Start here for overview, installation, and basic usage
 - **[Examples](examples.md)** - 15+ detailed examples covering various problem types
 - **[API Reference](api.md)** - Complete API documentation for all public functions
 
 ### For Developers
-- **[QUICKSTART](QUICKSTART.md)** - ⭐ Quick reference for developers (5-minute setup)
-- **[Contributing Guide](../CONTRIBUTING.md)** - Development setup, code style, PR process
+- **[QUICKSTART](QUICKSTART.md)** - Quick reference for developers (5-minute setup)
+- **[Contributing Guide](https://github.com/SECQUOIA/ToQUIO.jl/blob/main/CONTRIBUTING.md)** - Development setup, code style, PR process
 - **[Algorithm Details](algorithm.md)** - Mathematical formulation and derivation
 
 ## Quick Navigation
 
 ### New to ToQUIO.jl?
-1. Read [README](../README.md) for project overview
-2. Try the [Quick Start example](../README.md#quick-start)
+1. Read the [project README](https://github.com/SECQUOIA/ToQUIO.jl/blob/main/README.md) for project overview
+2. Try the [Quick Start example](https://github.com/SECQUOIA/ToQUIO.jl/blob/main/README.md#quick-start)
 3. Explore [Examples](examples.md) for your use case
 
 ### Want to Contribute?
 1. Read [QUICKSTART](QUICKSTART.md) for fast setup
-2. Follow [CONTRIBUTING](../CONTRIBUTING.md) guidelines
+2. Follow [CONTRIBUTING](https://github.com/SECQUOIA/ToQUIO.jl/blob/main/CONTRIBUTING.md) guidelines
 
 ### Need API Details?
 1. Check [API Reference](api.md) for function signatures
@@ -45,7 +45,7 @@ ToQUIO.jl transforms constrained integer optimization problems into Quadratic Un
 
 | File | Description | Audience |
 |------|-------------|----------|
-| [README.md](README.md) | Documentation index (this file) | All |
+| [index.md](index.md) | Documentation index (this file) | All |
 | [QUICKSTART.md](QUICKSTART.md) | Quick developer reference | Developers |
 | [api.md](api.md) | Complete API reference | Developers |
 | [algorithm.md](algorithm.md) | Mathematical details | Researchers |
@@ -65,4 +65,5 @@ ToQUIO.jl transforms constrained integer optimization problems into Quadratic Un
 
 ## License
 
-ToQUIO.jl is licensed under the Mozilla Public License Version 2.0. See the [LICENSE](../LICENSE) file for details.
+ToQUIO.jl is licensed under the Mozilla Public License Version 2.0. See the
+[LICENSE](https://github.com/SECQUOIA/ToQUIO.jl/blob/main/LICENSE) file for details.

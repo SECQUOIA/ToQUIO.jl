@@ -97,10 +97,12 @@ ToQUIO.jl/
 ├── README.md              ← Start here: Overview, installation, basic usage
 ├── CONTRIBUTING.md        ← Development guide
 └── docs/
-    ├── README.md          ← Documentation index
-    ├── api.md             ← Complete API reference
-    ├── algorithm.md       ← Mathematical details
-    └── examples.md        ← Extensive examples
+    ├── make.jl            ← Documentation build/deploy script
+    └── src/
+        ├── index.md       ← Documentation index
+        ├── api.md         ← Complete API reference
+        ├── algorithm.md   ← Mathematical details
+        └── examples.md    ← Extensive examples
 ```
 
 ## Testing Strategy
@@ -184,9 +186,9 @@ VI      # VariableIndex
 ## Getting Help
 
 - **Issues**: Report bugs or request features
-- **Documentation**: Check README.md and docs/
+- **Documentation**: Check README.md and docs/src/
 - **Code**: Read inline comments and docstrings
-- **Examples**: See docs/examples.md for ~15 different use cases
+- **Examples**: See docs/src/examples.md for ~15 different use cases
 
 ## Quick Reference Card
 
@@ -197,9 +199,9 @@ VI      # VariableIndex
 | Run tests | `Pkg.test()` |
 | Core logic | `src/to_quio.jl` |
 | Optimizer | `src/MOI_wrapper/MOI_wrapper.jl` |
-| Examples | `docs/examples.md` |
-| API docs | `docs/api.md` |
-| Math details | `docs/algorithm.md` |
+| Examples | `docs/src/examples.md` |
+| API docs | `docs/src/api.md` |
+| Math details | `docs/src/algorithm.md` |
 
 ## License
 
