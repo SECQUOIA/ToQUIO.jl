@@ -12,6 +12,7 @@ const DOCS_PROJECT_DEPS = Dict(
 )
 
 const SUPPORTED_JULIA_VERSIONS = ("1.10", "1")
+# Keep this in sync with Project.toml until the first registered tag is cut.
 const INITIAL_REGISTRATION_VERSION = "0.1.0"
 
 function normalized_yaml_scalar(value::AbstractString)
@@ -182,6 +183,8 @@ end
     @test occursin("JuliaRegistrator", contributing)
     @test occursin("TagBot", contributing)
     @test occursin("@JuliaRegistrator register", contributing)
+    @test occursin("SSH_KEY", contributing)
+    @test occursin("workflow_dispatch", contributing)
     @test occursin("Release checklist", contributing)
     @test occursin("Pkg.test()", contributing)
     @test occursin("docs/make.jl --skip-deploy", contributing)

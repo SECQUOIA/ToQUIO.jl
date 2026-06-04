@@ -245,11 +245,18 @@ Registered releases use JuliaRegistrator and TagBot:
 5. After registration is accepted, confirm TagBot creates the matching tag and
    GitHub release for the `Project.toml` version.
 
+TagBot is configured with `ssh: ${{ secrets.SSH_KEY }}` so TagBot-created tags
+can trigger downstream workflows such as documentation deployment. If that
+secret is not configured before a release, confirm the tag and release were
+created, then run the documentation workflow manually with `workflow_dispatch`.
+
 Release checklist:
 
 - Confirm `Project.toml` version and compat bounds are correct.
 - Run the full package test suite.
 - Build documentation when docs changed.
+- Confirm the `SSH_KEY` secret is configured, or plan a manual documentation
+  deployment with `workflow_dispatch`.
 - Start JuliaRegistrator registration from the release commit.
 - Confirm TagBot created the tag and release.
 
