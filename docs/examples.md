@@ -2,6 +2,10 @@
 
 Detailed examples demonstrating various use cases of ToQUIO.jl.
 
+Unless a backend solver is explicitly shown, these examples use reformulation-only
+mode. In this mode, `optimize!` builds `optimizer.target_model` and
+`optimizer.data`; it does not produce primal values or objective values.
+
 ## Table of Contents
 
 - [Basic Usage](#basic-usage)
@@ -21,7 +25,8 @@ using JuMP
 using ToQUIO
 
 # Create a model
-model = Model(() -> ToQUIO.Optimizer())
+optimizer = ToQUIO.Optimizer()
+model = Model(() -> optimizer)
 
 # Add variables
 @variable(model, 0 <= x <= 10, Int)
@@ -33,14 +38,12 @@ model = Model(() -> ToQUIO.Optimizer())
 # Add constraints
 @constraint(model, x + y >= 5)
 
-# Solve
+# Reformulate
 optimize!(model)
 
-# Get results
-println("Status: ", termination_status(model))
-println("x = ", value(x))
-println("y = ", value(y))
-println("Objective = ", objective_value(model))
+# Inspect the reformulated QUIO model
+println("Reformulated variables: ", optimizer.data[:n])
+println("Quadratic matrix size: ", size(optimizer.data[:Q]))
 ```
 
 ### Binary Variables
@@ -48,7 +51,8 @@ println("Objective = ", objective_value(model))
 ```julia
 using JuMP, ToQUIO
 
-model = Model(() -> ToQUIO.Optimizer())
+optimizer = ToQUIO.Optimizer()
+model = Model(() -> optimizer)
 
 # Binary variables (0 or 1)
 @variable(model, x[1:5], Bin)
@@ -61,7 +65,8 @@ model = Model(() -> ToQUIO.Optimizer())
 
 optimize!(model)
 
-println("Selected: ", findall(value.(x) .> 0.5))
+println("Reformulated variables: ", optimizer.data[:n])
+println("Variable upper bounds: ", optimizer.data[:u])
 ```
 
 ## Linear Programming
@@ -76,7 +81,8 @@ values = [10, 13, 18, 31, 7, 15]
 weights = [11, 15, 20, 35, 10, 33]
 capacity = 47
 
-model = Model(() -> ToQUIO.Optimizer())
+optimizer = ToQUIO.Optimizer()
+model = Model(() -> optimizer)
 
 n = length(values)
 @variable(model, x[1:n], Bin)
@@ -89,11 +95,8 @@ n = length(values)
 
 optimize!(model)
 
-# Print selected items
-selected = findall(value.(x) .> 0.5)
-println("Selected items: ", selected)
-println("Total value: ", objective_value(model))
-println("Total weight: ", sum(weights[selected]))
+println("Reformulated variables: ", optimizer.data[:n])
+println("Quadratic matrix size: ", size(optimizer.data[:Q]))
 ```
 
 ### Multi-dimensional Knapsack
@@ -110,7 +113,8 @@ weights = [
 ]
 capacities = [50, 40, 45]
 
-model = Model(() -> ToQUIO.Optimizer())
+optimizer = ToQUIO.Optimizer()
+model = Model(() -> optimizer)
 
 n = length(values)
 @variable(model, x[1:n], Bin)
@@ -124,8 +128,8 @@ end
 
 optimize!(model)
 
-println("Selected: ", findall(value.(x) .> 0.5))
-println("Objective: ", objective_value(model))
+println("Reformulated variables: ", optimizer.data[:n])
+println("Quadratic matrix size: ", size(optimizer.data[:Q]))
 ```
 
 ## Quadratic Programming
@@ -147,7 +151,8 @@ using JuMP, ToQUIO
 # Risk aversion parameter
 λ = 2.0
 
-model = Model(() -> ToQUIO.Optimizer())
+optimizer = ToQUIO.Optimizer()
+model = Model(() -> optimizer)
 
 # Investment amounts (integer multiples of a base unit)
 @variable(model, 0 <= w[1:4] <= 10, Int)
@@ -162,8 +167,8 @@ model = Model(() -> ToQUIO.Optimizer())
 
 optimize!(model)
 
-println("Allocation: ", value.(w))
-println("Expected return: ", sum(μ .* value.(w)))
+println("Reformulated variables: ", optimizer.data[:n])
+println("Linear vector length: ", length(optimizer.data[:L]))
 ```
 
 ### Quadratic Assignment
@@ -184,7 +189,8 @@ F = [0 5 2 1;
      1 2 4 0]
 
 n = 4
-model = Model(() -> ToQUIO.Optimizer())
+optimizer = ToQUIO.Optimizer()
+model = Model(() -> optimizer)
 
 # x[i,j] = 1 if facility i is at location j
 @variable(model, x[1:n, 1:n], Bin)
@@ -206,11 +212,8 @@ end
 
 optimize!(model)
 
-# Print assignment
-for i in 1:n
-    j = findfirst(value.(x[i,:]) .> 0.5)
-    println("Facility $i → Location $j")
-end
+println("Reformulated variables: ", optimizer.data[:n])
+println("Number of bounds: ", length(optimizer.data[:l]))
 ```
 
 ## Constrained Problems
@@ -231,7 +234,8 @@ A = [2 3 4;
 # Resource availability
 b = [100, 80]
 
-model = Model(() -> ToQUIO.Optimizer())
+optimizer = ToQUIO.Optimizer()
+model = Model(() -> optimizer)
 
 # Production quantities
 @variable(model, 0 <= x[1:3] <= 50, Int)
@@ -246,9 +250,8 @@ end
 
 optimize!(model)
 
-println("Production: ", value.(x))
-println("Profit: ", objective_value(model))
-println("Resource usage: ", [sum(A[r,:] .* value.(x)) for r in 1:2])
+println("Reformulated variables: ", optimizer.data[:n])
+println("Quadratic matrix size: ", size(optimizer.data[:Q]))
 ```
 
 ### Set Cover Problem
@@ -272,7 +275,8 @@ sets = [
 # Costs of sets
 costs = [4, 3, 3, 4, 2, 3]
 
-model = Model(() -> ToQUIO.Optimizer())
+optimizer = ToQUIO.Optimizer()
+model = Model(() -> optimizer)
 
 n_sets = length(sets)
 @variable(model, x[1:n_sets], Bin)
@@ -289,10 +293,8 @@ end
 
 optimize!(model)
 
-selected = findall(value.(x) .> 0.5)
-println("Selected sets: ", selected)
-println("Total cost: ", objective_value(model))
-println("Sets chosen: ", [sets[i] for i in selected])
+println("Reformulated variables: ", optimizer.data[:n])
+println("Number of penalties: ", size(optimizer.data[:D], 1))
 ```
 
 ## Custom Penalties
@@ -304,7 +306,8 @@ using JuMP, ToQUIO
 using MathOptInterface
 const MOI = MathOptInterface
 
-model = Model(() -> ToQUIO.Optimizer())
+optimizer = ToQUIO.Optimizer()
+model = Model(() -> optimizer)
 
 @variable(model, 0 <= x <= 10, Int)
 @variable(model, 0 <= y <= 10, Int)
@@ -316,17 +319,15 @@ model = Model(() -> ToQUIO.Optimizer())
 @constraint(model, c2, x - y == 0)
 
 # Set custom penalty for equality constraint (make it very strict)
-MOI.set(backend(model), ToQUIO.ConstraintPenaltyHint(), 
-        backend(model).model.con_to_name[c2], 1000.0)
+MOI.set(backend(model), ToQUIO.ConstraintPenaltyHint(), index(c2), 1000.0)
 
 # Set custom penalty for inequality (more lenient)
-MOI.set(backend(model), ToQUIO.ConstraintPenaltyHint(),
-        backend(model).model.con_to_name[c1], 10.0)
+MOI.set(backend(model), ToQUIO.ConstraintPenaltyHint(), index(c1), 10.0)
 
 optimize!(model)
 
-println("x = ", value(x))
-println("y = ", value(y))
+println("Penalty matrix:")
+display(optimizer.data[:D])
 ```
 
 ## Working with Different Solvers
@@ -337,7 +338,8 @@ println("y = ", value(y))
 using JuMP, ToQUIO
 
 # Create optimizer without backend solver
-model = Model(() -> ToQUIO.Optimizer())
+optimizer = ToQUIO.Optimizer()
+model = Model(() -> optimizer)
 
 @variable(model, 0 <= x[1:3] <= 5, Int)
 @objective(model, Min, sum(x[i]^2 for i in 1:3))
@@ -346,12 +348,8 @@ model = Model(() -> ToQUIO.Optimizer())
 # This will reformulate but not solve
 optimize!(model)
 
-# Access the reformulated model
-backend_opt = backend(model).optimizer.model
-reformulated = backend_opt.target_model
-
 println("Reformulated model available")
-println("Number of variables: ", MOI.get(reformulated, MOI.NumberOfVariables()))
+println("Number of variables: ", optimizer.data[:n])
 ```
 
 ### With a Backend Solver
@@ -381,7 +379,8 @@ println("Solution: ", value.(x))
 ```julia
 using JuMP, ToQUIO
 
-model = Model(() -> ToQUIO.Optimizer())
+optimizer = ToQUIO.Optimizer()
+model = Model(() -> optimizer)
 
 @variable(model, -2 <= x[1:2] <= 2, Int)
 @objective(model, Min, x[1]^2 + x[2]^2 + x[1] + x[2])
@@ -391,8 +390,7 @@ model = Model(() -> ToQUIO.Optimizer())
 optimize!(model)
 
 # Access reformulation data
-backend_opt = backend(model).optimizer.model
-data = backend_opt.data
+data = optimizer.data
 
 println("=== Reformulation Data ===")
 println("Dimension: ", data[:n])
@@ -410,7 +408,8 @@ println("\nUpper bounds: ", data[:u])
 ```julia
 using JuMP, ToQUIO
 
-model = Model(() -> ToQUIO.Optimizer())
+optimizer = ToQUIO.Optimizer()
+model = Model(() -> optimizer)
 
 @variable(model, 0 <= x <= 10, Int)
 @variable(model, 0 <= y <= 10, Int)
@@ -423,8 +422,7 @@ model = Model(() -> ToQUIO.Optimizer())
 optimize!(model)
 
 # The penalty matrix D contains the penalty coefficients
-backend_opt = backend(model).optimizer.model
-D = backend_opt.data[:D]
+D = optimizer.data[:D]
 
 println("Penalty diagonal matrix:")
 display(D)
@@ -434,9 +432,9 @@ display(D)
 
 ```julia
 using JuMP, ToQUIO
-using LinearAlgebra
 
-model = Model(() -> ToQUIO.Optimizer())
+optimizer = ToQUIO.Optimizer()
+model = Model(() -> optimizer)
 
 @variable(model, 0 <= x <= 5, Int)
 @variable(model, 0 <= y <= 5, Int)
@@ -446,17 +444,8 @@ model = Model(() -> ToQUIO.Optimizer())
 
 optimize!(model)
 
-# Get the solution
-x_val = value(x)
-y_val = value(y)
-
-# Verify constraint satisfaction
-println("Solution: x = $x_val, y = $y_val")
-println("Constraint x + y = $(x_val + y_val) (should be ≈ 4)")
-println("Objective value: ", objective_value(model))
-
-# Verify it's the optimal solution
-println("Expected optimal: x = 2, y = 2, obj = 8")
+println("Reformulated variables: ", optimizer.data[:n])
+println("Quadratic matrix size: ", size(optimizer.data[:Q]))
 ```
 
 ## Advanced Examples
@@ -473,7 +462,8 @@ W = [0 1 1 0;
      0 1 1 0]
 
 n = size(W, 1)
-model = Model(() -> ToQUIO.Optimizer())
+optimizer = ToQUIO.Optimizer()
+model = Model(() -> optimizer)
 
 # x[i] = 0 or 1 indicates which partition node i is in
 @variable(model, x[1:n], Bin)
@@ -485,13 +475,8 @@ model = Model(() -> ToQUIO.Optimizer())
 
 optimize!(model)
 
-# Extract partitions
-partition_0 = findall(value.(x) .< 0.5)
-partition_1 = findall(value.(x) .> 0.5)
-
-println("Partition 0: ", partition_0)
-println("Partition 1: ", partition_1)
-println("Cut value: ", objective_value(model))
+println("Reformulated variables: ", optimizer.data[:n])
+println("Quadratic matrix size: ", size(optimizer.data[:Q]))
 ```
 
 ### Facility Location
@@ -516,7 +501,8 @@ transport_cost = [
 n_customers = length(demand)
 n_facilities = length(fixed_cost)
 
-model = Model(() -> ToQUIO.Optimizer())
+optimizer = ToQUIO.Optimizer()
+model = Model(() -> optimizer)
 
 # y[j] = 1 if facility j is opened
 @variable(model, y[1:n_facilities], Bin)
@@ -542,12 +528,6 @@ end
 
 optimize!(model)
 
-# Display results
-open_facilities = findall(value.(y) .> 0.5)
-println("Open facilities: ", open_facilities)
-for i in 1:n_customers
-    j = findfirst(value.(x[i,:]) .> 0.5)
-    println("Customer $i → Facility $j")
-end
-println("Total cost: ", objective_value(model))
+println("Reformulated variables: ", optimizer.data[:n])
+println("Number of penalties: ", size(optimizer.data[:D], 1))
 ```

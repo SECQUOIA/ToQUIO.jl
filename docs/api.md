@@ -258,14 +258,17 @@ Allows users to specify custom penalty coefficients for constraints.
 **Usage:**
 
 ```julia
-using JuMP
+using JuMP, ToQUIO
+using MathOptInterface
+const MOI = MathOptInterface
 
-model = Model(() -> ToQUIO.Optimizer())
-@variable(model, x)
+optimizer = ToQUIO.Optimizer()
+model = Model(() -> optimizer)
+@variable(model, 0 <= x <= 10, Int)
 @constraint(model, con, x >= 1)
 
 # Set custom penalty
-MOI.set(backend(model), ToQUIO.ConstraintPenaltyHint(), con, 100.0)
+MOI.set(backend(model), ToQUIO.ConstraintPenaltyHint(), index(con), 100.0)
 ```
 
 ## Internal Functions

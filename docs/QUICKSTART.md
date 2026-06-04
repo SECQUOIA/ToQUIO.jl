@@ -1,6 +1,6 @@
-# Quick Start Guide for Developers and AI Assistants
+# Quick Start Guide for Developers
 
-This guide provides a quick overview for developers (including those using AI assistants like GitHub Copilot) who want to work with ToQUIO.jl.
+This guide provides a quick overview for developers who want to work with ToQUIO.jl.
 
 ## What is ToQUIO.jl?
 
@@ -42,16 +42,20 @@ Pkg.test()  # Run tests
 ```julia
 using JuMP, ToQUIO
 
-model = Model(() -> ToQUIO.Optimizer())
+optimizer = ToQUIO.Optimizer()
+model = Model(() -> optimizer)
 @variable(model, 0 <= x <= 10, Int)
 @variable(model, 0 <= y <= 10, Int)
 @objective(model, Min, x^2 + y^2)
 @constraint(model, x + y == 5)  # This becomes a penalty term
 
 optimize!(model)
+
+data = optimizer.data
+println("Reformulated variables: ", data[:n])
 ```
 
-## For AI Assistants / Copilot Users
+## Development Patterns
 
 ### Code Patterns to Follow
 
@@ -79,9 +83,8 @@ See `to_quio.jl`:
 #### Debugging reformulation
 
 ```julia
-# Access reformulation data
-backend_opt = backend(model).optimizer.model
-data = backend_opt.data
+# Access reformulation data after optimize!(model)
+data = optimizer.data
 Q = data[:Q]  # Quadratic matrix
 L = data[:L]  # Linear terms
 c = data[:c]  # Constant
@@ -92,7 +95,7 @@ c = data[:c]  # Constant
 ```
 ToQUIO.jl/
 ├── README.md              ← Start here: Overview, installation, basic usage
-├── CONTRIBUTING.md        ← Development guide, AI-assisted workflow
+├── CONTRIBUTING.md        ← Development guide
 └── docs/
     ├── README.md          ← Documentation index
     ├── api.md             ← Complete API reference

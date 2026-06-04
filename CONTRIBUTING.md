@@ -1,6 +1,6 @@
 # Contributing to ToQUIO.jl
 
-Thank you for your interest in contributing to ToQUIO.jl! This document provides guidelines and instructions for contributors, including those using AI assistants like GitHub Copilot.
+Thank you for your interest in contributing to ToQUIO.jl! This document provides guidelines and instructions for contributors.
 
 ## Table of Contents
 
@@ -9,7 +9,6 @@ Thank you for your interest in contributing to ToQUIO.jl! This document provides
 - [Code Style](#code-style)
 - [Testing](#testing)
 - [Pull Request Process](#pull-request-process)
-- [AI-Assisted Development](#ai-assisted-development)
 - [Architecture Overview](#architecture-overview)
 
 ## Getting Started
@@ -156,14 +155,15 @@ Tests are located in `test/runtests.jl`. When adding new features:
 
 ```julia
 @testset "New Feature" begin
-    model = Model(() -> ToQUIO.Optimizer())
-    @variable(model, x)
+    optimizer = ToQUIO.Optimizer()
+    model = Model(() -> optimizer)
+    @variable(model, 0 <= x <= 10, Int)
     # ... test setup ...
     
     optimize!(model)
     
-    @test termination_status(model) == MOI.OPTIMAL
-    @test isapprox(value(x), expected_value, atol=1e-6)
+    @test optimizer.target_model !== nothing
+    @test optimizer.data[:n] >= 1
 end
 ```
 
@@ -217,69 +217,6 @@ Aim for high test coverage, especially for:
 - Maintainers will review your PR
 - Address any feedback or requested changes
 - Once approved, your PR will be merged
-
-## AI-Assisted Development
-
-### Using GitHub Copilot or Other AI Assistants
-
-ToQUIO.jl is designed to be AI-friendly. When using AI assistants:
-
-#### Understanding the Codebase
-
-1. **Core reformulation** (`src/to_quio.jl`):
-   - Converts constrained problems to QUIO format
-   - Key function: `to_quio(T, varmap, conmap, source; ϵ)`
-   - Uses penalty methods for constraint handling
-
-2. **MOI Wrapper** (`src/MOI_wrapper/`):
-   - `MOI_wrapper.jl`: Main optimizer interface
-   - `QUIO_model.jl`: Model type definition using MOI utilities
-   - `attributes/`: MOI attribute implementations
-
-3. **Type System**:
-   - Heavy use of parametric types (`{T}` everywhere)
-   - Type aliases for clarity (e.g., `SAF{T}`, `VI`)
-   - Generic programming patterns
-
-#### Best Practices for AI Development
-
-1. **Preserve type genericity**: Don't hard-code `Float64` unless necessary
-
-2. **Follow existing patterns**: Look at similar functions for style guidance
-
-3. **Test incrementally**: Create small tests as you develop
-
-4. **Use type assertions wisely**: The codebase uses `@assert` for internal checks
-
-5. **Understand MOI**: Familiarity with MathOptInterface is crucial
-
-#### AI Prompt Templates
-
-When asking AI for help, provide context:
-
-```
-I'm working on ToQUIO.jl, a Julia package that reformulates constrained 
-integer programs into QUIO format using penalty methods. It integrates 
-with MathOptInterface (MOI).
-
-Current task: [describe your task]
-
-Relevant code: [paste relevant code]
-
-Requirements:
-- Maintain type-generic code (use {T} parameters)
-- Follow existing function patterns
-- Add appropriate docstrings
-- Include tests
-```
-
-#### Common Pitfalls to Avoid
-
-1. **Breaking type genericity**: Avoid assuming `Float64`
-2. **Ignoring MOI conventions**: Follow MOI naming and patterns
-3. **Incomplete error handling**: Add checks for invalid inputs
-4. **Missing documentation**: Always add docstrings to public functions
-5. **Untested code**: Add tests for new functionality
 
 ## Architecture Overview
 

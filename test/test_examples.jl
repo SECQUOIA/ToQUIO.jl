@@ -1,135 +1,65 @@
-# Test file that runs examples from documentation
-# This ensures documentation examples stay up-to-date and working
-
 using Test
-using JuMP
-using ToQUIO
+
+const DOC_ROOT = normpath(joinpath(@__DIR__, ".."))
+
+function extract_julia_blocks(path::AbstractString)
+    blocks = Tuple{Int,String}[]
+    lines = readlines(path)
+    in_block = false
+    start_line = 0
+    block = String[]
+
+    for (line_number, line) in pairs(lines)
+        stripped = strip(line)
+        if !in_block && startswith(stripped, "```julia")
+            in_block = true
+            start_line = line_number + 1
+            empty!(block)
+        elseif in_block && startswith(stripped, "```")
+            push!(blocks, (start_line, join(block, "\n")))
+            in_block = false
+        elseif in_block
+            push!(block, line)
+        end
+    end
+
+    return blocks
+end
+
+function should_run_doc_block(code::AbstractString)
+    contains(code, "optimize!(model)") || return false
+    contains(code, "QUBOSolver") && return false
+    contains(code, "SomeQUIOSolver") && return false
+    return true
+end
+
+function run_doc_block(path::AbstractString, line::Integer, code::AbstractString)
+    module_name = Symbol("DocExample_", replace(relpath(path, DOC_ROOT), r"[^A-Za-z0-9]" => "_"), "_", line)
+    mod = Module(module_name)
+    include_string(mod, code, "$(relpath(path, DOC_ROOT)):$line")
+    return nothing
+end
 
 @testset "Documentation Examples" begin
-    
-    @testset "Simple Integer Linear Program" begin
-        # Example from docs/examples.md - Basic Usage
-        model = Model(() -> ToQUIO.Optimizer())
-        
-        @variable(model, 0 <= x <= 10, Int)
-        @variable(model, 0 <= y <= 10, Int)
-        
-        @objective(model, Min, x + 2y)
-        @constraint(model, x + y >= 5)
-        
-        optimize!(model)
-        
-        # Test that model was set up correctly
-        @test num_variables(model) == 2
-        @test num_constraints(model; count_variable_in_set_constraints = false) == 1
-    end
-    
-    @testset "Binary Variables" begin
-        # Example from docs/examples.md - Basic Usage
-        model = Model(() -> ToQUIO.Optimizer())
-        
-        @variable(model, x[1:5], Bin)
-        @objective(model, Max, sum(x))
-        @constraint(model, sum(x) <= 3)
-        
-        optimize!(model)
-        
-        @test num_variables(model) == 5
-        @test num_constraints(model; count_variable_in_set_constraints = false) == 1
-    end
-    
-    @testset "Knapsack Problem" begin
-        # Example from docs/examples.md - Linear Programming
-        values = [10, 13, 18, 31, 7, 15]
-        weights = [11, 15, 20, 35, 10, 33]
-        capacity = 47
-        
-        model = Model(() -> ToQUIO.Optimizer())
-        
-        n = length(values)
-        @variable(model, x[1:n], Bin)
-        
-        @objective(model, Max, sum(values[i] * x[i] for i in 1:n))
-        @constraint(model, sum(weights[i] * x[i] for i in 1:n) <= capacity)
-        
-        optimize!(model)
-        
-        @test num_variables(model) == n
-        @test num_constraints(model; count_variable_in_set_constraints = false) == 1
-    end
-    
-    @testset "Quadratic Objective" begin
-        # Example from docs/examples.md - Quadratic Programming
-        model = Model(() -> ToQUIO.Optimizer())
-        
-        @variable(model, 0 <= x <= 5, Int)
-        @variable(model, 0 <= y <= 5, Int)
-        
-        @objective(model, Min, x^2 + y^2 - 2x - 4y)
-        @constraint(model, x + y >= 3)
-        @constraint(model, 2x + y <= 8)
-        
-        optimize!(model)
-        
-        @test num_variables(model) == 2
-        @test num_constraints(model; count_variable_in_set_constraints = false) == 2
-    end
-    
-    @testset "Production Planning" begin
-        # Example from docs/examples.md - Constrained Problems
-        costs = [10, 12, 15]
-        profits = [25, 30, 35]
-        
-        A = [2 3 4;
-             1 2 3]
-        b = [100, 80]
-        
-        model = Model(() -> ToQUIO.Optimizer())
-        
-        @variable(model, 0 <= x[1:3] <= 50, Int)
-        @objective(model, Max, sum((profits[i] - costs[i]) * x[i] for i in 1:3))
-        
-        for r in 1:2
-            @constraint(model, sum(A[r,p] * x[p] for p in 1:3) <= b[r])
+    docs = [
+        joinpath(DOC_ROOT, "README.md"),
+        joinpath(DOC_ROOT, "docs", "examples.md"),
+    ]
+
+    runnable_blocks = Tuple{String,Int,String}[]
+    for path in docs
+        for (line, code) in extract_julia_blocks(path)
+            should_run_doc_block(code) || continue
+            push!(runnable_blocks, (path, line, code))
         end
-        
-        optimize!(model)
-        
-        @test num_variables(model) == 3
-        @test num_constraints(model; count_variable_in_set_constraints = false) == 2
     end
-    
-    @testset "Set Cover Problem" begin
-        # Example from docs/examples.md - Constrained Problems
-        elements = 1:10
-        
-        sets = [
-            [1, 2, 3, 4],
-            [3, 4, 5, 6],
-            [5, 6, 7, 8],
-            [7, 8, 9, 10],
-            [1, 5, 9],
-            [2, 6, 10]
-        ]
-        
-        costs = [4, 3, 3, 4, 2, 3]
-        
-        model = Model(() -> ToQUIO.Optimizer())
-        
-        n_sets = length(sets)
-        @variable(model, x[1:n_sets], Bin)
-        
-        @objective(model, Min, sum(costs[i] * x[i] for i in 1:n_sets))
-        
-        for e in elements
-            containing_sets = [i for i in 1:n_sets if e in sets[i]]
-            @constraint(model, sum(x[i] for i in containing_sets) >= 1)
+
+    @test !isempty(runnable_blocks)
+
+    for (path, line, code) in runnable_blocks
+        @testset "$(relpath(path, DOC_ROOT)):$line" begin
+            run_doc_block(path, line, code)
+            @test true
         end
-        
-        optimize!(model)
-        
-        @test num_variables(model) == n_sets
-        @test num_constraints(model; count_variable_in_set_constraints = false) == length(elements)
     end
-    
 end

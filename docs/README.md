@@ -13,7 +13,6 @@ Welcome to the ToQUIO.jl documentation! This directory contains detailed documen
 - **[QUICKSTART](QUICKSTART.md)** - ⭐ Quick reference for developers (5-minute setup)
 - **[Contributing Guide](../CONTRIBUTING.md)** - Development setup, code style, PR process
 - **[Algorithm Details](algorithm.md)** - Mathematical formulation and derivation
-- **[COPILOT Guide](COPILOT_GUIDE.md)** - ⭐ Detailed guide for GitHub Copilot users
 
 ## Quick Navigation
 
@@ -25,7 +24,6 @@ Welcome to the ToQUIO.jl documentation! This directory contains detailed documen
 ### Want to Contribute?
 1. Read [QUICKSTART](QUICKSTART.md) for fast setup
 2. Follow [CONTRIBUTING](../CONTRIBUTING.md) guidelines
-3. If using AI assistants, check [COPILOT_GUIDE](COPILOT_GUIDE.md)
 
 ### Need API Details?
 1. Check [API Reference](api.md) for function signatures
@@ -49,7 +47,6 @@ ToQUIO.jl transforms constrained integer optimization problems into Quadratic Un
 |------|-------------|----------|
 | [README.md](README.md) | Documentation index (this file) | All |
 | [QUICKSTART.md](QUICKSTART.md) | Quick developer reference | Developers |
-| [COPILOT_GUIDE.md](COPILOT_GUIDE.md) | AI-assisted development guide | AI/Copilot users |
 | [api.md](api.md) | Complete API reference | Developers |
 | [algorithm.md](algorithm.md) | Mathematical details | Researchers |
 | [examples.md](examples.md) | Usage examples | Users |
@@ -69,4 +66,3 @@ ToQUIO.jl transforms constrained integer optimization problems into Quadratic Un
 ## License
 
 ToQUIO.jl is licensed under the Mozilla Public License Version 2.0. See the [LICENSE](../LICENSE) file for details.
-

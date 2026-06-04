@@ -37,8 +37,9 @@ pkg> add https://github.com/SECQUOIA/ToQUIO.jl
 using JuMP
 using ToQUIO
 
-# Create a JuMP model with ToQUIO as the optimizer
-model = Model(() -> ToQUIO.Optimizer())
+# Create a JuMP model with ToQUIO in reformulation-only mode
+optimizer = ToQUIO.Optimizer()
+model = Model(() -> optimizer)
 
 # Define integer variables with bounds
 @variable(model, -3 <= x[1:3] <= 3, Int)
@@ -49,9 +50,9 @@ model = Model(() -> ToQUIO.Optimizer())
 # Optimize the model
 optimize!(model)
 
-# Access results
-println("Objective value: ", objective_value(model))
-println("Solution: ", value.(x))
+# Inspect the reformulated QUIO model
+println("Reformulated variables: ", optimizer.data[:n])
+println("Quadratic matrix size: ", size(optimizer.data[:Q]))
 ```
 
 ### Using with a QUIO Solver Backend
@@ -183,10 +184,7 @@ model = Model(() -> ToQUIO.Optimizer())
 @constraint(model, x + y >= 3)
 @constraint(model, 2x + y <= 8)
 
-optimize!(model)
-
-println("x = ", value(x))
-println("y = ", value(y))
+optimize!(model)  # Reformulates the model; provide a backend solver to solve it
 ```
 
 ### Examining the Reformulated Model
@@ -205,8 +203,7 @@ model = Model(() -> optimizer)
 optimize!(model)
 
 # Access reformulation data
-backend = backend(model)
-data = backend.optimizer.model.data
+data = optimizer.data
 
 println("Q matrix: ", data[:Q])
 println("Linear terms: ", data[:L])
@@ -256,20 +253,6 @@ ToQUIO.jl/
 
 We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
-### For AI/Copilot Development
-
-When working with AI assistants or GitHub Copilot on this project:
-
-1. **Understand the reformulation**: The core algorithm converts constraints into quadratic penalties
-2. **Key files**: 
-   - `src/to_quio.jl`: Contains the main reformulation logic
-   - `src/MOI_wrapper/MOI_wrapper.jl`: MOI optimizer interface
-3. **Type system**: The code is type-generic; maintain this property in changes
-4. **Testing**: Always run tests after modifications
-5. **MOI compliance**: Ensure changes maintain MathOptInterface compliance
-
-See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed development instructions.
-
 ## References
 
 - [JuMP Documentation](https://jump.dev/JuMP.jl/stable/)
@@ -297,4 +280,3 @@ If you use ToQUIO.jl in your research, please cite:
   url = {https://github.com/SECQUOIA/ToQUIO.jl}
 }
 ```
-
