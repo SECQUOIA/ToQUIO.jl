@@ -15,7 +15,7 @@ Thank you for your interest in contributing to ToQUIO.jl! This document provides
 
 ### Prerequisites
 
-- Julia 1.11 or higher
+- Julia 1.10 or higher
 - Git
 - A GitHub account
 

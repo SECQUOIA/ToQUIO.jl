@@ -52,7 +52,11 @@ end
 
 MOI.supports(::Optimizer{T}, ::MOI.ObjectiveFunction{F}) where {T,F<:Union{SAF{T},SQF{T}}}= true
 
-MOI.supports_constraint(::Optimizer{T}, ::Type{VI}, ::Type{<:Union{EQ{T},LT{T},GT{T}}}) where {T} = true
+MOI.supports_constraint(
+    ::Optimizer{T},
+    ::Type{VI},
+    ::Type{<:Union{EQ{T},LT{T},GT{T},MOI.Interval{T}}},
+) where {T} = true
 MOI.supports_constraint(::Optimizer{T}, ::Type{VI}, ::Type{<:Union{MOI.ZeroOne,MOI.Integer}}) where {T} = true
 
 MOI.supports_constraint(::Optimizer{T}, ::Type{<:Union{SAF{T}}}, ::Type{<:Union{EQ{T},LT{T},GT{T}}}) where {T} = true

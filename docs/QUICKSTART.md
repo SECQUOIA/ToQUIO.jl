@@ -105,15 +105,15 @@ ToQUIO.jl/
 
 ## Testing Strategy
 
-Tests are in `test/runtests.jl`. Currently uses Bonmin as a backend solver to verify reformulation correctness.
+Tests are in `test/runtests.jl`. The default suite is solver-independent: it runs
+maintenance policy checks and direct MOI-level reformulation regression tests.
 
 ```julia
 # Run tests
 Pkg.test()
 
-# Or manually
+# Or manually from the repository root
 include("test/runtests.jl")
-test_example()  # Basic test function
 ```
 
 ## Common Gotchas

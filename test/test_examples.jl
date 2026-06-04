@@ -1,6 +1,26 @@
 const MOI = ToQUIO.MOI
 
 @testset "Reformulation data extraction" begin
+    @testset "Supported bound constraints" begin
+        optimizer = ToQUIO.Optimizer()
+
+        @test MOI.supports_constraint(
+            optimizer,
+            MOI.VariableIndex,
+            MOI.GreaterThan{Float64},
+        )
+        @test MOI.supports_constraint(
+            optimizer,
+            MOI.VariableIndex,
+            MOI.LessThan{Float64},
+        )
+        @test MOI.supports_constraint(
+            optimizer,
+            MOI.VariableIndex,
+            MOI.Interval{Float64},
+        )
+    end
+
     @testset "ZeroOne variable bounds" begin
         source = MOI.Utilities.Model{Float64}()
         x = MOI.add_variable(source)

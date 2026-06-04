@@ -23,6 +23,14 @@ using Pkg
 Pkg.add(url="https://github.com/SECQUOIA/ToQUIO.jl")
 ```
 
+The examples below use JuMP to build models. Install JuMP separately if it is
+not already in your active environment:
+
+```julia
+using Pkg
+Pkg.add("JuMP")
+```
+
 Or from the Julia package manager (press `]`):
 
 ```julia
