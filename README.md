@@ -240,6 +240,16 @@ println("Constant: ", data[:c])
    Pkg.test()
    ```
 
+### Building Documentation Locally
+
+From the repository root, instantiate the docs environment and build the
+Documenter site without deploying:
+
+```bash
+julia --project=docs -e 'using Pkg; Pkg.develop(path=pwd()); Pkg.instantiate()'
+julia --project=docs docs/make.jl --skip-deploy
+```
+
 ### Project Structure
 
 ```
@@ -253,6 +263,9 @@ ToQUIO.jl/
 │       └── attributes/        # MOI attributes
 ├── test/
 │   └── runtests.jl            # Test suite
+├── docs/
+│   ├── make.jl                # Documentation build/deploy script
+│   └── src/                   # Documenter source pages
 ├── Project.toml               # Package metadata
 └── README.md                  # This file
 ```
