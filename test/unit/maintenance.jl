@@ -233,6 +233,7 @@ end
         config = read(dependabot_config, String)
 
         @test has_julia_dependabot_entry(config, "/")
+        @test has_julia_dependabot_entry(config, "/docs")
         @test has_github_actions_dependabot_entry(config)
     else
         # Dormant until #8 adds a Dependabot config; synthetic tests below
