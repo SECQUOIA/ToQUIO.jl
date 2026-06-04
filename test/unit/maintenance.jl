@@ -20,17 +20,6 @@ function normalized_yaml_scalar(value::AbstractString)
     return value
 end
 
-function has_yaml_sequence_value(config::AbstractString, value::AbstractString)
-    for raw_line in split(config, '\n')
-        line = strip(raw_line)
-        item = match(r"""^-\s*(.+?)\s*$""", line)
-        item === nothing && continue
-        normalized_yaml_scalar(item.captures[1]) == value && return true
-    end
-
-    return false
-end
-
 function normalized_dependabot_directory(value::AbstractString)
     directory = normalized_yaml_scalar(value)
     directory == "/" && return directory
@@ -46,6 +35,49 @@ function inline_yaml_values(value::AbstractString)
         value = value[2:(end - 1)]
     end
     return split(value, ",")
+end
+
+function leading_whitespace_length(value::AbstractString)
+    prefix = match(r"""^\s*""", value)
+    return length(prefix.match)
+end
+
+function ci_julia_versions(config::AbstractString)
+    versions = String[]
+    in_julia_version = false
+    julia_version_indent = 0
+
+    for raw_line in split(config, '\n')
+        line = strip(raw_line)
+        isempty(line) && continue
+
+        if in_julia_version
+            if leading_whitespace_length(raw_line) <= julia_version_indent &&
+               !startswith(line, "-")
+                in_julia_version = false
+            else
+                item = match(r"""^-\s*(.+?)\s*$""", line)
+                if item !== nothing
+                    push!(versions, normalized_yaml_scalar(item.captures[1]))
+                    continue
+                end
+            end
+        end
+
+        julia_version = match(r"""^(\s*)julia-version:\s*(.*?)\s*$""", raw_line)
+        if julia_version !== nothing
+            julia_version_indent = length(julia_version.captures[1])
+            inline_versions = strip(julia_version.captures[2])
+            if isempty(inline_versions)
+                in_julia_version = true
+            else
+                append!(versions, normalized_yaml_scalar.(inline_yaml_values(inline_versions)))
+                in_julia_version = false
+            end
+        end
+    end
+
+    return versions
 end
 
 # Dependabot config is YAML, but these guards only need to detect exact
@@ -123,7 +155,26 @@ end
     @test occursin(r"(?m)^\s*pull_request\s*:", ci_config)
     @test occursin("julia-actions/setup-julia", ci_config)
     @test occursin("julia-actions/julia-runtest", ci_config)
-    @test all(version -> has_yaml_sequence_value(ci_config, version), SUPPORTED_JULIA_VERSIONS)
+    @test ci_julia_versions(ci_config) == collect(SUPPORTED_JULIA_VERSIONS)
+end
+
+@testset "CI Julia version detection" begin
+    @test ci_julia_versions("""
+        matrix:
+          julia-version:
+            - '1.10'
+            - '1'
+    """) == ["1.10", "1"]
+    @test ci_julia_versions("""
+        matrix:
+          julia-version: ["1.10", "1"]
+    """) == ["1.10", "1"]
+    @test isempty(ci_julia_versions("""
+        matrix:
+          unrelated:
+            - '1.10'
+            - '1'
+    """))
 end
 
 @testset "Test environment compat policy" begin
@@ -149,7 +200,8 @@ end
         @test has_julia_dependabot_entry(config, "/")
         @test has_github_actions_dependabot_entry(config)
     else
-        # Dormant until a Dependabot config is added.
+        # Dormant until #8 adds a Dependabot config; synthetic tests below
+        # cover the detector meanwhile.
     end
 end
 
