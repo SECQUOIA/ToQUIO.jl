@@ -16,7 +16,9 @@ A Julia package that reformulates constrained integer optimization problems into
 
 ## Installation
 
-ToQUIO.jl is a Julia package. To install it, open a Julia REPL and run:
+ToQUIO.jl is targeting registration in the Julia General registry. Until the
+first registered release is accepted and tagged, install it by URL from a Julia
+REPL:
 
 ```julia
 using Pkg
@@ -35,6 +37,13 @@ Or from the Julia package manager (press `]`):
 
 ```julia
 pkg> add https://github.com/SECQUOIA/ToQUIO.jl
+```
+
+After registration, released versions will be installable with:
+
+```julia
+using Pkg
+Pkg.add("ToQUIO")
 ```
 
 ## Quick Start
@@ -273,6 +282,13 @@ ToQUIO.jl/
 ### Contributing
 
 We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+
+### Release State
+
+ToQUIO.jl is on the Julia General registration path rather than a permanent
+URL-only release path. The initial registration/tag should use
+`version = "0.1.0"` from `Project.toml` unless a feature or breaking change
+requires a version bump before registration.
 
 ## References
 

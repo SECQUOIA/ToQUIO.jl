@@ -12,6 +12,7 @@ const DOCS_PROJECT_DEPS = Dict(
 )
 
 const SUPPORTED_JULIA_VERSIONS = ("1.10", "1")
+const INITIAL_REGISTRATION_VERSION = "0.1.0"
 
 function normalized_yaml_scalar(value::AbstractString)
     value = strip(value)
@@ -147,9 +148,44 @@ has_github_actions_dependabot_entry(config::AbstractString) =
     project = TOML.parsefile(joinpath(pkgdir(ToQUIO), "Project.toml"))
     compat = project["compat"]
 
+    @test project["version"] == INITIAL_REGISTRATION_VERSION
     @test compat["julia"] == first(SUPPORTED_JULIA_VERSIONS)
     @test compat["LinearAlgebra"] == "1"
     @test compat["MathOptInterface"] == "1"
+end
+
+@testset "Release workflow policy" begin
+    tagbot_workflow = joinpath(pkgdir(ToQUIO), ".github", "workflows", "TagBot.yml")
+    @test isfile(tagbot_workflow)
+
+    tagbot_config = read(tagbot_workflow, String)
+    @test occursin(r"(?m)^\s*issue_comment\s*:", tagbot_config)
+    @test occursin(r"(?m)^\s*workflow_dispatch\s*:", tagbot_config)
+    @test occursin(r"(?m)^\s*contents:\s*write\s*$", tagbot_config)
+    @test occursin(r"(?m)^\s*issues:\s*read\s*$", tagbot_config)
+    @test occursin("github.actor == 'JuliaTagBot'", tagbot_config)
+    @test occursin("JuliaRegistries/TagBot@v1", tagbot_config)
+    @test occursin(raw"token: ${{ secrets.GITHUB_TOKEN }}", tagbot_config)
+    @test occursin(raw"ssh: ${{ secrets.SSH_KEY }}", tagbot_config)
+end
+
+@testset "Release documentation policy" begin
+    readme = read(joinpath(pkgdir(ToQUIO), "README.md"), String)
+    contributing = read(joinpath(pkgdir(ToQUIO), "CONTRIBUTING.md"), String)
+
+    @test occursin("targeting registration in the Julia General registry", readme)
+    @test occursin("After registration, released versions will be installable", readme)
+    @test occursin("""Pkg.add("ToQUIO")""", readme)
+    @test occursin("version = \"$(INITIAL_REGISTRATION_VERSION)\"", readme)
+
+    @test occursin("## Release Process", contributing)
+    @test occursin("JuliaRegistrator", contributing)
+    @test occursin("TagBot", contributing)
+    @test occursin("@JuliaRegistrator register", contributing)
+    @test occursin("Release checklist", contributing)
+    @test occursin("Pkg.test()", contributing)
+    @test occursin("docs/make.jl --skip-deploy", contributing)
+    @test occursin("version = \"$(INITIAL_REGISTRATION_VERSION)\"", contributing)
 end
 
 @testset "CI workflow policy" begin

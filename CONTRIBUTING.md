@@ -9,6 +9,7 @@ Thank you for your interest in contributing to ToQUIO.jl! This document provides
 - [Code Style](#code-style)
 - [Testing](#testing)
 - [Pull Request Process](#pull-request-process)
+- [Release Process](#release-process)
 - [Architecture Overview](#architecture-overview)
 
 ## Getting Started
@@ -217,6 +218,40 @@ Aim for high test coverage, especially for:
 - Maintainers will review your PR
 - Address any feedback or requested changes
 - Once approved, your PR will be merged
+
+## Release Process
+
+ToQUIO.jl is intended to be registered in the Julia General registry. Until the
+first registration is accepted and tagged, users should install the package by
+URL as shown in the README.
+
+Registered releases use JuliaRegistrator and TagBot:
+
+1. Confirm `Project.toml` has the intended version value. The first
+   registration should remain `version = "0.1.0"` unless a feature or breaking
+   change lands first.
+2. Run the package tests from the root environment:
+   ```julia
+   using Pkg
+   Pkg.test()
+   ```
+3. Build the documentation locally when release-facing docs changed:
+   ```bash
+   julia --project=docs -e 'using Pkg; Pkg.develop(path=pwd()); Pkg.instantiate()'
+   julia --project=docs docs/make.jl --skip-deploy
+   ```
+4. On the release commit, open a JuliaRegistrator request by commenting
+   `@JuliaRegistrator register`.
+5. After registration is accepted, confirm TagBot creates the matching tag and
+   GitHub release for the `Project.toml` version.
+
+Release checklist:
+
+- Confirm `Project.toml` version and compat bounds are correct.
+- Run the full package test suite.
+- Build documentation when docs changed.
+- Start JuliaRegistrator registration from the release commit.
+- Confirm TagBot created the tag and release.
 
 ## Architecture Overview
 
