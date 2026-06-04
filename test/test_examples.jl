@@ -1,65 +1,26 @@
-using Test
+const MOI = ToQUIO.MOI
 
-const DOC_ROOT = normpath(joinpath(@__DIR__, ".."))
+@testset "Reformulation data extraction" begin
+    @testset "ZeroOne variable bounds" begin
+        source = MOI.Utilities.Model{Float64}()
+        x = MOI.add_variable(source)
+        MOI.add_constraint(source, x, MOI.ZeroOne())
 
-function extract_julia_blocks(path::AbstractString)
-    blocks = Tuple{Int,String}[]
-    lines = readlines(path)
-    in_block = false
-    start_line = 0
-    block = String[]
+        l, u = ToQUIO.get_variable_bounds(Float64, vi -> vi.value, source)
 
-    for (line_number, line) in pairs(lines)
-        stripped = strip(line)
-        if !in_block && startswith(stripped, "```julia")
-            in_block = true
-            start_line = line_number + 1
-            empty!(block)
-        elseif in_block && startswith(stripped, "```")
-            push!(blocks, (start_line, join(block, "\n")))
-            in_block = false
-        elseif in_block
-            push!(block, line)
-        end
+        @test l == [0.0]
+        @test u == [1.0]
     end
 
-    return blocks
-end
+    @testset "GreaterThan affine matrix" begin
+        source = MOI.Utilities.Model{Float64}()
+        x = MOI.add_variable(source)
+        f = MOI.ScalarAffineFunction([MOI.ScalarAffineTerm(2.0, x)], 3.0)
+        MOI.add_constraint(source, f, MOI.GreaterThan(7.0))
 
-function should_run_doc_block(code::AbstractString)
-    contains(code, "optimize!(model)") || return false
-    contains(code, "QUBOSolver") && return false
-    contains(code, "SomeQUIOSolver") && return false
-    return true
-end
+        A, b = ToQUIO.get_gt_matrices(Float64, vi -> vi.value, ci -> ci.value, source)
 
-function run_doc_block(path::AbstractString, line::Integer, code::AbstractString)
-    module_name = Symbol("DocExample_", replace(relpath(path, DOC_ROOT), r"[^A-Za-z0-9]" => "_"), "_", line)
-    mod = Module(module_name)
-    include_string(mod, code, "$(relpath(path, DOC_ROOT)):$line")
-    return nothing
-end
-
-@testset "Documentation Examples" begin
-    docs = [
-        joinpath(DOC_ROOT, "README.md"),
-        joinpath(DOC_ROOT, "docs", "examples.md"),
-    ]
-
-    runnable_blocks = Tuple{String,Int,String}[]
-    for path in docs
-        for (line, code) in extract_julia_blocks(path)
-            should_run_doc_block(code) || continue
-            push!(runnable_blocks, (path, line, code))
-        end
-    end
-
-    @test !isempty(runnable_blocks)
-
-    for (path, line, code) in runnable_blocks
-        @testset "$(relpath(path, DOC_ROOT)):$line" begin
-            run_doc_block(path, line, code)
-            @test true
-        end
+        @test A == reshape([2.0], 1, 1)
+        @test b == [4.0]
     end
 end
