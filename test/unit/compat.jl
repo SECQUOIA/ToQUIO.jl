@@ -6,7 +6,9 @@ const TEST_PROJECT_DEPS = Dict(
     "ToQUIO" => "c8c7c8a1-01ab-43fa-b80d-8804f80d4aae",
 )
 
-function normalized_dependabot_directory(value::AbstractString)
+const SUPPORTED_JULIA_VERSIONS = ("1.10", "1")
+
+function normalized_yaml_scalar(value::AbstractString)
     value = strip(value)
     if endswith(value, ",")
         value = strip(value[begin:prevind(value, end)])
@@ -18,7 +20,25 @@ function normalized_dependabot_directory(value::AbstractString)
     return value
 end
 
-is_test_directory(value::AbstractString) = normalized_dependabot_directory(value) in ("/test", "/test/")
+function has_yaml_sequence_value(config::AbstractString, value::AbstractString)
+    for raw_line in split(config, '\n')
+        line = strip(raw_line)
+        item = match(r"""^-\s*(.+?)\s*$""", line)
+        item === nothing && continue
+        normalized_yaml_scalar(item.captures[1]) == value && return true
+    end
+
+    return false
+end
+
+function normalized_dependabot_directory(value::AbstractString)
+    directory = normalized_yaml_scalar(value)
+    directory == "/" && return directory
+    return rstrip(directory, '/')
+end
+
+is_dependabot_directory(value::AbstractString, directory::AbstractString) =
+    normalized_dependabot_directory(value) == normalized_dependabot_directory(directory)
 
 function inline_yaml_values(value::AbstractString)
     value = strip(value)
@@ -28,44 +48,49 @@ function inline_yaml_values(value::AbstractString)
     return split(value, ",")
 end
 
-# Dependabot config is YAML, but this guard only needs to detect exact Julia
-# entries for /test without accepting paths like /testing.
-function has_julia_test_dependabot_entry(config::AbstractString)
-    in_julia_update = false
+# Dependabot config is YAML, but these guards only need to detect exact
+# ecosystem/directory entries without accepting paths like /testing.
+function has_dependabot_entry(
+    config::AbstractString;
+    ecosystem::AbstractString,
+    directory::AbstractString,
+)
+    in_matching_update = false
     in_multiline_directories = false
 
     for raw_line in split(config, '\n')
         line = strip(raw_line)
         isempty(line) && continue
 
-        ecosystem = match(r"""^-?\s*package-ecosystem:\s*(.+?)\s*$""", line)
-        if ecosystem !== nothing
-            in_julia_update = normalized_dependabot_directory(ecosystem.captures[1]) == "julia"
+        ecosystem_match = match(r"""^-?\s*package-ecosystem:\s*(.+?)\s*$""", line)
+        if ecosystem_match !== nothing
+            in_matching_update = normalized_yaml_scalar(ecosystem_match.captures[1]) == ecosystem
             in_multiline_directories = false
             continue
         end
 
-        in_julia_update || continue
+        in_matching_update || continue
 
-        directory = match(r"""^directory:\s*(.+?)\s*$""", line)
-        if directory !== nothing
+        directory_match = match(r"""^directory:\s*(.+?)\s*$""", line)
+        if directory_match !== nothing
             in_multiline_directories = false
-            is_test_directory(directory.captures[1]) && return true
+            is_dependabot_directory(directory_match.captures[1], directory) && return true
             continue
         end
 
-        directories = match(r"""^directories:\s*(.*?)\s*$""", line)
-        if directories !== nothing
-            value = strip(directories.captures[1])
+        directories_match = match(r"""^directories:\s*(.*?)\s*$""", line)
+        if directories_match !== nothing
+            value = strip(directories_match.captures[1])
             in_multiline_directories = isempty(value)
-            any(is_test_directory, inline_yaml_values(value)) && return true
+            any(value -> is_dependabot_directory(value, directory), inline_yaml_values(value)) &&
+                return true
             continue
         end
 
         if in_multiline_directories
             item = match(r"""^-\s*(.+?)\s*$""", line)
             if item !== nothing
-                is_test_directory(item.captures[1]) && return true
+                is_dependabot_directory(item.captures[1], directory) && return true
             else
                 in_multiline_directories = false
             end
@@ -75,13 +100,30 @@ function has_julia_test_dependabot_entry(config::AbstractString)
     return false
 end
 
+has_julia_dependabot_entry(config::AbstractString, directory::AbstractString) =
+    has_dependabot_entry(config; ecosystem = "julia", directory = directory)
+
+has_github_actions_dependabot_entry(config::AbstractString) =
+    has_dependabot_entry(config; ecosystem = "github-actions", directory = "/")
+
 @testset "Root compat policy" begin
     project = TOML.parsefile(joinpath(pkgdir(ToQUIO), "Project.toml"))
     compat = project["compat"]
 
-    @test compat["julia"] == "1.10"
+    @test compat["julia"] == first(SUPPORTED_JULIA_VERSIONS)
     @test compat["LinearAlgebra"] == "1"
     @test compat["MathOptInterface"] == "1"
+end
+
+@testset "CI workflow policy" begin
+    ci_workflow = joinpath(pkgdir(ToQUIO), ".github", "workflows", "ci.yml")
+    @test isfile(ci_workflow)
+
+    ci_config = read(ci_workflow, String)
+    @test occursin(r"(?m)^\s*pull_request\s*:", ci_config)
+    @test occursin("julia-actions/setup-julia", ci_config)
+    @test occursin("julia-actions/julia-runtest", ci_config)
+    @test all(version -> has_yaml_sequence_value(ci_config, version), SUPPORTED_JULIA_VERSIONS)
 end
 
 @testset "Test environment compat policy" begin
@@ -92,45 +134,72 @@ end
 
     dependabot_config = joinpath(pkgdir(ToQUIO), ".github", "dependabot.yml")
     if isfile(dependabot_config)
-        @test !has_julia_test_dependabot_entry(read(dependabot_config, String))
+        @test !has_julia_dependabot_entry(read(dependabot_config, String), "/test")
     else
         # Dormant until a Dependabot config is added; the policy is enforced
         # above by requiring no test-specific compat bounds.
     end
 end
 
-@testset "Dependabot /test entry detection" begin
-    @test has_julia_test_dependabot_entry("""
+@testset "Dependabot config policy" begin
+    dependabot_config = joinpath(pkgdir(ToQUIO), ".github", "dependabot.yml")
+    if isfile(dependabot_config)
+        config = read(dependabot_config, String)
+
+        @test has_julia_dependabot_entry(config, "/")
+        @test has_github_actions_dependabot_entry(config)
+    else
+        # Dormant until a Dependabot config is added.
+    end
+end
+
+@testset "Dependabot entry detection" begin
+    @test has_julia_dependabot_entry("""
+        updates:
+          - package-ecosystem: "julia"
+            directory: "/"
+    """, "/")
+    @test has_github_actions_dependabot_entry("""
+        updates:
+          - package-ecosystem: github-actions
+            directory: "/"
+    """)
+    @test has_julia_dependabot_entry("""
         updates:
           - package-ecosystem: "julia"
             directory: "/test"
-    """)
-    @test has_julia_test_dependabot_entry("""
+    """, "/test")
+    @test has_julia_dependabot_entry("""
         updates:
           - package-ecosystem: julia
             directory: /test/
-    """)
-    @test has_julia_test_dependabot_entry("""
+    """, "/test")
+    @test has_julia_dependabot_entry("""
         updates:
           - package-ecosystem: julia
             directories: ["/", "/test"]
-    """)
-    @test has_julia_test_dependabot_entry("""
+    """, "/test")
+    @test has_julia_dependabot_entry("""
         updates:
           - package-ecosystem: julia
             directories:
               - "/"
               - "/test"
-    """)
+    """, "/test")
 
-    @test !has_julia_test_dependabot_entry("""
+    @test !has_julia_dependabot_entry("""
         updates:
           - package-ecosystem: julia
             directory: /testing
-    """)
-    @test !has_julia_test_dependabot_entry("""
+    """, "/test")
+    @test !has_julia_dependabot_entry("""
         updates:
           - package-ecosystem: github-actions
             directory: "/test"
+    """, "/test")
+    @test !has_github_actions_dependabot_entry("""
+        updates:
+          - package-ecosystem: julia
+            directory: "/"
     """)
 end
