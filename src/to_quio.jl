@@ -40,6 +40,15 @@ function get_variable_bounds(::Type{T}, varmap::Function, source::MOI.ModelLike)
         u[i] = ui
     end
 
+    # Handle binary variables (ZeroOne constraint means bounds are [0, 1])
+    for ci in MOI.get(source, MOI.ListOfConstraintIndices{VI,MOI.ZeroOne}())
+        vi = MOI.get(source, MOI.ConstraintFunction(), ci)
+        i  = varmap(vi)
+
+        l[i] = zero(T)
+        u[i] = one(T)
+    end
+
     @assert all(!isnothing, l) && all(!isnothing, u) "The model contains unbounded variables."
 
     return (collect(T, l), collect(T, u))
@@ -396,7 +405,7 @@ function get_gt_matrices(::Type{T}, varmap::Function, conmap::Function, source) 
             A[i, j] = c
         end
 
-        b[i] = s.upper - f.constant
+        b[i] = s.lower - f.constant
     end
 
     return (A, b)
