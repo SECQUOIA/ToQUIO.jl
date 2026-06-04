@@ -36,6 +36,9 @@ jobs:
     name: Deploy documentation
     if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
+    concurrency:
+      group: docs-deploy
+      cancel-in-progress: false
     permissions:
       contents: write
     steps:
