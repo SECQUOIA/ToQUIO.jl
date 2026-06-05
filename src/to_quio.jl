@@ -281,11 +281,19 @@ function to_quio(::Type{T}, varmap::Function, conmap::Function, source::MOI.Mode
     cl, _ = validate_ie_feasibility(T, A_ie, b_ie, l, u)
 
     # Compute Penalties!
-    # TODO: Store penalties for analysis
     # NOTE: This gives priority to user-defined penalties.
-    ρ_eq = something.(θ_eq, (Δ ./ ε_eq) .+ ϵ)
-    ρ_ie = something.(θ_ie, (Δ ./ ε_ie) .+ ϵ)
+    ρ_auto_eq = (Δ ./ (ε_eq .^ 2)) .+ ϵ
+    ρ_auto_ie = (Δ ./ (ε_ie .^ 2)) .+ ϵ
+    ρ_eq = apply_penalty_hints(θ_eq, ρ_auto_eq, :equality)
+    ρ_ie = apply_penalty_hints(θ_ie, ρ_auto_ie, :inequality)
     ρ    = T[ρ_eq; ρ_ie]
+    ρ_auto = T[ρ_auto_eq; ρ_auto_ie]
+    θ = Maybe{T}[θ_eq; θ_ie]
+    penalty_constraints = Any[
+        get_eq_constraint_indices(T, conmap, source);
+        get_lt_constraint_indices(T, conmap, source);
+        get_gt_constraint_indices(T, conmap, source);
+    ]
 
     target = QUIOModel{T}()
 
@@ -367,6 +375,10 @@ function to_quio(::Type{T}, varmap::Function, conmap::Function, source::MOI.Mode
         :L => g, # linear terms
         :c => γ, # constant term
         :D => D, #
+        :rho => ρ,
+        :rho_auto => ρ_auto,
+        :penalty_hints => θ,
+        :penalty_constraints => penalty_constraints,
         :l => T[l; zeros(T, length(s))], # lower
         :u => T[u; sb],                  # upper
         :source_variables => source_variables,
@@ -436,14 +448,50 @@ function get_constraint_penalty_hint(::Type{T}, source, ci) where {T}
     isnothing(θ) && return nothing
 
     θ = convert(T, θ)
-    θ > zero(T) || error("Constraint penalty hints must be positive.")
+    isfinite(θ) && θ > zero(T) ||
+        error("Constraint penalty hints must be finite and positive.")
 
     return θ
+end
+
+function apply_penalty_hints(θ::AbstractVector{Maybe{T}}, ρ_auto::AbstractVector{T}, constraint_kind::Symbol) where {T}
+    ρ = similar(ρ_auto)
+
+    for i in eachindex(ρ_auto)
+        hint = θ[i]
+
+        if isnothing(hint)
+            ρ[i] = ρ_auto[i]
+        else
+            if hint < ρ_auto[i]
+                @warn "Constraint penalty hint is below the automatic sufficient penalty; constrained-problem equivalence is not guaranteed." constraint_kind=constraint_kind constraint_index=i hint=hint automatic_penalty=ρ_auto[i]
+            end
+
+            ρ[i] = hint
+        end
+    end
+
+    return ρ
 end
 
 get_eq_penalty_hints(::Type{T}, conmap, source) where {T} = get_penalty_hints(T, SAF{T}, EQ{T}, conmap, source)
 get_lt_penalty_hints(::Type{T}, conmap, source) where {T} = get_penalty_hints(T, SAF{T}, LT{T}, conmap, source)
 get_gt_penalty_hints(::Type{T}, conmap, source) where {T} = get_penalty_hints(T, SAF{T}, GT{T}, conmap, source)
+
+function get_constraint_indices(::Type{T}, ::Type{F}, ::Type{S}, conmap, source) where {T,F,S}
+    m = MOI.get(source, MOI.NumberOfConstraints{F,S}())
+    indices = Vector{CI{F,S}}(undef, m)
+
+    for ci in MOI.get(source, MOI.ListOfConstraintIndices{F,S}())
+        indices[conmap(ci)] = ci
+    end
+
+    return indices
+end
+
+get_eq_constraint_indices(::Type{T}, conmap, source) where {T} = get_constraint_indices(T, SAF{T}, EQ{T}, conmap, source)
+get_lt_constraint_indices(::Type{T}, conmap, source) where {T} = get_constraint_indices(T, SAF{T}, LT{T}, conmap, source)
+get_gt_constraint_indices(::Type{T}, conmap, source) where {T} = get_constraint_indices(T, SAF{T}, GT{T}, conmap, source)
 
 function get_lt_matrices(::Type{T}, varmap::Function, conmap::Function, source) where {T}
     F = SAF{T}

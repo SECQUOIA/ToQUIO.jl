@@ -120,23 +120,28 @@ The penalty coefficients must be large enough to enforce constraints but not so 
 
 ### Objective Range
 
-First, compute the range of the objective function over the feasible region defined by bounds:
+First, compute an objective range bound over the region defined by variable bounds:
 
 ```
-Δ = max{f(x) : l ≤ x ≤ u} - min{f(x) : l ≤ x ≤ u}
+Δ_bound ≥ max{f(x) : l ≤ x ≤ u} - min{f(x) : l ≤ x ≤ u}
 ```
 
-For linear objectives `f(x) = ℓ'x + β`:
+For linear objectives `f(x) = ℓ'x + β`, this bound is exact:
 
 ```
-Δ = Σᵢ |ℓᵢ|(uᵢ - lᵢ)
+Δ_bound = Σᵢ |ℓᵢ|(uᵢ - lᵢ)
 ```
 
-For quadratic objectives, the computation is more complex (see implementation).
+For quadratic objectives, ToQUIO computes a conservative termwise interval
+bound by summing the minimum and maximum contribution of each affine and
+quadratic objective term over the variable bounds. This can overestimate the
+exact objective range because each term is bounded independently.
 
 ### Sensibility Factor
 
-For constraint `Ax ⊙ b` (where ⊙ is =, ≤, or ≥), the sensibility factor `ε` represents the minimum violation granularity. For integer coefficients:
+For constraint `Ax ⊙ b` (where ⊙ is =, ≤, or ≥), the sensibility factor `ε`
+represents the minimum nonzero violation magnitude. The current implementation
+requires integer-valued constraint coefficients and right-hand sides, so:
 
 ```
 ε = 1
@@ -146,18 +151,22 @@ This ensures that any violation is at least 1 in magnitude.
 
 ### Penalty Formula
 
-The penalty coefficient for each constraint is computed as:
+The automatic penalty coefficient for each constraint is computed as:
 
 ```
-ρ = Δ/ε + ϵ
+ρ_auto = Δ_bound/ε² + ϵ
 ```
 
 Where:
-- `Δ`: Objective range
-- `ε`: Sensibility factor
+- `Δ_bound`: Exact objective range for affine objectives, or a conservative
+  objective range bound for quadratic objectives
+- `ε`: Minimum nonzero violation magnitude
 - `ϵ`: User-specified adjustment (default: 1.0)
 
-This ensures that any constraint violation causes an objective increase larger than the entire objective range, strongly incentivizing feasibility.
+Because the penalty term is quadratic, a minimum nonzero violation contributes
+`ρ_auto * ε²`. With positive `ϵ`, the automatic coefficient makes that
+contribution larger than the objective range bound, strongly incentivizing
+feasibility.
 
 ### User-Specified Penalties
 
@@ -166,6 +175,13 @@ Users can override automatic penalties using the `ConstraintPenaltyHint` attribu
 ```julia
 MOI.set(model, ConstraintPenaltyHint(), constraint, custom_penalty)
 ```
+
+Custom penalty hints must be finite and positive. They override the automatic
+sufficient coefficient and are treated as user-chosen heuristic values; if a
+hint is lower than `ρ_auto`, ToQUIO uses it but equivalence to the constrained
+problem is not guaranteed. ToQUIO emits a warning when a hint is below
+`ρ_auto`. The reformulation metadata stores the selected penalties, automatic
+penalties, user hints, and corresponding source constraints for inspection.
 
 ## Reformulation Steps
 
@@ -179,11 +195,11 @@ MOI.set(model, ConstraintPenaltyHint(), constraint, custom_penalty)
 
 ### Step 2: Compute Penalties
 
-1. Compute objective range `Δ`
+1. Compute objective range bound `Δ_bound`
 2. Compute sensibility factors `ε_eq`, `ε_ie`
 3. Compute penalty coefficients:
-   - `ρ_eq = Δ/ε_eq + ϵ` for equalities
-   - `ρ_ie = Δ/ε_ie + ϵ` for inequalities
+   - `ρ_auto_eq = Δ_bound/ε_eq² + ϵ` for equalities
+   - `ρ_auto_ie = Δ_bound/ε_ie² + ϵ` for inequalities
 4. Apply user hints if provided
 
 ### Step 3: Add Slack Variables

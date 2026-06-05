@@ -318,16 +318,19 @@ model = Model(() -> optimizer)
 @constraint(model, c1, x + y >= 5)
 @constraint(model, c2, x - y == 0)
 
-# Set custom penalty for equality constraint (make it very strict)
+# Set finite, positive custom penalties.
+# These override automatic sufficient penalties and can be heuristic.
 MOI.set(backend(model), ToQUIO.ConstraintPenaltyHint(), index(c2), 1000.0)
-
-# Set custom penalty for inequality (more lenient)
 MOI.set(backend(model), ToQUIO.ConstraintPenaltyHint(), index(c1), 10.0)
 
 optimize!(model)
 
 println("Penalty matrix:")
 display(optimizer.data[:D])
+println("Selected penalties: ", optimizer.data[:rho])
+println("Automatic penalties: ", optimizer.data[:rho_auto])
+println("User hints: ", optimizer.data[:penalty_hints])
+println("Penalty constraints: ", optimizer.data[:penalty_constraints])
 ```
 
 ## Working with Different Solvers

@@ -89,7 +89,16 @@ Core function that performs the QUIO reformulation.
   - `:Q`: Quadratic term matrix
   - `:L`: Linear term vector
   - `:c`: Constant term
-  - `:D`: Diagonal penalty matrix
+  - `:D`: Diagonal penalty matrix used in the target objective, including the
+    objective-sense sign
+  - `:rho`: Selected positive penalty coefficients before applying the
+    objective-sense sign
+  - `:rho_auto`: Automatic sufficient positive penalty coefficients
+  - `:penalty_hints`: User-provided penalty hints, or `nothing` for automatic
+    penalties
+  - `:penalty_constraints`: Source constraint indices corresponding to
+    `:rho`, `:rho_auto`, and `:penalty_hints`, ordered as equalities,
+    less-than inequalities, then greater-than inequalities
   - `:l`: Lower bounds vector
   - `:u`: Upper bounds vector
 
@@ -100,7 +109,7 @@ Core function that performs the QUIO reformulation.
 - Equality and inequality rows must be feasible within the variable bounds.
 - Equality rows must also pass the integer divisibility check for integer
   assignments.
-- Custom `ConstraintPenaltyHint` values must be positive.
+- Custom `ConstraintPenaltyHint` values must be finite and positive.
 
 **Mathematical Formulation:**
 
@@ -275,7 +284,11 @@ variables introduced by reformulation are not exposed as source variables.
 struct ConstraintPenaltyHint <: MOI.AbstractConstraintAttribute end
 ```
 
-Allows users to specify custom penalty coefficients for constraints.
+Allows users to specify custom penalty coefficients for constraints. Hints must
+be finite and positive. They override the automatic sufficient coefficient, so
+small hints are treated as heuristic values and may not preserve equivalence to
+the constrained source problem. ToQUIO emits a warning when a hint is below the
+automatic sufficient coefficient.
 
 **Usage:**
 
@@ -303,10 +316,12 @@ These functions are used internally and are not part of the public API, but may 
 get_objective_delta(varmap::Function, f, l::AbstractVector{T}, u::AbstractVector{T}) where {T}
 ```
 
-Computes the objective value range based on variable bounds.
+Computes the objective value range based on variable bounds. This is exact for
+affine objectives. For quadratic objectives, it is a conservative termwise
+interval bound and may overestimate the exact range.
 
 **Returns:**
-- `Δ = δ_max - δ_min`: Objective range
+- `Δ = δ_max - δ_min`: Objective range or range bound
 
 ### Constraint Bounds
 
@@ -331,7 +346,8 @@ Computes sensibility factors for penalty computation.
 - `ε`: Vector of sensibility factors
 
 **Requirements:**
-- Currently requires integer coefficients
+- Currently requires integer-valued constraint coefficients and right-hand
+  sides, which makes `ε = 1`
 
 ## Type Aliases
 
