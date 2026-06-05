@@ -95,9 +95,9 @@ const CI{F,S} = MOI.ConstraintIndex{F,S}
 # Priority: user-defined hints over auto-calculated penalties
 # θ (theta): user-defined penalty hints (Maybe{T} vector)
 # Δ (Delta): objective delta (bound difference)
-# ε (epsilon): constraint sensitivity
+# ε (epsilon): minimum nonzero constraint violation magnitude
 # ϵ (epsilon_tolerance): epsilon tolerance
-ρ = something.(θ, (Δ ./ ε) .+ ϵ)
+ρ = something.(θ, (Δ ./ (ε .^ 2)) .+ ϵ)
 ```
 
 ## Development Guidelines

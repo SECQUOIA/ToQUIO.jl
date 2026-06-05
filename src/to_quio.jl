@@ -281,11 +281,14 @@ function to_quio(::Type{T}, varmap::Function, conmap::Function, source::MOI.Mode
     cl, _ = validate_ie_feasibility(T, A_ie, b_ie, l, u)
 
     # Compute Penalties!
-    # TODO: Store penalties for analysis
     # NOTE: This gives priority to user-defined penalties.
-    ρ_eq = something.(θ_eq, (Δ ./ ε_eq) .+ ϵ)
-    ρ_ie = something.(θ_ie, (Δ ./ ε_ie) .+ ϵ)
+    ρ_auto_eq = (Δ ./ (ε_eq .^ 2)) .+ ϵ
+    ρ_auto_ie = (Δ ./ (ε_ie .^ 2)) .+ ϵ
+    ρ_eq = something.(θ_eq, ρ_auto_eq)
+    ρ_ie = something.(θ_ie, ρ_auto_ie)
     ρ    = T[ρ_eq; ρ_ie]
+    ρ_auto = T[ρ_auto_eq; ρ_auto_ie]
+    θ = Maybe{T}[θ_eq; θ_ie]
 
     target = QUIOModel{T}()
 
@@ -367,6 +370,9 @@ function to_quio(::Type{T}, varmap::Function, conmap::Function, source::MOI.Mode
         :L => g, # linear terms
         :c => γ, # constant term
         :D => D, #
+        :rho => ρ,
+        :rho_auto => ρ_auto,
+        :penalty_hints => θ,
         :l => T[l; zeros(T, length(s))], # lower
         :u => T[u; sb],                  # upper
         :source_variables => source_variables,
@@ -436,7 +442,8 @@ function get_constraint_penalty_hint(::Type{T}, source, ci) where {T}
     isnothing(θ) && return nothing
 
     θ = convert(T, θ)
-    θ > zero(T) || error("Constraint penalty hints must be positive.")
+    isfinite(θ) && θ > zero(T) ||
+        error("Constraint penalty hints must be finite and positive.")
 
     return θ
 end

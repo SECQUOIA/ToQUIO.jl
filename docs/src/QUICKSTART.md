@@ -78,7 +78,7 @@ println("Reformulated variables: ", data[:n])
 See `to_quio.jl`:
 - `get_objective_delta()`: Computes objective range
 - `get_sensibility()`: Constraint violation granularity  
-- Lines ~210-214: Actual penalty computation `ρ = Δ/ε + ϵ`
+- Lines ~280-290: Actual automatic penalty computation `ρ = Δ/ε² + ϵ`
 
 #### Debugging reformulation
 
@@ -150,11 +150,11 @@ Where `z = [x; s]` includes slack variables for inequalities.
 ### Penalty Coefficients
 
 ```julia
-ρ = Δ/ε + ϵ
+ρ = Δ/ε² + ϵ
 ```
 
-- `Δ`: Objective function range over feasible region
-- `ε`: Minimum constraint violation (sensibility)
+- `Δ`: Objective function range bound over variable bounds
+- `ε`: Minimum nonzero constraint violation magnitude (sensibility)
 - `ϵ`: User adjustment (default: 1.0)
 
 ## Type System
