@@ -49,7 +49,8 @@ function get_variable_bounds(::Type{T}, varmap::Function, source::MOI.ModelLike)
         u[i] = one(T)
     end
 
-    @assert all(!isnothing, l) && all(!isnothing, u) "The model contains unbounded variables."
+    all(!isnothing, l) && all(!isnothing, u) ||
+        error("The model contains unbounded variables.")
 
     return (collect(T, l), collect(T, u))
 end
@@ -207,6 +208,23 @@ function validate_eq_feasibility(::Type{T}, A, b, l, u) where {T}
     for i in eachindex(b)
         δl[i] <= b[i] <= δu[i] ||
             error("Equality constraint $i is infeasible within variable bounds.")
+    end
+
+    validate_eq_integer_feasibility(A, b)
+
+    return nothing
+end
+
+function validate_eq_integer_feasibility(A, b)
+    for i in eachindex(b)
+        row_gcd = BigInt(0)
+        for j in axes(A, 2)
+            row_gcd = gcd(row_gcd, abs(round(BigInt, A[i, j])))
+        end
+
+        row_gcd == 0 && continue
+        rem(round(BigInt, b[i]), row_gcd) == 0 ||
+            error("Equality constraint $i is infeasible over integer assignments.")
     end
 
     return nothing

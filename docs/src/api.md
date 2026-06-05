@@ -93,6 +93,15 @@ Core function that performs the QUIO reformulation.
   - `:l`: Lower bounds vector
   - `:u`: Upper bounds vector
 
+**Input validation:**
+- Every source variable must have finite lower and upper bounds and be marked
+  `MOI.Integer` or `MOI.ZeroOne`.
+- Affine constraint coefficients and right-hand sides must be integer-valued.
+- Equality and inequality rows must be feasible within the variable bounds.
+- Equality rows must also pass the integer divisibility check for integer
+  assignments.
+- Custom `ConstraintPenaltyHint` values must be positive.
+
 **Mathematical Formulation:**
 
 The reformulation converts:

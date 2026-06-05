@@ -91,6 +91,7 @@ end
 
         @test RMOI.get(target, RMOI.ObjectiveSense()) == RMOI.MIN_SENSE
         @test data[:n] == 1
+        # Δ = 6, ρ = 7; 2x + 1 + ρ(x - 1)^2 gives Q = 7, L = -12, c = 8.
         @test data[:Q] == reshape([7.0], 1, 1)
         @test data[:L] == [-12.0]
         @test data[:c] == 8.0
@@ -108,6 +109,7 @@ end
 
         @test RMOI.get(target, RMOI.ObjectiveSense()) == RMOI.MIN_SENSE
         @test data[:n] == 2
+        # Δ = 3, ρ = 4; x + ρ(x + s - 2)^2 gives Q, L, and c below.
         @test data[:Q] == [4.0 4.0; 4.0 4.0]
         @test data[:L] == [-15.0, -16.0]
         @test data[:c] == 16.0
@@ -124,6 +126,7 @@ end
         _, data = reformulate(source)
 
         @test data[:n] == 2
+        # Δ = 3, ρ = 4; x + ρ(-x + s + 1)^2 gives the canonicalized >= form.
         @test data[:Q] == [4.0 -4.0; -4.0 4.0]
         @test data[:L] == [-7.0, 8.0]
         @test data[:c] == 4.0
@@ -140,6 +143,7 @@ end
         target, data = reformulate(source)
 
         @test RMOI.get(target, RMOI.ObjectiveSense()) == RMOI.MAX_SENSE
+        # Δ = 2, ρ = 3; maximization subtracts the penalty: x - ρ(x - 1)^2.
         @test data[:Q] == reshape([-3.0], 1, 1)
         @test data[:L] == [7.0]
         @test data[:c] == -3.0
@@ -160,6 +164,7 @@ end
         _, data = reformulate(source)
 
         @test data[:n] == 2
+        # No penalties; MOI diagonal quadratic terms are halved, off-diagonal terms are not.
         @test data[:Q] == [3.0 5.0; 0.0 0.0]
         @test data[:L] == [2.0, -1.0]
         @test data[:c] == 4.0
@@ -210,7 +215,7 @@ end
         x = RMOI.add_variable(unbounded)
         RMOI.add_constraint(unbounded, x, RMOI.Integer())
         set_affine_objective!(unbounded, RMOI.MIN_SENSE, affine_term(1, x))
-        @test_throws AssertionError reformulate(unbounded)
+        @test_throws ErrorException reformulate(unbounded)
 
         continuous = RMOI.Utilities.Model{Float64}()
         x = RMOI.add_variable(continuous)
@@ -233,6 +238,16 @@ end
         set_affine_objective!(infeasible_equality, RMOI.MIN_SENSE, affine_term(1, x))
         RMOI.add_constraint(infeasible_equality, affine_function(affine_term(1, x)), RMOI.EqualTo(2.0))
         @test_throws ErrorException reformulate(infeasible_equality)
+
+        integer_infeasible_equality = RMOI.Utilities.Model{Float64}()
+        x = add_interval_integer_variable(integer_infeasible_equality, 0, 2)
+        set_affine_objective!(integer_infeasible_equality, RMOI.MIN_SENSE, affine_term(1, x))
+        RMOI.add_constraint(
+            integer_infeasible_equality,
+            affine_function(affine_term(2, x)),
+            RMOI.EqualTo(1.0),
+        )
+        @test_throws ErrorException reformulate(integer_infeasible_equality)
 
         infeasible_inequality = RMOI.Utilities.Model{Float64}()
         x = add_interval_integer_variable(infeasible_inequality, 0, 1)
