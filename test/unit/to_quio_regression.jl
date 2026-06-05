@@ -98,7 +98,7 @@ end
         source = RMOI.Utilities.Model{Float64}()
         x = add_interval_integer_variable(source, 0, 3)
         set_affine_objective!(source, RMOI.MIN_SENSE, affine_term(2, x); constant = 1)
-        RMOI.add_constraint(source, affine_function(affine_term(1, x)), RMOI.EqualTo(1.0))
+        ci = RMOI.add_constraint(source, affine_function(affine_term(1, x)), RMOI.EqualTo(1.0))
 
         target, data = reformulate(source)
 
@@ -111,6 +111,7 @@ end
         @test data[:rho] == [7.0]
         @test data[:rho_auto] == [7.0]
         @test data[:penalty_hints] == [nothing]
+        @test data[:penalty_constraints] == Any[ci]
         @test data[:l] == [0.0]
         @test data[:u] == [3.0]
     end
@@ -122,12 +123,32 @@ end
         ci = RMOI.add_constraint(source, affine_function(affine_term(1, x)), RMOI.EqualTo(1.0))
 
         hinted = HintedModel(source, Dict{Any,Float64}(ci => 2.0))
-        _, data = reformulate(hinted)
+        _, data = @test_logs (
+            :warn,
+            r"Constraint penalty hint is below the automatic sufficient penalty",
+        ) reformulate(hinted)
 
         @test data[:rho_auto] == [3.0]
         @test data[:rho] == [2.0]
         @test data[:penalty_hints] == [2.0]
+        @test data[:penalty_constraints] == Any[ci]
         @test data[:D] == reshape([2.0], 1, 1)
+    end
+
+    @testset "penalty metadata records source constraints in reformulation order" begin
+        source = RMOI.Utilities.Model{Float64}()
+        x = add_interval_integer_variable(source, 0, 3)
+        set_affine_objective!(source, RMOI.MIN_SENSE, affine_term(1, x))
+        ci_lt = RMOI.add_constraint(source, affine_function(affine_term(1, x)), RMOI.LessThan(2.0))
+        ci_eq = RMOI.add_constraint(source, affine_function(affine_term(1, x)), RMOI.EqualTo(1.0))
+        ci_gt = RMOI.add_constraint(source, affine_function(affine_term(1, x)), RMOI.GreaterThan(0.0))
+
+        _, data = reformulate(source)
+
+        @test data[:penalty_constraints] == Any[ci_eq, ci_lt, ci_gt]
+        @test length(data[:rho]) == length(data[:penalty_constraints])
+        @test length(data[:rho_auto]) == length(data[:penalty_constraints])
+        @test length(data[:penalty_hints]) == length(data[:penalty_constraints])
     end
 
     @testset "less-than inequality expands slack penalty" begin

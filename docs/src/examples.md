@@ -330,6 +330,7 @@ display(optimizer.data[:D])
 println("Selected penalties: ", optimizer.data[:rho])
 println("Automatic penalties: ", optimizer.data[:rho_auto])
 println("User hints: ", optimizer.data[:penalty_hints])
+println("Penalty constraints: ", optimizer.data[:penalty_constraints])
 ```
 
 ## Working with Different Solvers

@@ -96,6 +96,9 @@ Core function that performs the QUIO reformulation.
   - `:rho_auto`: Automatic sufficient positive penalty coefficients
   - `:penalty_hints`: User-provided penalty hints, or `nothing` for automatic
     penalties
+  - `:penalty_constraints`: Source constraint indices corresponding to
+    `:rho`, `:rho_auto`, and `:penalty_hints`, ordered as equalities,
+    less-than inequalities, then greater-than inequalities
   - `:l`: Lower bounds vector
   - `:u`: Upper bounds vector
 
@@ -284,7 +287,8 @@ struct ConstraintPenaltyHint <: MOI.AbstractConstraintAttribute end
 Allows users to specify custom penalty coefficients for constraints. Hints must
 be finite and positive. They override the automatic sufficient coefficient, so
 small hints are treated as heuristic values and may not preserve equivalence to
-the constrained source problem.
+the constrained source problem. ToQUIO emits a warning when a hint is below the
+automatic sufficient coefficient.
 
 **Usage:**
 

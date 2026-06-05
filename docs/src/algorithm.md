@@ -179,8 +179,9 @@ MOI.set(model, ConstraintPenaltyHint(), constraint, custom_penalty)
 Custom penalty hints must be finite and positive. They override the automatic
 sufficient coefficient and are treated as user-chosen heuristic values; if a
 hint is lower than `ρ_auto`, ToQUIO uses it but equivalence to the constrained
-problem is not guaranteed. The reformulation metadata stores the selected
-penalties, automatic penalties, and user hints for inspection.
+problem is not guaranteed. ToQUIO emits a warning when a hint is below
+`ρ_auto`. The reformulation metadata stores the selected penalties, automatic
+penalties, user hints, and corresponding source constraints for inspection.
 
 ## Reformulation Steps
 
