@@ -316,6 +316,10 @@ function to_quio(::Type{T}, varmap::Function, conmap::Function, source::MOI.Mode
     MOI.add_constraints(target, s, MOI.Integer())
 
     z = VI[x; s]
+    source_variables = MOI.get(source, MOI.ListOfVariableIndices())
+    source_to_target_variables = Dict{VI,VI}(
+        vi => x[varmap(vi)] for vi in source_variables
+    )
     
     # Construct Penalty terms
     # F = (x' Q x + ℓ' x + β) + ρ_eq' * (A_eq x - b_eq)' (A_eq x - b_eq) + ρ_ie' * (A_ie x + s - b_ie)' (A_ie x + s - b_ie)
@@ -365,6 +369,10 @@ function to_quio(::Type{T}, varmap::Function, conmap::Function, source::MOI.Mode
         :D => D, #
         :l => T[l; zeros(T, length(s))], # lower
         :u => T[u; sb],                  # upper
+        :source_variables => source_variables,
+        :target_variables => x,
+        :slack_variables => s,
+        :source_to_target_variables => source_to_target_variables,
     )
 
     return (target, data)
