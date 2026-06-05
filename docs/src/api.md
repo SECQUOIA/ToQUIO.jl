@@ -133,6 +133,7 @@ const MOI = MathOptInterface
 model = MOI.Utilities.Model{Float64}()
 x = MOI.add_variable(model)
 MOI.add_constraint(model, x, MOI.Interval(0.0, 10.0))
+MOI.add_constraint(model, x, MOI.Integer())
 MOI.set(model, MOI.ObjectiveFunction{MOI.ScalarAffineFunction{Float64}}(),
         MOI.ScalarAffineFunction([MOI.ScalarAffineTerm(1.0, x)], 0.0))
 MOI.set(model, MOI.ObjectiveSense(), MOI.MIN_SENSE)
