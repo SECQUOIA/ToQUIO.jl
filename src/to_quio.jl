@@ -49,9 +49,31 @@ function get_variable_bounds(::Type{T}, varmap::Function, source::MOI.ModelLike)
         u[i] = one(T)
     end
 
-    @assert all(!isnothing, l) && all(!isnothing, u) "The model contains unbounded variables."
+    all(!isnothing, l) && all(!isnothing, u) ||
+        error("The model contains unbounded variables.")
 
     return (collect(T, l), collect(T, u))
+end
+
+function mark_integer_variables!(is_integer::AbstractVector{Bool}, ::Type{S}, varmap::Function, source) where {S}
+    for ci in MOI.get(source, MOI.ListOfConstraintIndices{VI,S}())
+        vi = MOI.get(source, MOI.ConstraintFunction(), ci)
+        is_integer[varmap(vi)] = true
+    end
+
+    return is_integer
+end
+
+function validate_integer_variables(varmap::Function, source::MOI.ModelLike)
+    n = MOI.get(source, MOI.NumberOfVariables())
+    is_integer = falses(n)
+
+    mark_integer_variables!(is_integer, MOI.Integer, varmap, source)
+    mark_integer_variables!(is_integer, MOI.ZeroOne, varmap, source)
+
+    all(is_integer) || error("All source variables must be constrained as Integer or ZeroOne.")
+
+    return nothing
 end
 
 function get_objective_bounds(varmap::Function, f::SAF{T}, l::AbstractVector{T}, u::AbstractVector{T}) where {T}
@@ -180,6 +202,45 @@ function get_sensibility(A::AbstractMatrix{T}, b::AbstractVector{T}) where {T}
     end
 end
 
+function validate_eq_feasibility(::Type{T}, A, b, l, u) where {T}
+    δl, δu = get_constraint_bounds(T, A, l, u)
+
+    for i in eachindex(b)
+        δl[i] <= b[i] <= δu[i] ||
+            error("Equality constraint $i is infeasible within variable bounds.")
+    end
+
+    validate_eq_integer_feasibility(A, b)
+
+    return nothing
+end
+
+function validate_eq_integer_feasibility(A, b)
+    for i in eachindex(b)
+        row_gcd = BigInt(0)
+        for j in axes(A, 2)
+            row_gcd = gcd(row_gcd, abs(round(BigInt, A[i, j])))
+        end
+
+        row_gcd == 0 && continue
+        rem(round(BigInt, b[i]), row_gcd) == 0 ||
+            error("Equality constraint $i is infeasible over integer assignments.")
+    end
+
+    return nothing
+end
+
+function validate_ie_feasibility(::Type{T}, A, b, l, u) where {T}
+    δl, δu = get_constraint_bounds(T, A, l, u)
+
+    for i in eachindex(b)
+        b[i] >= δl[i] ||
+            error("Inequality constraint $i is infeasible within variable bounds.")
+    end
+
+    return (δl, δu)
+end
+
 @doc raw"""
     varmap : VI -> Int
 """
@@ -194,6 +255,7 @@ function to_quio(::Type{T}, varmap::Function, conmap::Function, source::MOI.Mode
     f = MOI.get(source, MOI.ObjectiveFunction{F}())
 
     l, u = get_variable_bounds(T, varmap, source)
+    validate_integer_variables(varmap, source)
 
     n = MOI.get(source, MOI.NumberOfVariables())
 
@@ -214,6 +276,9 @@ function to_quio(::Type{T}, varmap::Function, conmap::Function, source::MOI.Mode
 
     ε_eq = get_sensibility(A_eq, b_eq)
     ε_ie = get_sensibility(A_ie, b_ie)
+
+    validate_eq_feasibility(T, A_eq, b_eq, l, u)
+    cl, _ = validate_ie_feasibility(T, A_ie, b_ie, l, u)
 
     # Compute Penalties!
     # TODO: Store penalties for analysis
@@ -242,7 +307,6 @@ function to_quio(::Type{T}, varmap::Function, conmap::Function, source::MOI.Mode
         (diagm(ρ), diagm(ρ_eq), diagm(ρ_ie))
     end
 
-    cl, cu = get_constraint_bounds(T, A_ie, l, u)
     sb     = b_ie - cl # Calculate slack bounds
 
     x, _ = MOI.add_constrained_variables(target, MOI.Interval{T}.(l, u))
@@ -343,8 +407,28 @@ function get_penalty_hints(::Type{T}, ::Type{F}, ::Type{S}, conmap, source) wher
     for ci in MOI.get(source, MOI.ListOfConstraintIndices{F,S}())
         i = conmap(ci)
 
-        θ[i] = MOI.get(source, ConstraintPenaltyHint(), ci)
+        θ[i] = get_constraint_penalty_hint(T, source, ci)
     end
+
+    return θ
+end
+
+function supports_constraint_penalty_hint(source, ci)
+    return try
+        MOI.supports(source, ConstraintPenaltyHint(), typeof(ci))
+    catch
+        false
+    end
+end
+
+function get_constraint_penalty_hint(::Type{T}, source, ci) where {T}
+    supports_constraint_penalty_hint(source, ci) || return nothing
+
+    θ = MOI.get(source, ConstraintPenaltyHint(), ci)
+    isnothing(θ) && return nothing
+
+    θ = convert(T, θ)
+    θ > zero(T) || error("Constraint penalty hints must be positive.")
 
     return θ
 end

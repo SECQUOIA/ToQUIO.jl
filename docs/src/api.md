@@ -93,6 +93,15 @@ Core function that performs the QUIO reformulation.
   - `:l`: Lower bounds vector
   - `:u`: Upper bounds vector
 
+**Input validation:**
+- Every source variable must have finite lower and upper bounds and be marked
+  `MOI.Integer` or `MOI.ZeroOne`.
+- Affine constraint coefficients and right-hand sides must be integer-valued.
+- Equality and inequality rows must be feasible within the variable bounds.
+- Equality rows must also pass the integer divisibility check for integer
+  assignments.
+- Custom `ConstraintPenaltyHint` values must be positive.
+
 **Mathematical Formulation:**
 
 The reformulation converts:
@@ -124,6 +133,7 @@ const MOI = MathOptInterface
 model = MOI.Utilities.Model{Float64}()
 x = MOI.add_variable(model)
 MOI.add_constraint(model, x, MOI.Interval(0.0, 10.0))
+MOI.add_constraint(model, x, MOI.Integer())
 MOI.set(model, MOI.ObjectiveFunction{MOI.ScalarAffineFunction{Float64}}(),
         MOI.ScalarAffineFunction([MOI.ScalarAffineTerm(1.0, x)], 0.0))
 MOI.set(model, MOI.ObjectiveSense(), MOI.MIN_SENSE)
