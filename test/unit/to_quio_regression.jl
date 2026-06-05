@@ -234,6 +234,7 @@ end
         RMOI.optimize!(optimizer, source)
 
         @test RMOI.get(optimizer, RMOI.TerminationStatus()) == RMOI.OPTIMAL
+        @test RMOI.is_set_by_optimize(ToQUIO.PenalizedObjectiveValue())
         @test optimizer.data[:source_to_target_variables][x] == RMOI.VariableIndex(1)
         @test optimizer.data[:target_variables] == [RMOI.VariableIndex(1)]
         @test optimizer.data[:slack_variables] == [RMOI.VariableIndex(2)]
@@ -245,6 +246,28 @@ end
         )
         @test RMOI.get(optimizer, RMOI.ObjectiveValue()) == 3.0
         @test RMOI.get(optimizer, ToQUIO.PenalizedObjectiveValue()) == 7.0
+    end
+
+    @testset "backend objective value evaluates quadratic source objective" begin
+        source = RMOI.Utilities.Model{Float64}()
+        x = add_interval_integer_variable(source, 0, 3)
+        y = add_interval_integer_variable(source, 0, 3)
+        set_quadratic_objective!(
+            source,
+            RMOI.MIN_SENSE,
+            [quadratic_term(6, x, x), quadratic_term(5, x, y)],
+            [affine_term(2, x), affine_term(-1, y)];
+            constant = 4,
+        )
+
+        optimizer = ToQUIO.Optimizer{Float64}(() -> mock_backend_with_primal([2, 3]))
+
+        RMOI.optimize!(optimizer, source)
+
+        @test RMOI.get(optimizer, RMOI.VariablePrimal(), x) == 2.0
+        @test RMOI.get(optimizer, RMOI.VariablePrimal(), y) == 3.0
+        @test RMOI.get(optimizer, RMOI.ObjectiveValue()) == 47.0
+        @test RMOI.get(optimizer, ToQUIO.PenalizedObjectiveValue()) == 47.0
     end
 
     @testset "invalid source models fail before reformulation" begin

@@ -18,6 +18,8 @@ struct PenalizedObjectiveValue <: MOI.AbstractModelAttribute
     PenalizedObjectiveValue(result_index::Int = 1) = new(result_index)
 end
 
+MOI.is_set_by_optimize(::PenalizedObjectiveValue) = true
+
 function _target_variable(solver::Optimizer, vi::VI)
     source_to_target = get(solver.data, :source_to_target_variables, nothing)
     isnothing(source_to_target) &&
