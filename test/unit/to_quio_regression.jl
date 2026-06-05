@@ -80,6 +80,19 @@ function penalized_value(data, z)
     return quadratic + linear + data[:c]
 end
 
+function mock_backend_with_primal(primal)
+    mock = RMOI.Utilities.MockOptimizer(RMOI.Utilities.Model{Float64}())
+    RMOI.Utilities.set_mock_optimize!(
+        mock,
+        mock -> RMOI.Utilities.mock_optimize!(
+            mock,
+            RMOI.OPTIMAL,
+            (RMOI.FEASIBLE_POINT, Float64[primal...]),
+        ),
+    )
+    return mock
+end
+
 @testset "to_quio solver-independent regression tests" begin
     @testset "linear objective with equality expands penalty" begin
         source = RMOI.Utilities.Model{Float64}()
@@ -208,6 +221,30 @@ end
 
         @test best_x == [1]
         @test best_value == -1.0
+    end
+
+    @testset "backend results use original-model semantics" begin
+        source = RMOI.Utilities.Model{Float64}()
+        x = add_interval_integer_variable(source, 0, 3)
+        set_affine_objective!(source, RMOI.MIN_SENSE, affine_term(1, x))
+        RMOI.add_constraint(source, affine_function(affine_term(1, x)), RMOI.LessThan(2.0))
+
+        optimizer = ToQUIO.Optimizer{Float64}(() -> mock_backend_with_primal([3, 0]))
+
+        RMOI.optimize!(optimizer, source)
+
+        @test RMOI.get(optimizer, RMOI.TerminationStatus()) == RMOI.OPTIMAL
+        @test optimizer.data[:source_to_target_variables][x] == RMOI.VariableIndex(1)
+        @test optimizer.data[:target_variables] == [RMOI.VariableIndex(1)]
+        @test optimizer.data[:slack_variables] == [RMOI.VariableIndex(2)]
+        @test RMOI.get(optimizer, RMOI.VariablePrimal(), x) == 3.0
+        @test_throws RMOI.InvalidIndex RMOI.get(
+            optimizer,
+            RMOI.VariablePrimal(),
+            RMOI.VariableIndex(2),
+        )
+        @test RMOI.get(optimizer, RMOI.ObjectiveValue()) == 3.0
+        @test RMOI.get(optimizer, ToQUIO.PenalizedObjectiveValue()) == 7.0
     end
 
     @testset "invalid source models fail before reformulation" begin

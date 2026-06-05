@@ -245,7 +245,17 @@ Returns the termination status from the inner solver, or `OPTIMIZE_NOT_CALLED` i
 MOI.get(optimizer::Optimizer, ::MOI.ObjectiveValue)
 ```
 
-Returns the objective value from the inner solver.
+Returns the original source-model objective evaluated at the mapped source
+variable primal values returned by the inner solver.
+
+#### `PenalizedObjectiveValue`
+
+```julia
+MOI.get(optimizer::Optimizer, ToQUIO.PenalizedObjectiveValue())
+```
+
+Returns the objective value reported by the inner solver for the reformulated
+QUIO target model. This includes penalty and slack-variable terms.
 
 #### `MOI.VariablePrimal`
 
@@ -253,7 +263,9 @@ Returns the objective value from the inner solver.
 MOI.get(optimizer::Optimizer, ::MOI.VariablePrimal, vi::VariableIndex)
 ```
 
-Returns the primal value for a variable.
+Returns the primal value for an original source-model variable by mapping it to
+the corresponding target-model variable before querying the inner solver. Slack
+variables introduced by reformulation are not exposed as source variables.
 
 ### Custom Attributes
 

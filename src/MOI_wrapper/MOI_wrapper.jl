@@ -25,6 +25,7 @@ function MOI.empty!(solver::Optimizer{T}) where {T}
     isnothing(solver.inner) || MOI.empty!(solver.inner)
     isnothing(solver.source_model) || MOI.empty!(solver.source_model)
     isnothing(solver.target_model) || MOI.empty!(solver.target_model)
+    empty!(solver.data)
 
     return nothing
 end
@@ -33,18 +34,38 @@ include("attributes/model.jl")
 include("attributes/results.jl")
 include("attributes/reformulation.jl")
 
+function _source_variable_positions(source::MOI.ModelLike)
+    return Dict(vi => i for (i, vi) in enumerate(MOI.get(source, MOI.ListOfVariableIndices())))
+end
+
+function _source_constraint_positions(::Type{T}, source::MOI.ModelLike) where {T}
+    constraints = Dict{Any,Int}()
+    for (F, S) in ((SAF{T}, EQ{T}), (SAF{T}, LT{T}), (SAF{T}, GT{T}))
+        for (i, ci) in enumerate(MOI.get(source, MOI.ListOfConstraintIndices{F,S}()))
+            constraints[ci] = i
+        end
+    end
+    return constraints
+end
+
 function MOI.optimize!(solver::Optimizer{T}, model::MOI.ModelLike) where {T}
     solver.source_model = model
+    variable_positions = _source_variable_positions(solver.source_model)
+    constraint_positions = _source_constraint_positions(T, solver.source_model)
 
     solver.target_model, solver.data = to_quio(
         T,
-        vi -> vi.value, # varmap : VI -> Int
-        ci -> ci.value, # conmap : CI{F,S} -> Int
+        vi -> variable_positions[vi], # varmap : VI -> Int
+        ci -> constraint_positions[ci], # conmap : CI{F,S} -> Int
         solver.source_model,
     )
 
     if !isnothing(solver.inner)
-        MOI.optimize!(solver.inner, solver.target_model)
+        index_map, _ = MOI.optimize!(solver.inner, solver.target_model)
+        target_variables = MOI.get(solver.target_model, MOI.ListOfVariableIndices())
+        solver.data[:target_to_backend_variables] = Dict{VI,VI}(
+            vi => index_map[vi] for vi in target_variables
+        )
     end
 
     return (MOIU.identity_index_map(solver.source_model), false)
