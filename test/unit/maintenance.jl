@@ -174,9 +174,9 @@ end
     readme = read(joinpath(pkgdir(ToQUIO), "README.md"), String)
     contributing = read(joinpath(pkgdir(ToQUIO), "CONTRIBUTING.md"), String)
 
-    @test occursin("targeting registration in the Julia General registry", readme)
-    @test occursin("After registration, released versions will be installable", readme)
+    @test occursin("registered in the Julia General registry", readme)
     @test occursin("""Pkg.add("ToQUIO")""", readme)
+    @test occursin("""Pkg.add(url="https://github.com/SECQUOIA/ToQUIO.jl")""", readme)
     @test occursin("version = \"$(INITIAL_REGISTRATION_VERSION)\"", readme)
 
     @test occursin("## Release Process", contributing)
