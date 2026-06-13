@@ -221,9 +221,9 @@ Aim for high test coverage, especially for:
 
 ## Release Process
 
-ToQUIO.jl is intended to be registered in the Julia General registry. Until the
-first registration is accepted and tagged, users should install the package by
-URL as shown in the README.
+ToQUIO.jl is registered in the Julia General registry; users install the
+released package by name as shown in the README, and contributors can install
+the development version by URL.
 
 Registered releases use JuliaRegistrator and TagBot:
 
