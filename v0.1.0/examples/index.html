@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Examples · ToQUIO.jl</title><meta name="title" content="Examples · ToQUIO.jl"/><meta property="og:title" content="Examples · ToQUIO.jl"/><meta property="twitter:title" content="Examples · ToQUIO.jl"/><meta name="description" content="Documentation for ToQUIO.jl."/><meta property="og:description" content="Documentation for ToQUIO.jl."/><meta property="twitter:description" content="Documentation for ToQUIO.jl."/><script data-outdated-warner src="../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.050/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.8/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL=".."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../assets/documenter.js"></script><script src="../search_index.js"></script><script src="../siteinfo.js"></script><script src="../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/catppuccin-mocha.css" data-theme-name="catppuccin-mocha"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/catppuccin-macchiato.css" data-theme-name="catppuccin-macchiato"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/catppuccin-frappe.css" data-theme-name="catppuccin-frappe"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/catppuccin-latte.css" data-theme-name="catppuccin-latte"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit"><a href="../">ToQUIO.jl</a></span></div><button class="docs-search-query input is-rounded is-small is-clickable my-2 mx-auto py-1 px-2" id="documenter-search-query">Search docs (Ctrl + /)</button><ul class="docs-menu"><li><a class="tocitem" href="../">Home</a></li><li><a class="tocitem" href="../QUICKSTART/">Quick Start</a></li><li class="is-active"><a class="tocitem" href>Examples</a><ul class="internal"><li><a class="tocitem" href="#Table-of-Contents"><span>Table of Contents</span></a></li><li><a class="tocitem" href="#Basic-Usage"><span>Basic Usage</span></a></li><li><a class="tocitem" href="#Linear-Programming"><span>Linear Programming</span></a></li><li><a class="tocitem" href="#Quadratic-Programming"><span>Quadratic Programming</span></a></li><li><a class="tocitem" href="#Constrained-Problems"><span>Constrained Problems</span></a></li><li><a class="tocitem" href="#Custom-Penalties"><span>Custom Penalties</span></a></li><li><a class="tocitem" href="#Working-with-Different-Solvers"><span>Working with Different Solvers</span></a></li><li><a class="tocitem" href="#Inspecting-Reformulation"><span>Inspecting Reformulation</span></a></li><li><a class="tocitem" href="#Advanced-Examples"><span>Advanced Examples</span></a></li></ul></li><li><a class="tocitem" href="../api/">API Reference</a></li><li><a class="tocitem" href="../algorithm/">Algorithm</a></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><a class="docs-sidebar-button docs-navbar-link fa-solid fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a><nav class="breadcrumb"><ul class="is-hidden-mobile"><li class="is-active"><a href>Examples</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Examples</a></li></ul></nav><div class="docs-right"><a class="docs-navbar-link" href="https://github.com/SECQUOIA/ToQUIO.jl" title="View the repository on GitHub"><span class="docs-icon fa-brands"></span><span class="docs-label is-hidden-touch">GitHub</span></a><a class="docs-navbar-link" href="https://github.com/SECQUOIA/ToQUIO.jl/blob/main/docs/src/examples.md" title="Edit source on GitHub"><span class="docs-icon fa-solid"></span></a><a class="docs-settings-button docs-navbar-link fa-solid fa-gear" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-article-toggle-button fa-solid fa-chevron-up" id="documenter-article-toggle-button" href="javascript:;" title="Collapse all docstrings"></a></div></header><article class="content" id="documenter-page"><h1 id="Examples"><a class="docs-heading-anchor" href="#Examples">Examples</a><a id="Examples-1"></a><a class="docs-heading-anchor-permalink" href="#Examples" title="Permalink"></a></h1><p>Detailed examples demonstrating various use cases of ToQUIO.jl.</p><p>Unless a backend solver is explicitly shown, these examples use reformulation-only mode. In this mode, <code>optimize!</code> builds <code>optimizer.target_model</code> and <code>optimizer.data</code>; it does not produce primal values or objective values.</p><h2 id="Table-of-Contents"><a class="docs-heading-anchor" href="#Table-of-Contents">Table of Contents</a><a id="Table-of-Contents-1"></a><a class="docs-heading-anchor-permalink" href="#Table-of-Contents" title="Permalink"></a></h2><ul><li><a href="#basic-usage">Basic Usage</a></li><li><a href="#linear-programming">Linear Programming</a></li><li><a href="#quadratic-programming">Quadratic Programming</a></li><li><a href="#constrained-problems">Constrained Problems</a></li><li><a href="#custom-penalties">Custom Penalties</a></li><li><a href="#working-with-different-solvers">Working with Different Solvers</a></li><li><a href="#inspecting-reformulation">Inspecting Reformulation</a></li></ul><h2 id="Basic-Usage"><a class="docs-heading-anchor" href="#Basic-Usage">Basic Usage</a><a id="Basic-Usage-1"></a><a class="docs-heading-anchor-permalink" href="#Basic-Usage" title="Permalink"></a></h2><h3 id="Simple-Integer-Linear-Program"><a class="docs-heading-anchor" href="#Simple-Integer-Linear-Program">Simple Integer Linear Program</a><a id="Simple-Integer-Linear-Program-1"></a><a class="docs-heading-anchor-permalink" href="#Simple-Integer-Linear-Program" title="Permalink"></a></h3><pre><code class="language-julia hljs">using JuMP
+using ToQUIO
+
+# Create a model
+optimizer = ToQUIO.Optimizer()
+model = Model(() -&gt; optimizer)
+
+# Add variables
+@variable(model, 0 &lt;= x &lt;= 10, Int)
+@variable(model, 0 &lt;= y &lt;= 10, Int)
+
+# Set objective
+@objective(model, Min, x + 2y)
+
+# Add constraints
+@constraint(model, x + y &gt;= 5)
+
+# Reformulate
+optimize!(model)
+
+# Inspect the reformulated QUIO model
+println(&quot;Reformulated variables: &quot;, optimizer.data[:n])
+println(&quot;Quadratic matrix size: &quot;, size(optimizer.data[:Q]))</code></pre><h3 id="Binary-Variables"><a class="docs-heading-anchor" href="#Binary-Variables">Binary Variables</a><a id="Binary-Variables-1"></a><a class="docs-heading-anchor-permalink" href="#Binary-Variables" title="Permalink"></a></h3><pre><code class="language-julia hljs">using JuMP, ToQUIO
+
+optimizer = ToQUIO.Optimizer()
+model = Model(() -&gt; optimizer)
+
+# Binary variables (0 or 1)
+@variable(model, x[1:5], Bin)
+
+# Objective: maximize sum
+@objective(model, Max, sum(x))
+
+# Constraint: can select at most 3
+@constraint(model, sum(x) &lt;= 3)
+
+optimize!(model)
+
+println(&quot;Reformulated variables: &quot;, optimizer.data[:n])
+println(&quot;Variable upper bounds: &quot;, optimizer.data[:u])</code></pre><h2 id="Linear-Programming"><a class="docs-heading-anchor" href="#Linear-Programming">Linear Programming</a><a id="Linear-Programming-1"></a><a class="docs-heading-anchor-permalink" href="#Linear-Programming" title="Permalink"></a></h2><h3 id="Knapsack-Problem"><a class="docs-heading-anchor" href="#Knapsack-Problem">Knapsack Problem</a><a id="Knapsack-Problem-1"></a><a class="docs-heading-anchor-permalink" href="#Knapsack-Problem" title="Permalink"></a></h3><pre><code class="language-julia hljs">using JuMP, ToQUIO
+
+# Item values and weights
+values = [10, 13, 18, 31, 7, 15]
+weights = [11, 15, 20, 35, 10, 33]
+capacity = 47
+
+optimizer = ToQUIO.Optimizer()
+model = Model(() -&gt; optimizer)
+
+n = length(values)
+@variable(model, x[1:n], Bin)
+
+# Maximize value
+@objective(model, Max, sum(values[i] * x[i] for i in 1:n))
+
+# Weight capacity constraint
+@constraint(model, sum(weights[i] * x[i] for i in 1:n) &lt;= capacity)
+
+optimize!(model)
+
+println(&quot;Reformulated variables: &quot;, optimizer.data[:n])
+println(&quot;Quadratic matrix size: &quot;, size(optimizer.data[:Q]))</code></pre><h3 id="Multi-dimensional-Knapsack"><a class="docs-heading-anchor" href="#Multi-dimensional-Knapsack">Multi-dimensional Knapsack</a><a id="Multi-dimensional-Knapsack-1"></a><a class="docs-heading-anchor-permalink" href="#Multi-dimensional-Knapsack" title="Permalink"></a></h3><pre><code class="language-julia hljs">using JuMP, ToQUIO
+
+# Multiple resource constraints
+values = [100, 150, 200, 120]
+weights = [
+    [10, 8, 12, 15],   # Weight constraint 1
+    [5, 12, 8, 10],    # Weight constraint 2
+    [8, 9, 11, 7]      # Weight constraint 3
+]
+capacities = [50, 40, 45]
+
+optimizer = ToQUIO.Optimizer()
+model = Model(() -&gt; optimizer)
+
+n = length(values)
+@variable(model, x[1:n], Bin)
+
+@objective(model, Max, sum(values[i] * x[i] for i in 1:n))
+
+# Multiple constraints
+for (w, c) in zip(weights, capacities)
+    @constraint(model, sum(w[i] * x[i] for i in 1:n) &lt;= c)
+end
+
+optimize!(model)
+
+println(&quot;Reformulated variables: &quot;, optimizer.data[:n])
+println(&quot;Quadratic matrix size: &quot;, size(optimizer.data[:Q]))</code></pre><h2 id="Quadratic-Programming"><a class="docs-heading-anchor" href="#Quadratic-Programming">Quadratic Programming</a><a id="Quadratic-Programming-1"></a><a class="docs-heading-anchor-permalink" href="#Quadratic-Programming" title="Permalink"></a></h2><h3 id="Portfolio-Optimization-(Simple)"><a class="docs-heading-anchor" href="#Portfolio-Optimization-(Simple)">Portfolio Optimization (Simple)</a><a id="Portfolio-Optimization-(Simple)-1"></a><a class="docs-heading-anchor-permalink" href="#Portfolio-Optimization-(Simple)" title="Permalink"></a></h3><pre><code class="language-julia hljs">using JuMP, ToQUIO
+
+# Expected returns
+μ = [0.1, 0.15, 0.12, 0.08]
+
+# Risk (variance-covariance matrix)
+Σ = [0.04 0.01 0.02 0.00;
+     0.01 0.06 0.01 0.01;
+     0.02 0.01 0.05 0.00;
+     0.00 0.01 0.00 0.03]
+
+# Risk aversion parameter
+λ = 2.0
+
+optimizer = ToQUIO.Optimizer()
+model = Model(() -&gt; optimizer)
+
+# Investment amounts (integer multiples of a base unit)
+@variable(model, 0 &lt;= w[1:4] &lt;= 10, Int)
+
+# Objective: maximize return - risk penalty
+@objective(model, Max, 
+    sum(μ[i] * w[i] for i in 1:4) - 
+    λ * sum(w[i] * Σ[i,j] * w[j] for i in 1:4 for j in 1:4))
+
+# Budget constraint (invest exactly 10 units)
+@constraint(model, sum(w) == 10)
+
+optimize!(model)
+
+println(&quot;Reformulated variables: &quot;, optimizer.data[:n])
+println(&quot;Linear vector length: &quot;, length(optimizer.data[:L]))</code></pre><h3 id="Quadratic-Assignment"><a class="docs-heading-anchor" href="#Quadratic-Assignment">Quadratic Assignment</a><a id="Quadratic-Assignment-1"></a><a class="docs-heading-anchor-permalink" href="#Quadratic-Assignment" title="Permalink"></a></h3><pre><code class="language-julia hljs">using JuMP, ToQUIO
+
+# Distance matrix between locations
+D = [0 1 2 3;
+     1 0 1 2;
+     2 1 0 1;
+     3 2 1 0]
+
+# Flow matrix between facilities
+F = [0 5 2 1;
+     5 0 3 2;
+     2 3 0 4;
+     1 2 4 0]
+
+n = 4
+optimizer = ToQUIO.Optimizer()
+model = Model(() -&gt; optimizer)
+
+# x[i,j] = 1 if facility i is at location j
+@variable(model, x[1:n, 1:n], Bin)
+
+# Minimize total flow × distance
+@objective(model, Min,
+    sum(F[i,k] * D[j,l] * x[i,j] * x[k,l] 
+        for i in 1:n for j in 1:n for k in 1:n for l in 1:n))
+
+# Each facility at exactly one location
+for i in 1:n
+    @constraint(model, sum(x[i,j] for j in 1:n) == 1)
+end
+
+# Each location has exactly one facility
+for j in 1:n
+    @constraint(model, sum(x[i,j] for i in 1:n) == 1)
+end
+
+optimize!(model)
+
+println(&quot;Reformulated variables: &quot;, optimizer.data[:n])
+println(&quot;Number of bounds: &quot;, length(optimizer.data[:l]))</code></pre><h2 id="Constrained-Problems"><a class="docs-heading-anchor" href="#Constrained-Problems">Constrained Problems</a><a id="Constrained-Problems-1"></a><a class="docs-heading-anchor-permalink" href="#Constrained-Problems" title="Permalink"></a></h2><h3 id="Production-Planning"><a class="docs-heading-anchor" href="#Production-Planning">Production Planning</a><a id="Production-Planning-1"></a><a class="docs-heading-anchor-permalink" href="#Production-Planning" title="Permalink"></a></h3><pre><code class="language-julia hljs">using JuMP, ToQUIO
+
+# Production costs and profits
+costs = [10, 12, 15]
+profits = [25, 30, 35]
+
+# Resource requirements (3 products × 2 resources)
+A = [2 3 4;
+     1 2 3]
+
+# Resource availability
+b = [100, 80]
+
+optimizer = ToQUIO.Optimizer()
+model = Model(() -&gt; optimizer)
+
+# Production quantities
+@variable(model, 0 &lt;= x[1:3] &lt;= 50, Int)
+
+# Maximize profit
+@objective(model, Max, sum((profits[i] - costs[i]) * x[i] for i in 1:3))
+
+# Resource constraints
+for r in 1:2
+    @constraint(model, sum(A[r,p] * x[p] for p in 1:3) &lt;= b[r])
+end
+
+optimize!(model)
+
+println(&quot;Reformulated variables: &quot;, optimizer.data[:n])
+println(&quot;Quadratic matrix size: &quot;, size(optimizer.data[:Q]))</code></pre><h3 id="Set-Cover-Problem"><a class="docs-heading-anchor" href="#Set-Cover-Problem">Set Cover Problem</a><a id="Set-Cover-Problem-1"></a><a class="docs-heading-anchor-permalink" href="#Set-Cover-Problem" title="Permalink"></a></h3><pre><code class="language-julia hljs">using JuMP, ToQUIO
+
+# Elements to cover
+elements = 1:10
+
+# Sets available (each set covers certain elements)
+sets = [
+    [1, 2, 3, 4],
+    [3, 4, 5, 6],
+    [5, 6, 7, 8],
+    [7, 8, 9, 10],
+    [1, 5, 9],
+    [2, 6, 10]
+]
+
+# Costs of sets
+costs = [4, 3, 3, 4, 2, 3]
+
+optimizer = ToQUIO.Optimizer()
+model = Model(() -&gt; optimizer)
+
+n_sets = length(sets)
+@variable(model, x[1:n_sets], Bin)
+
+# Minimize total cost
+@objective(model, Min, sum(costs[i] * x[i] for i in 1:n_sets))
+
+# Cover each element
+for e in elements
+    # Find which sets contain element e
+    containing_sets = [i for i in 1:n_sets if e in sets[i]]
+    @constraint(model, sum(x[i] for i in containing_sets) &gt;= 1)
+end
+
+optimize!(model)
+
+println(&quot;Reformulated variables: &quot;, optimizer.data[:n])
+println(&quot;Number of penalties: &quot;, size(optimizer.data[:D], 1))</code></pre><h2 id="Custom-Penalties"><a class="docs-heading-anchor" href="#Custom-Penalties">Custom Penalties</a><a id="Custom-Penalties-1"></a><a class="docs-heading-anchor-permalink" href="#Custom-Penalties" title="Permalink"></a></h2><h3 id="Specifying-Penalty-Coefficients"><a class="docs-heading-anchor" href="#Specifying-Penalty-Coefficients">Specifying Penalty Coefficients</a><a id="Specifying-Penalty-Coefficients-1"></a><a class="docs-heading-anchor-permalink" href="#Specifying-Penalty-Coefficients" title="Permalink"></a></h3><pre><code class="language-julia hljs">using JuMP, ToQUIO
+using MathOptInterface
+const MOI = MathOptInterface
+
+optimizer = ToQUIO.Optimizer()
+model = Model(() -&gt; optimizer)
+
+@variable(model, 0 &lt;= x &lt;= 10, Int)
+@variable(model, 0 &lt;= y &lt;= 10, Int)
+
+@objective(model, Min, x + y)
+
+# Add constraints with custom penalties
+@constraint(model, c1, x + y &gt;= 5)
+@constraint(model, c2, x - y == 0)
+
+# Set finite, positive custom penalties.
+# These override automatic sufficient penalties and can be heuristic.
+MOI.set(backend(model), ToQUIO.ConstraintPenaltyHint(), index(c2), 1000.0)
+MOI.set(backend(model), ToQUIO.ConstraintPenaltyHint(), index(c1), 10.0)
+
+optimize!(model)
+
+println(&quot;Penalty matrix:&quot;)
+display(optimizer.data[:D])
+println(&quot;Selected penalties: &quot;, optimizer.data[:rho])
+println(&quot;Automatic penalties: &quot;, optimizer.data[:rho_auto])
+println(&quot;User hints: &quot;, optimizer.data[:penalty_hints])
+println(&quot;Penalty constraints: &quot;, optimizer.data[:penalty_constraints])</code></pre><h2 id="Working-with-Different-Solvers"><a class="docs-heading-anchor" href="#Working-with-Different-Solvers">Working with Different Solvers</a><a id="Working-with-Different-Solvers-1"></a><a class="docs-heading-anchor-permalink" href="#Working-with-Different-Solvers" title="Permalink"></a></h2><h3 id="Reformulation-Only-(No-Solving)"><a class="docs-heading-anchor" href="#Reformulation-Only-(No-Solving)">Reformulation Only (No Solving)</a><a id="Reformulation-Only-(No-Solving)-1"></a><a class="docs-heading-anchor-permalink" href="#Reformulation-Only-(No-Solving)" title="Permalink"></a></h3><pre><code class="language-julia hljs">using JuMP, ToQUIO
+
+# Create optimizer without backend solver
+optimizer = ToQUIO.Optimizer()
+model = Model(() -&gt; optimizer)
+
+@variable(model, 0 &lt;= x[1:3] &lt;= 5, Int)
+@objective(model, Min, sum(x[i]^2 for i in 1:3))
+@constraint(model, sum(x) == 6)
+
+# This will reformulate but not solve
+optimize!(model)
+
+println(&quot;Reformulated model available&quot;)
+println(&quot;Number of variables: &quot;, optimizer.data[:n])</code></pre><h3 id="With-a-Backend-Solver"><a class="docs-heading-anchor" href="#With-a-Backend-Solver">With a Backend Solver</a><a id="With-a-Backend-Solver-1"></a><a class="docs-heading-anchor-permalink" href="#With-a-Backend-Solver" title="Permalink"></a></h3><pre><code class="language-julia hljs">using JuMP, ToQUIO
+# using SomeQUIOSolver  # Your QUIO solver
+
+# Wrap the QUIO solver
+model = Model(() -&gt; ToQUIO.Optimizer(() -&gt; SomeQUIOSolver.Optimizer()))
+
+@variable(model, 0 &lt;= x[1:5] &lt;= 10, Int)
+@objective(model, Min, sum((x[i] - 3)^2 for i in 1:5))
+@constraint(model, sum(x) &gt;= 15)
+
+optimize!(model)
+
+# Results come from the backend solver
+println(&quot;Status: &quot;, termination_status(model))
+println(&quot;Solution: &quot;, value.(x))</code></pre><h2 id="Inspecting-Reformulation"><a class="docs-heading-anchor" href="#Inspecting-Reformulation">Inspecting Reformulation</a><a id="Inspecting-Reformulation-1"></a><a class="docs-heading-anchor-permalink" href="#Inspecting-Reformulation" title="Permalink"></a></h2><h3 id="Examining-QUIO-Matrices"><a class="docs-heading-anchor" href="#Examining-QUIO-Matrices">Examining QUIO Matrices</a><a id="Examining-QUIO-Matrices-1"></a><a class="docs-heading-anchor-permalink" href="#Examining-QUIO-Matrices" title="Permalink"></a></h3><pre><code class="language-julia hljs">using JuMP, ToQUIO
+
+optimizer = ToQUIO.Optimizer()
+model = Model(() -&gt; optimizer)
+
+@variable(model, -2 &lt;= x[1:2] &lt;= 2, Int)
+@objective(model, Min, x[1]^2 + x[2]^2 + x[1] + x[2])
+@constraint(model, eq, x[1] + x[2] == 1)
+@constraint(model, ineq, x[1] - x[2] &lt;= 2)
+
+optimize!(model)
+
+# Access reformulation data
+data = optimizer.data
+
+println(&quot;=== Reformulation Data ===&quot;)
+println(&quot;Dimension: &quot;, data[:n])
+println(&quot;\nQuadratic matrix Q:&quot;)
+display(data[:Q])
+println(&quot;\nLinear vector L:&quot;)
+display(data[:L])
+println(&quot;\nConstant: &quot;, data[:c])
+println(&quot;\nLower bounds: &quot;, data[:l])
+println(&quot;\nUpper bounds: &quot;, data[:u])</code></pre><h3 id="Analyzing-Penalty-Coefficients"><a class="docs-heading-anchor" href="#Analyzing-Penalty-Coefficients">Analyzing Penalty Coefficients</a><a id="Analyzing-Penalty-Coefficients-1"></a><a class="docs-heading-anchor-permalink" href="#Analyzing-Penalty-Coefficients" title="Permalink"></a></h3><pre><code class="language-julia hljs">using JuMP, ToQUIO
+
+optimizer = ToQUIO.Optimizer()
+model = Model(() -&gt; optimizer)
+
+@variable(model, 0 &lt;= x &lt;= 10, Int)
+@variable(model, 0 &lt;= y &lt;= 10, Int)
+
+@objective(model, Min, x + 2y)
+
+@constraint(model, c1, x + y == 8)
+@constraint(model, c2, 2x + 3y &lt;= 25)
+
+optimize!(model)
+
+# The penalty matrix D contains the penalty coefficients
+D = optimizer.data[:D]
+
+println(&quot;Penalty diagonal matrix:&quot;)
+display(D)</code></pre><h3 id="Verification"><a class="docs-heading-anchor" href="#Verification">Verification</a><a id="Verification-1"></a><a class="docs-heading-anchor-permalink" href="#Verification" title="Permalink"></a></h3><pre><code class="language-julia hljs">using JuMP, ToQUIO
+
+optimizer = ToQUIO.Optimizer()
+model = Model(() -&gt; optimizer)
+
+@variable(model, 0 &lt;= x &lt;= 5, Int)
+@variable(model, 0 &lt;= y &lt;= 5, Int)
+
+@objective(model, Min, x^2 + y^2)
+@constraint(model, x + y == 4)
+
+optimize!(model)
+
+println(&quot;Reformulated variables: &quot;, optimizer.data[:n])
+println(&quot;Quadratic matrix size: &quot;, size(optimizer.data[:Q]))</code></pre><h2 id="Advanced-Examples"><a class="docs-heading-anchor" href="#Advanced-Examples">Advanced Examples</a><a id="Advanced-Examples-1"></a><a class="docs-heading-anchor-permalink" href="#Advanced-Examples" title="Permalink"></a></h2><h3 id="Max-Cut-Problem"><a class="docs-heading-anchor" href="#Max-Cut-Problem">Max-Cut Problem</a><a id="Max-Cut-Problem-1"></a><a class="docs-heading-anchor-permalink" href="#Max-Cut-Problem" title="Permalink"></a></h3><pre><code class="language-julia hljs">using JuMP, ToQUIO
+
+# Graph adjacency matrix (weights)
+W = [0 1 1 0;
+     1 0 1 1;
+     1 1 0 1;
+     0 1 1 0]
+
+n = size(W, 1)
+optimizer = ToQUIO.Optimizer()
+model = Model(() -&gt; optimizer)
+
+# x[i] = 0 or 1 indicates which partition node i is in
+@variable(model, x[1:n], Bin)
+
+# Maximize cut: sum of weights crossing partitions
+@objective(model, Max,
+    sum(W[i,j] * (x[i] * (1-x[j]) + (1-x[i]) * x[j])
+        for i in 1:n for j in i+1:n))
+
+optimize!(model)
+
+println(&quot;Reformulated variables: &quot;, optimizer.data[:n])
+println(&quot;Quadratic matrix size: &quot;, size(optimizer.data[:Q]))</code></pre><h3 id="Facility-Location"><a class="docs-heading-anchor" href="#Facility-Location">Facility Location</a><a id="Facility-Location-1"></a><a class="docs-heading-anchor-permalink" href="#Facility-Location" title="Permalink"></a></h3><pre><code class="language-julia hljs">using JuMP, ToQUIO
+
+# Customer demands
+demand = [10, 15, 20, 12]
+
+# Fixed costs to open facilities
+fixed_cost = [100, 120, 110]
+
+# Transportation costs (customers × facilities)
+transport_cost = [
+    5 8 6;
+    6 4 7;
+    8 5 3;
+    7 6 5
+]
+
+n_customers = length(demand)
+n_facilities = length(fixed_cost)
+
+optimizer = ToQUIO.Optimizer()
+model = Model(() -&gt; optimizer)
+
+# y[j] = 1 if facility j is opened
+@variable(model, y[1:n_facilities], Bin)
+
+# x[i,j] = 1 if customer i is served by facility j
+@variable(model, x[1:n_customers, 1:n_facilities], Bin)
+
+# Minimize total cost
+@objective(model, Min,
+    sum(fixed_cost[j] * y[j] for j in 1:n_facilities) +
+    sum(demand[i] * transport_cost[i,j] * x[i,j] 
+        for i in 1:n_customers for j in 1:n_facilities))
+
+# Each customer served by exactly one facility
+for i in 1:n_customers
+    @constraint(model, sum(x[i,j] for j in 1:n_facilities) == 1)
+end
+
+# Can only serve from open facilities
+for i in 1:n_customers, j in 1:n_facilities
+    @constraint(model, x[i,j] &lt;= y[j])
+end
+
+optimize!(model)
+
+println(&quot;Reformulated variables: &quot;, optimizer.data[:n])
+println(&quot;Number of penalties: &quot;, size(optimizer.data[:D], 1))</code></pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../QUICKSTART/">« Quick Start</a><a class="docs-footer-nextpage" href="../api/">API Reference »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.17.0 on <span class="colophon-date" title="Saturday 13 June 2026 11:06">Saturday 13 June 2026</span>. Using Julia version 1.12.6.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
