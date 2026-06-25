@@ -4,4 +4,5 @@ ToQUIO = "c8c7c8a1-01ab-43fa-b80d-8804f80d4aae"
 
 [compat]
 Documenter = "1"
+ToQUIO = "0.1.0"
 julia = "1.10"
