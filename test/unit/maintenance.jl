@@ -145,6 +145,32 @@ has_julia_dependabot_entry(config::AbstractString, directory::AbstractString) =
 has_github_actions_dependabot_entry(config::AbstractString) =
     has_dependabot_entry(config; ecosystem = "github-actions", directory = "/")
 
+function uses_action_major_at_least(
+    config::AbstractString,
+    action::AbstractString,
+    minimum_major::Integer,
+)
+    action_prefix = string(action, "@")
+    has_action = false
+
+    for raw_line in split(config, '\n')
+        uses_match = match(r"""^\s*-?\s*uses:\s*(.+?)\s*$""", raw_line)
+        uses_match === nothing && continue
+
+        uses = normalized_yaml_scalar(uses_match.captures[1])
+        startswith(uses, action_prefix) || continue
+
+        has_action = true
+        lastindex(uses) > lastindex(action_prefix) || return false
+        ref = uses[(lastindex(action_prefix) + 1):end]
+        major = match(r"""^v([1-9][0-9]*)$""", ref)
+        major === nothing && return false
+        parse(Int, major.captures[1]) >= minimum_major || return false
+    end
+
+    return has_action
+end
+
 @testset "Root compat policy" begin
     project = TOML.parsefile(joinpath(pkgdir(ToQUIO), "Project.toml"))
     compat = project["compat"]
@@ -222,8 +248,8 @@ end
     docs_config = read(docs_workflow, String)
     @test occursin(r"(?m)^\s*pull_request\s*:", docs_config)
     @test occursin(r"(?m)^\s*workflow_dispatch\s*:", docs_config)
-    @test occursin("actions/checkout@v6", docs_config)
-    @test occursin("julia-actions/setup-julia@v3", docs_config)
+    @test uses_action_major_at_least(docs_config, "actions/checkout", 6)
+    @test uses_action_major_at_least(docs_config, "julia-actions/setup-julia", 3)
     @test occursin("github.event_name == 'pull_request'", docs_config)
     @test occursin("github.event_name != 'pull_request'", docs_config)
     @test occursin(r"(?m)^\s*group: docs-deploy\s*$", docs_config)
@@ -249,6 +275,48 @@ end
             - '1.10'
             - '1'
     """))
+end
+
+@testset "GitHub Actions major policy detection" begin
+    @test uses_action_major_at_least("""
+        steps:
+          - uses: actions/checkout@v6
+    """, "actions/checkout", 6)
+    @test uses_action_major_at_least("""
+        steps:
+          - uses: actions/checkout@v7
+    """, "actions/checkout", 6)
+    @test uses_action_major_at_least("""
+        steps:
+          - uses: 'julia-actions/setup-julia@v4'
+    """, "julia-actions/setup-julia", 3)
+    @test uses_action_major_at_least("""
+        steps:
+          - uses: actions/cache@latest
+          - uses: actions/checkout@v7
+    """, "actions/checkout", 6)
+
+    @test !uses_action_major_at_least("""
+        steps:
+          - uses: actions/checkout@v5
+    """, "actions/checkout", 6)
+    @test !uses_action_major_at_least("""
+        steps:
+          - uses: julia-actions/setup-julia@v2
+    """, "julia-actions/setup-julia", 3)
+    @test !uses_action_major_at_least("""
+        steps:
+          - uses: actions/checkout@latest
+    """, "actions/checkout", 6)
+    @test !uses_action_major_at_least("""
+        steps:
+          - uses: actions/checkout@v7
+          - uses: actions/checkout@latest
+    """, "actions/checkout", 6)
+    @test !uses_action_major_at_least("""
+        steps:
+          - uses: actions/cache@v3
+    """, "actions/checkout", 6)
 end
 
 @testset "Test environment compat policy" begin
