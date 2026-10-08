@@ -1,0 +1,20 @@
+{
+  "repository": "SECQUOIA/ToQUIO.jl",
+  "required_checks": [
+    "Julia 1.10 - ubuntu-latest",
+    "Julia 1 - ubuntu-latest",
+    "Dependabot policy",
+    "Build documentation"
+  ],
+  "protected_checks": [
+    "Julia 1.10 - ubuntu-latest",
+    "Julia 1 - ubuntu-latest"
+  ],
+  "publication": [
+    {
+      "workflow": "documentation.yml",
+      "input": "dependabot_pr",
+      "title": "Dependabot documentation"
+    }
+  ]
+}

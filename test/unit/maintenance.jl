@@ -252,8 +252,9 @@ end
     @test uses_action_major_at_least(docs_config, "julia-actions/setup-julia", 3)
     @test occursin("github.event_name == 'pull_request'", docs_config)
     @test occursin("github.event_name != 'pull_request'", docs_config)
-    @test occursin(r"(?m)^\s*group: docs-deploy\s*$", docs_config)
+    @test occursin(r"(?m)^\s*group: documentation-publishing\s*$", docs_config)
     @test occursin(r"(?m)^\s*cancel-in-progress: false\s*$", docs_config)
+    @test occursin(r"(?m)^\s*queue: max\s*$", docs_config)
     @test occursin(r"(?m)^\s*run: julia --project=docs docs/make\.jl --skip-deploy\s*$", docs_config)
     @test occursin(r"(?m)^\s*run: julia --project=docs docs/make\.jl\s*$", docs_config)
 end
