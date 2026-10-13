@@ -385,6 +385,8 @@ function to_quio(::Type{T}, varmap::Function, conmap::Function, source::MOI.Mode
         :target_variables => x,
         :slack_variables => s,
         :source_to_target_variables => source_to_target_variables,
+        :quio_variables => z,
+        :slack_constraints => penalty_constraints[(length(b_eq) + 1):end],
     )
 
     return (target, data)

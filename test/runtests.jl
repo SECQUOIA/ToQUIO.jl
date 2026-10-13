@@ -4,5 +4,6 @@ using ToQUIO
 @testset "ToQUIO" begin
     include("unit/maintenance.jl")
     include("unit/to_quio_regression.jl")
+    include("unit/reformulation_metadata.jl")
     include("test_examples.jl")
 end

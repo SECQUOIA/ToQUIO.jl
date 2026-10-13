@@ -24,5 +24,8 @@ include("MOI_wrapper/QUIO_model.jl")
 include("MOI_wrapper/MOI_wrapper.jl")
 
 include("to_quio.jl")
+include("reformulation.jl")
+
+export reformulation_metadata, original_variables, auxiliary_variables, project_original_state
 
 end # module ToQUIO
