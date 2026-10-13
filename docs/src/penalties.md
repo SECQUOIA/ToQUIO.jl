@@ -2,8 +2,10 @@
 
 ToQUIO turns each supported affine constraint into a squared residual in the
 QUIO objective. The native integer bounds remain constraints on the target.
-These APIs describe this source tree; use its project environment for the
-examples. Registered release availability follows the package's release tags.
+These APIs describe this source tree. From the repository root, run
+`using Pkg; Pkg.activate("."); Pkg.instantiate()` before these examples.
+In another environment, add `MathOptInterface` explicitly alongside the ToQUIO
+version providing these APIs; adding ToQUIO alone makes MOI an indirect dependency. Registered release availability follows the package's release tags.
 
 ## Defaults and controls
 
@@ -24,7 +26,8 @@ It is distinct from the direct call's additive `ϵ` keyword.
 positive. An unhinted row receives `scale * ρ_auto`; a finite, positive
 `ConstraintPenaltyHint` overrides that entire expression with its exact value.
 Hints bypass both global controls. `AppliedPenalty` always returns a positive
-magnitude; maximization subtracts the squared penalty from the source objective.
+magnitude; maximization subtracts the penalty-weighted squared residual `ρ * residual^2`
+from the source objective.
 
 Given a feasible source problem, exact supported integer domains/slacks,
 sufficient magnitudes and adequate numerical precision, a global target optimum
@@ -82,7 +85,7 @@ For a JuMP `ConstraintRef con`, use
 In reformulation-only mode the high-level JuMP result getter can reject the query
 because no solver result exists; the raw MOI query accesses the compiled value.
 
-## Sweep and check a weak penalty
+## Sweep controls and check a weak penalty
 
 Here the source is `min 2x + 1`, subject to `x = 1`, with integer `x` in `0:3`.
 The automatic magnitude is 7. We independently enumerate its known penalized
@@ -106,7 +109,8 @@ ci = MOI.add_constraint(source,
     MOI.ScalarAffineFunction([MOI.ScalarAffineTerm(1.0, x)], 0.0), MOI.EqualTo(1.0))
 optimizer = ToQUIO.Optimizer()
 sweep = []
-for scale in (0.1, 1.0, 2.0)
+for (offset, scale) in ((1.0, 0.1), (1.0, 1.0), (1.0, 2.0), (3.0, 1.0))
+    MOI.set(optimizer, ToQUIO.PenaltyOffset(), offset)
     MOI.set(optimizer, ToQUIO.PenaltyScale(), scale)
     MOI.optimize!(optimizer, source)
     penalty = MOI.get(optimizer, ToQUIO.AppliedPenalty(), ci)
@@ -114,17 +118,18 @@ for scale in (0.1, 1.0, 2.0)
     energies = [2value + 1 + penalty * (value - 1)^2 for value in 0:3]
     best = argmin(energies) - 1
     report = ToQUIO.feasibility_report(optimizer, [best]) # Equality has no slack.
-    push!(sweep, (scale = scale, penalty = penalty, x = best, feasible = report["feasible"]))
+    push!(sweep, (offset = offset, scale = scale, penalty = penalty, x = best, feasible = report["feasible"]))
 end
 foreach(println, sweep)
 ```
 <!-- /penalty-example:sweep -->
 
-| Scale | Applied magnitude | Best target x | Source feasible |
-|---|---|---|---|
-| 0.1 | approximately 0.7 | 0 | false |
-| 1 | 7 | 1 | true |
-| 2 | 14 | 1 | true |
+| Offset | Scale | Applied magnitude | Best target x | Source feasible |
+|---|---|---|---|---|
+| 1 | 0.1 | approximately 0.7 | 0 | false |
+| 1 | 1 | 7 | 1 | true |
+| 1 | 2 | 14 | 1 | true |
+| 3 | 1 | 9 | 1 | true |
 
 For scale 0.1 the target prefers `x = 0`: its energy is 1.7 versus 3 at the
 source-feasible `x = 1`. The source evaluator identifies the equality violation.

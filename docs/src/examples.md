@@ -413,6 +413,10 @@ println("\nUpper bounds: ", data[:u])
 
 ### Analyzing Penalty Coefficients
 
+This is low-level inspection of the signed matrix `:D`: its diagonal is `+ρ`
+for minimization and `-ρ` for maximization. For positive applied magnitudes and
+typed source identities, use the [public inspection example](penalties.md).
+
 ```julia
 using JuMP, ToQUIO
 

@@ -66,8 +66,8 @@ P_eq(x) = ρ_eq * (a'x - b)²
 
 Here `ρ_eq > 0` is the penalty magnitude for minimization. Finite magnitudes
 above the sufficient objective-range threshold can enforce feasibility at a
-global target optimum. Maximization subtracts the same positive-magnitude
-squared residual. See [Penalty tuning](penalties.md) for controls and samples.
+global target optimum. Maximization subtracts the same penalty-weighted
+squared residual `ρ * residual^2`. See [Penalty tuning](penalties.md) for controls and samples.
 
 ### Inequality Constraints
 
