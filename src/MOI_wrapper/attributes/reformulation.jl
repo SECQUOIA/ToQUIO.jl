@@ -99,9 +99,12 @@ end
     AppliedPenalty()
 
 Read the positive penalty magnitude used for a source scalar affine equality or
-inequality in the last completed reformulation. Available without a solver
-backend. Maximization subtracts this magnitude in the objective. Changing the
-controls affects the next reformulation, not this query's recorded value.
+inequality in the most recent reformulation, if it succeeded. A failed later
+reformulation invalidates this query. Available without a solver backend through
+raw `MOI.get`; JuMP's high-level result getter checks solver termination status,
+so use `MOI.get(backend(model), AppliedPenalty(), index(con))` in reformulation-only
+mode. Maximization subtracts this magnitude in the objective. Changing controls
+affects the next reformulation, not this query's recorded value.
 """
 struct AppliedPenalty <: ConstraintReformulationAttribute end
 

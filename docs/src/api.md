@@ -330,6 +330,11 @@ MOI.get(optimizer, ToQUIO.AppliedPenalty(), constraint_index)
 `source` and `constraint_index` refer to the supported MOI source model and an
 affine constraint index. Setting a control changes the **next** reformulation;
 applied-penalty queries and snapshots retain the values from the last one.
+For a JuMP model without a backend solver, query the compiled value through
+`MOI.get(backend(model), ToQUIO.AppliedPenalty(), index(con))` after `optimize!`.
+JuMP's high-level `get_attribute(con, ...)` result path requires a solver status
+other than `OPTIMIZE_NOT_CALLED`, which reformulation-only mode does not provide.
+A failed new reformulation invalidates the current applied-penalty query.
 Use `nothing` with either control attribute to reset its default. Global controls
 persist across `MOI.empty!`; computed penalties do not. Offset and scale must be
 finite positive real values representable in the optimizer's numeric type.
@@ -350,6 +355,8 @@ positive value. Scales below 1 can weaken feasibility protection and warn when
 the applied value falls below the unscaled sufficient coefficient. Existing
 low-hint warnings retain their meaning; a hint is compared to that unscaled
 reference even when a global scale is set.
+Global-scale warnings are aggregated once per equality/inequality kind with the
+affected row count, while warnings for individual low hints remain per constraint.
 
 ## Reformulation Metadata and Projection
 

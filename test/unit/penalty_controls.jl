@@ -81,6 +81,23 @@ end
                                   ϵ = 2.0, penalty_scale = 2.0)
         @test direct[:rho] == [16.0]
         @test direct[:rho_auto] == [8.0]
+        RMOI.set(configured, ToQUIO.PenaltyScale(), 0.5)
+        @test_logs RMOI.optimize!(configured, hinted) # No automatic penalty was scaled.
+        @test RMOI.get(configured, ToQUIO.AppliedPenalty(), ci) == 100.0
+    end
+
+    @testset "global warning count is independent of row count" begin
+        source, x, _ = penalty_fixture()
+        RMOI.add_constraint(source, affine_function(affine_term(-1, x)), RMOI.EqualTo(-1.0))
+        RMOI.add_constraint(source, affine_function(affine_term(1, x)), RMOI.LessThan(2.0))
+        RMOI.add_constraint(source, affine_function(affine_term(1, x)), RMOI.GreaterThan(1.0))
+        optimizer = ToQUIO.Optimizer(; penalty_scale = 0.5)
+        @test_logs (
+            :warn, r"Applied automatic penalty is below",
+        ) (
+            :warn, r"Applied automatic penalty is below",
+        ) RMOI.optimize!(optimizer, source)
+        @test optimizer.data[:rho] == fill(3.5, 4)
     end
 
     @testset "both inequality signs and maximization" begin
@@ -127,6 +144,16 @@ end
             @test_throws ArgumentError RMOI.set(optimizer, ToQUIO.PenaltyScale(), value)
             @test_throws ArgumentError RMOI.set(optimizer, ToQUIO.PenaltyOffset(), value)
             @test_throws ArgumentError ToQUIO.Optimizer(; penalty_scale = value)
+            @test_throws ArgumentError ToQUIO.Optimizer(; penalty_offset = value)
+            called = Ref(false)
+            factory = () -> begin
+                called[] = true
+                return mock_backend_with_primal([0])
+            end
+            @test_throws ArgumentError ToQUIO.Optimizer(factory; penalty_scale = value)
+            @test !called[]
+            @test_throws ArgumentError ToQUIO.Optimizer(factory; penalty_offset = value)
+            @test !called[]
             @test_throws ArgumentError ToQUIO.to_quio(
                 Float64, vi -> vi.value, ci -> ci.value, source; ϵ = value,
             )

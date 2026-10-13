@@ -472,6 +472,7 @@ function apply_penalty_hints(
     scale = one(T),
 ) where {T}
     ρ = similar(ρ_auto)
+    affected_rows = 0
 
     for i in eachindex(ρ_auto)
         isfinite(ρ_auto[i]) && ρ_auto[i] > zero(T) ||
@@ -483,15 +484,7 @@ function apply_penalty_hints(
             isfinite(applied) && applied > zero(T) ||
                 throw(ArgumentError("Applied penalty must remain finite and positive."))
             if applied < ρ_auto[i]
-                @warn(
-                    "Applied automatic penalty is below the unscaled sufficient penalty; " *
-                    "constrained-problem equivalence is not guaranteed.",
-                    constraint_kind = constraint_kind,
-                    constraint_index = i,
-                    scale = scale,
-                    applied_penalty = applied,
-                    automatic_penalty = ρ_auto[i],
-                )
+                affected_rows += 1
             end
             ρ[i] = applied
         else
@@ -503,6 +496,15 @@ function apply_penalty_hints(
         end
     end
 
+    if affected_rows > 0
+        @warn(
+            "Applied automatic penalty is below the unscaled sufficient penalty; " *
+            "constrained-problem equivalence is not guaranteed.",
+            constraint_kind = constraint_kind,
+            affected_constraints = affected_rows,
+            scale = scale,
+        )
+    end
     return ρ
 end
 
