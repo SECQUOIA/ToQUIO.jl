@@ -38,6 +38,7 @@
             @test sum(big.(layout.weights) .* layout.upper_bounds; init = big(0)) == width
             # Reserve the complete product before enumeration; no state-space materialization.
             assignments = prod(big(m) + 1 for m in layout.upper_bounds; init = big(1))
+            assignments <= 10_000 || throw(ArgumentError("Radix test enumeration exceeds its budget."))
             @test assignments <= 10_000
             images = Set{BigInt}()
             for digits in Iterators.product((0:m for m in layout.upper_bounds)...)
@@ -72,7 +73,8 @@
             @test isempty(data[:encoding_digit_positions][3])
             native_lower, native_upper = [-3, 0, 2, 0, 0], [4, 1, 2, 4, 5]
             @test data[:l] == native_lower && data[:u] == native_upper
-            count = prod(big(u) + 1 for u in data[:encoded_u]; init = big(1))
+            count = prod(BigInt(u) + 1 for u in data[:encoded_u]; init = big(1))
+            count <= 10_000 || throw(ArgumentError("Radix test enumeration exceeds its budget."))
             @test count <= 10_000
             original(xv, yv) = 2xv^2 + 3xv*yv + yv^2 + 10xv - 4yv + 7
             feasible_objectives = [original(xv, yv) for xv in -3:4 for yv in 0:1
@@ -118,8 +120,11 @@
     end
 
     @testset "invalid source domains and arithmetic never reach the backend" begin
-        for (lower, upper, integer) in ((0.2, 0.8, true), (-Inf, 2, true),
-                                        (0, Inf, true), (0, 2, false))
+        for (lower, upper, integer, expected_error) in (
+            (0.2, 0.8, true, ArgumentError), (-Inf, 2, true, ArgumentError),
+            (0, Inf, true, ArgumentError), (0, NaN, true, ArgumentError),
+            (0, 2, false, ErrorException),
+        )
             source = RMOI.Utilities.Model{Float64}()
             x = RMOI.add_variable(source)
             RMOI.add_constraint(source, x, RMOI.Interval(Float64(lower), Float64(upper)))
@@ -129,7 +134,17 @@
             backend = multi_result_backend([zeros(1)])
             RMOI.Utilities.set_mock_optimize!(backend, _ -> (called[] = true))
             optimizer = ToQUIO.Optimizer(() -> backend; encoding = ToQUIO.RadixEncoding())
-            @test_throws Exception RMOI.optimize!(optimizer, source)
+            failure = try
+                RMOI.optimize!(optimizer, source)
+                nothing
+            catch caught
+                caught
+            end
+            @test failure isa expected_error
+            if !isfinite(lower) || !isfinite(upper)
+                @test failure isa ArgumentError &&
+                      failure.msg == "Integer encoding requires finite native variable bounds."
+            end
             @test !called[] && isempty(optimizer.data) && isnothing(optimizer.target_model)
         end
         source = RMOI.Utilities.Model{Float64}()
@@ -140,5 +155,34 @@
         @test_throws ArgumentError RMOI.optimize!(ToQUIO.Optimizer(; encoding = strategy), source)
         @test_throws ArgumentError RMOI.optimize!(ToQUIO.Optimizer(;
             encoding = ToQUIO.RadixEncoding(; levels = 2), max_encoded_variables = 2), source)
+    end
+
+    @testset "documented JuMP example structure without optional dependencies" begin
+        source = RMOI.Utilities.Model{Float64}()
+        x = add_interval_integer_variable(source, -2, 5)
+        y = add_binary_variable(source)
+        fixed = RMOI.add_variable(source)
+        RMOI.add_constraint(source, fixed, RMOI.EqualTo(2.0))
+        RMOI.add_constraint(source, fixed, RMOI.Integer())
+        RMOI.add_constraint(source, affine_function(affine_term(1, x), affine_term(1, y)),
+                            RMOI.LessThan(3.0))
+        set_affine_objective!(source, RMOI.MAX_SENSE,
+                             affine_term(3, x), affine_term(2, y), affine_term(1, fixed))
+        baseline = nothing
+        strategies = (ToQUIO.NativeEncoding(), ToQUIO.RadixEncoding(; levels = 4),
+                      ToQUIO.RadixEncoding(; levels = 2))
+        for (encoding, count, levels) in zip(strategies, [4, 5, 7], [8, 4, 2])
+            optimizer = ToQUIO.Optimizer(; encoding)
+            RMOI.optimize!(optimizer, source)
+            saved = ToQUIO.reformulation_metadata(optimizer)
+            @test RMOI.get(optimizer.target_model, RMOI.NumberOfVariables()) == count
+            @test maximum(saved["target_upper_bounds"] .- saved["target_lower_bounds"] .+ 1) == levels
+            isnothing(baseline) && (baseline = copy(optimizer.data[:rho]))
+            @test optimizer.data[:rho] == baseline
+            digits = ToQUIO.lift_native_state(optimizer, [1, 1, 2, 1])
+            @test ToQUIO.project_native_state(optimizer, digits) == [1, 1, 2, 1]
+            @test encoded_value(optimizer.target_model, optimizer.data, digits) == 3*1 + 2*1 + 2 == 7
+            @test ToQUIO.is_feasible(optimizer, digits)
+        end
     end
 end

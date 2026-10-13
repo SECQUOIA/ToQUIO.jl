@@ -28,7 +28,8 @@ function protocol_canonical_lift(value::Integer, weights, uppers)
         throw(ArgumentError("Value outside the encoded interval."))
     digits = zeros(BigInt, length(weights))
     remainder = big(value)
-    for i in reverse(eachindex(weights))
+    # Match the package's authoritative lift: decreasing weight, stable ties.
+    for i in sortperm(weights; rev = true)
         digits[i] = min(uppers[i], remainder ÷ weights[i])
         remainder -= weights[i] * digits[i]
     end

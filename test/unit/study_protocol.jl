@@ -38,6 +38,20 @@ using TOML
     lift = Base.invokelatest(getproperty, proof, :protocol_canonical_lift)
     state_count = Base.invokelatest(getproperty, proof, :protocol_state_count)
     substitute = Base.invokelatest(getproperty, proof, :protocol_affine_substitution)
+    @testset "authoritative package and protocol lifts agree" begin
+        for levels in 2:6, width in 0:32
+            weights, uppers = Base.invokelatest(layout, width; levels)
+            package_layout = ToQUIO.variable_encoding(ToQUIO.RadixEncoding(; levels), -7, width - 7;
+                                                      context = nothing)
+            @test package_layout.weights == weights && package_layout.upper_bounds == uppers
+            for value in 0:width
+                @test Base.invokelatest(lift, value, weights, uppers) ==
+                      ToQUIO._canonical_digits(package_layout, value - 7)
+            end
+        end
+        @test Base.invokelatest(lift, 5, [1, 4, 3], [3, 2, 1]) == [1, 1, 0]
+        @test Base.invokelatest(lift, 1, [1, 1], [1, 1]) == [1, 0]
+    end
     # Independent DP checks an emitted layout, rather than trusting its formula.
     function reachable_sums(weights, uppers; offset = 0)
         image = Set([big(offset)])

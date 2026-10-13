@@ -17,6 +17,7 @@ w=\min(C+1,W-C),\qquad m=\min(\mathrm{levels}-1,\lfloor(W-C)/w\rfloor),
 The coordinate is `L+sum(w_j*d_j)`, with integer digits `0<=d_j<=m_j`.
 If previous digits cover every integer `0:C`, the translated intervals for the
 new digit touch or overlap because `w<=C+1`. Their union is `0:C+w*m`.
+Since `w<=W-C` and `levels-1>=1`, the new digit bound `m>=1`.
 Each step increases coverage and stays within W; eventually the endpoint is
 exactly W. Thus every source integer has a representation and every allowed
 digit assignment stays in the source interval, with no enforcement penalty.
@@ -30,13 +31,19 @@ model when preserving its literal coordinates is desired.
 Full radix powers are used where they fit; a bounded final tail completes other
 widths. For levels 4, width 14 has weights `[1,4,3]` and upper bounds `[3,2,1]`:
 the endpoint is `3+8+3=14`. Tails can overlap previous representations. Width 4
-has weights `[1,1]`, bounds `[3,1]`, and two representations of value 1. These
+has weights `[1,1]`, bounds `[3,1]`: values 1, 2 and 3 each have two representations,
+while endpoints 0 and 4 each have one. These
 duplicates affect multiplicity and sampling neighborhoods. The strategy does not
 promise the minimum digit count or a faster solve.
 
 Levels 2 gives the bounded-tail binary special case: width 6 has weights
 `[1,2,3]` and bounds `[1,1,1]`. This mathematical reduction is not performance
 equivalence with a separately implemented binary compiler.
+
+`lift_native_state` is the authoritative canonical lift for controlled
+initialization and replay. It chooses decreasing weights, with ties in original
+digit order. The protocol helper follows this order, including unsorted tails:
+levels 4, width 14, value 5 lifts to `[1,1,0]` for weights `[1,4,3]`.
 
 The levels cap must be an integer at least 2; Booleans and floating caps are
 rejected. Layout arithmetic uses BigInt, and compilation rejects integers not

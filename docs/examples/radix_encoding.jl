@@ -42,4 +42,4 @@ function radix_structural_comparison()
     return rows
 end
 
-radix_structural_comparison()
+foreach(println, radix_structural_comparison())
