@@ -299,6 +299,11 @@ println("Number of penalties: ", size(optimizer.data[:D], 1))
 
 ## Custom Penalties
 
+The [Penalty tuning guide](penalties.md) explains defaults, global controls,
+compiled queries and an independently enumerated weak-penalty example. The
+matrix/data inspection below is explicitly low-level; prefer `AppliedPenalty`
+and `reformulation_metadata` for public inspection.
+
 ### Specifying Penalty Coefficients
 
 ```julia

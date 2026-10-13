@@ -20,6 +20,7 @@ makedocs(;
         "Home" => "index.md",
         "Quick Start" => "QUICKSTART.md",
         "Examples" => "examples.md",
+        "Penalty Tuning" => "penalties.md",
         "API Reference" => "api.md",
         "Algorithm" => "algorithm.md",
     ],
