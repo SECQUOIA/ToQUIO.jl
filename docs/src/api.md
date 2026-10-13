@@ -443,6 +443,47 @@ metadata snapshot when a record must survive this reset. Existing raw keys such 
 (original-variable targets only), `:rho` and `:Q` keep their previous meaning;
 `:quio_variables` adds the full target order and `:slack_constraints` adds ownership.
 
+## Original Source Feasibility
+
+```@docs
+ToQUIO.ConstraintViolation
+ToQUIO.violations
+ToQUIO.is_feasible
+ToQUIO.feasibility_report
+```
+
+For the reformulation-only example above, the full target order is `[x, slack]`:
+
+```julia
+is_feasible(optimizer, [1, 1])     # true: x <= 2, and x is integer/in bounds
+violations(optimizer, [3, 0])      # source LessThan violation of magnitude 1
+report = feasibility_report(optimizer, [1, 9])
+report["feasible"]                # true for the source point x = 1
+report["constraints"]             # target residual exposes inconsistent slack
+```
+
+For a solver-backed optimizer, `violations(optimizer; result=2)` reads that
+result's complete target state through the recorded backend index map. The
+default `feasibility_report(optimizer)` summarizes all result records; these
+counts do not include sampler read multiplicities. A report with no results has
+`feasible_fraction = nothing`. A requested missing result raises
+`MOI.ResultIndexBoundsError`.
+
+The analysis evaluates a captured copy of the source constraints from the most
+recent successful reformulation. It supports source scalar affine `=`, `<=`,
+`>=`, and variable bounds, intervals, integrality and binary domains. Later edits
+to the caller's model do not change that snapshot; reformulate to analyze them.
+Direct `to_quio` dictionaries contain the same snapshot. Older dictionaries and
+serialized projection metadata without source functions cannot perform this check.
+
+`atol` is a finite nonnegative absolute tolerance in each constraint's native
+units. Violation magnitudes and signed residuals remain unmodified in the report,
+including small residuals accepted by the tolerance. Max/sum diagnostics do not
+normalize different constraint units. Integrality checks use the actual sample
+values without rounding. The source-feasibility verdict is independent of target
+slack consistency and penalized objective energy; neither feasible samples nor a
+target-optimal status certify optimality for the source problem.
+
 ## Internal Functions
 
 These functions are used internally and are not part of the public API, but may be useful for understanding or extending the package.

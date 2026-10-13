@@ -25,7 +25,9 @@ include("MOI_wrapper/MOI_wrapper.jl")
 
 include("to_quio.jl")
 include("reformulation.jl")
+include("feasibility.jl")
 
 export reformulation_metadata, original_variables, auxiliary_variables, project_original_state
+export ConstraintViolation, violations, is_feasible, feasibility_report
 
 end # module ToQUIO
