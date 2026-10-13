@@ -21,6 +21,7 @@ makedocs(;
         "Quick Start" => "QUICKSTART.md",
         "Examples" => "examples.md",
         "Penalty Tuning" => "penalties.md",
+        "Encoding Study" => "study.md",
         "API Reference" => "api.md",
         "Algorithm" => "algorithm.md",
     ],
