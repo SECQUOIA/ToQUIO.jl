@@ -54,9 +54,11 @@ uses a residual interval of width `d+r` plus `r-1` digits of weight `mu`, where
 `W=r*mu+d`. An independent source-formula enumeration finds width3/cap2 maps to
 `0:2`, and width6/cap2 maps to `0:7`. Width20/cap2 produces weights
 `[1,2,4,3,2,2,2,2,2,2,2,2,2]`, image `0:28` and a weight4 exceeding cap2.
-For `0<W<mu`, the formula also calls its allocator with `r-1=-1`; this is an
-invalid allocation request, not a verified full-compiler exception here.
-Pure-arithmetic regression fixtures preserve these failures without a dependency.
+For `0<W<mu`, the formula also calls its allocator with `r-1=-1`. This is a
+latent negative-count request whose runtime effect on the pinned target is
+unverified, not another demonstrated coverage failure: width1/cap2's arithmetic
+image is exactly `0:1`. Pure-arithmetic fixtures preserve that distinction and
+the demonstrated width3/6/20 failures without a dependency.
 This audit is not full compiler execution.
 It fails the exact box-image contract needed here. The native `Bounded` method
 therefore cannot be an unchecked baseline at this pin.
@@ -111,6 +113,13 @@ future compiled instance passes the mandatory emitted-map gates.
 Automatic policies can differ. This is an end-to-end comparison, not a matched
 penalty causal estimate. No weak-penalty sweep or precision perturbation enters
 the primary campaign; the worked failure below is a diagnostic control.
+ToQUIO's three compiler-default arms have the same polynomial and encoding as
+their controlled cells. Use the same native-full-box initialization and canonical
+lift, RNG streams and schedule for these arms in both regimes. These are
+intentional calibration repeats, with identical trajectories at equal completed
+work (clock stops may differ), not independent additional data or evidence of a
+compiler-default regime effect. Do not pool regimes. The distinct ToQUBO default
+cells supply the compiler-policy comparison against these repeated controls.
 
 ## Exact affine contract
 
@@ -244,7 +253,7 @@ independent coverage/lifts through width64. Archive gate inputs/results and RNG
 seeds. Record each instance/arm's normalized offset/weight/digit-bound layout
 equality with native and radix (order-independent within each native variable);
 report the number of structurally distinct instances for every contrast. Widths
-up to3 yield native identity, and cap4 equals radix through width15: zero contrasts
+up to3 yield native identity, and cap4 equals radix through width19: zero contrasts
 on those cells are structural degeneracy, not evidence of an empirical null effect.
 
 ## Independent references and targets
@@ -273,9 +282,10 @@ independently of all encodings and does not certify a heuristic's optimality.
 Each proposal chooses an active digit uniformly and an independent +/-1 with
 equal probability; out-of-domain proposals reject and still count. Initialize
 uniformly in the native full box, then canonical-lift the identical native state
-for controlled arms. Compiler-default arms share original-variable initialization;
-compiler-specific auxiliaries use recorded seeded initialization and are a
-confounder. No source optimum or reference witness seeds the competing samplers.
+for controlled arms and the repeated ToQUIO default cells. ToQUBO compiler-default
+arms share original-variable initialization; compiler-specific auxiliaries use
+recorded seeded initialization and are a confounder. No source optimum or
+reference witness seeds the competing samplers.
 Use separate MersenneTwister streams: initialization seed=effective run seed,
 proposal seed=effective run seed+1000000000; these seed values are identical
 across paired arms. Record both identities. Effective run seed=listed replicate seed+10000*instance
@@ -336,7 +346,10 @@ both regimes. Radix levels and all temperatures/penalties stay fixed. Record all
 
 For every visited state, decode and check the original model to observe first
 target attainment and the best feasible objective; include this observation cost
-in measured solve latency. Use monotonic `time_ns`: start immediately before
+in measured solve latency. A visited state is the initialization plus the current
+chain state after each proposal's accept/reject decision. Rejected candidates
+are not observed states; repeated chain states retain their multiplicity.
+Use monotonic `time_ns`: start immediately before
 initialization and canonical lift, after compilation/warmup, and stop after the
 final observation. First-hit latency includes initialization/lift and decoding;
 timely hits require the observation to finish within2s. This is an instrumented
@@ -383,6 +396,10 @@ or externally interrupted campaign is an incomplete campaign with no completed-
 campaign aggregate; preserve partial records and the reason, never relabel it a
 sampler failure or report a completed result. All planned cells must be accounted
 for before a complete exploratory report is allowed.
+The same F, invalid-run, ordinary clock-censoring, target-time and work-score rules
+apply to all120 tuning starts, with five planned replicates per instance/arm/cap
+cell. Select caps using the all-five denominator, including invalid failures;
+a preflight/global failure instead leaves tuning incomplete and stops evaluation.
 
 Structural outputs include allocated original/native/encoded integer and binary
 counts, each domain's levels, active variables, build time, allocated bytes and

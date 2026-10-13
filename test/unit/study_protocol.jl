@@ -1,6 +1,7 @@
 using TOML
 
 @testset "Frozen CQT study protocol" begin
+    moi = ToQUIO.MOI
     specification = TOML.parsefile(joinpath(pkgdir(ToQUIO), "benchmarks", "protocol_v1.toml"))
     families, arms, regimes = specification["families"], specification["arms"], specification["regimes"]
     pilot, tuning, evaluation = specification["pilot"], specification["tuning"], specification["evaluation"]
@@ -159,6 +160,13 @@ using TOML
         @test reachable_sums(weights, ones(Int, length(weights))) == Set(0:28)
         _, negative_request = upstream_formula(1, 2)
         @test negative_request == -1
+        small_weights, _ = upstream_formula(1, 2)
+        @test reachable_sums(small_weights, ones(Int, length(small_weights))) == Set(0:1)
+        for width in (19, 20)
+            radix = Base.invokelatest(layout, width; levels = 4)
+            bounded = Base.invokelatest(layout, width; levels = 4, max_weight = 4)
+            @test (radix == bounded) == (width == 19)
+        end
     end
     @testset "Nonsymmetric MOI matrix convention and overflow" begin
         G, g = [1 3; 0 2], [-2, 4]
@@ -166,13 +174,13 @@ using TOML
         transformed = Base.invokelatest(substitute, G, g, 7, offset, expansion)
         function moi_polynomial(G, g, constant)
             n = length(g)
-            quadratic = [RMOI.ScalarQuadraticTerm(2.0 * G[i, i],
-                         RMOI.VariableIndex(i), RMOI.VariableIndex(i)) for i in 1:n]
-            append!(quadratic, [RMOI.ScalarQuadraticTerm(Float64(G[i, j] + G[j, i]),
-                               RMOI.VariableIndex(i), RMOI.VariableIndex(j))
+            quadratic = [moi.ScalarQuadraticTerm(2.0 * G[i, i],
+                         moi.VariableIndex(i), moi.VariableIndex(i)) for i in 1:n]
+            append!(quadratic, [moi.ScalarQuadraticTerm(Float64(G[i, j] + G[j, i]),
+                               moi.VariableIndex(i), moi.VariableIndex(j))
                                for i in 1:n for j in (i + 1):n])
-            affine = [RMOI.ScalarAffineTerm(Float64(g[i]), RMOI.VariableIndex(i)) for i in 1:n]
-            return RMOI.ScalarQuadraticFunction(quadratic, affine, Float64(constant))
+            affine = [moi.ScalarAffineTerm(Float64(g[i]), moi.VariableIndex(i)) for i in 1:n]
+            return moi.ScalarQuadraticFunction(quadratic, affine, Float64(constant))
         end
         native_function = moi_polynomial(G, g, 7)
         digit_function = moi_polynomial(transformed.G, transformed.g, transformed.gamma)
@@ -181,8 +189,8 @@ using TOML
             z = offset + expansion * d
             @test sum(d .* (transformed.G * d)) + sum(transformed.g .* d) + transformed.gamma ==
                   sum(z .* (G * z)) + sum(g .* z) + 7
-            @test RMOI.Utilities.eval_variables(vi -> z[vi.value], native_function) ==
-                  RMOI.Utilities.eval_variables(vi -> d[vi.value], digit_function) ==
+            @test moi.Utilities.eval_variables(vi -> z[vi.value], native_function) ==
+                  moi.Utilities.eval_variables(vi -> d[vi.value], digit_function) ==
                   sum(z .* (G * z)) + sum(g .* z) + 7
         end
         @test_throws ArgumentError Base.invokelatest(substitute,
