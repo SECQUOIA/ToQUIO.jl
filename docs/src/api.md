@@ -430,7 +430,7 @@ a `target_position` and `coefficient`. Positions are **one-based state-vector
 positions**, independent of MOI variable IDs. Native reformulation uses one term
 with coefficient 1 and offset 0; the format permits later multi-digit affine
 projections without changing the legacy one-to-one raw mapping. Optional integer
-encodings use schema version2 with composed source maps, encoded target order and
+encodings use schema version 2 with composed source maps, encoded target order and
 a nested complete native snapshot; see [Integer Encoding](encoding.md).
 
 Metadata contains finite integer or floating-point numbers, strings, booleans,

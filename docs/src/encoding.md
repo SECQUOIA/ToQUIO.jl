@@ -46,7 +46,7 @@ positive native `rho` are retained. Floating arithmetic still has the precision
 of the chosen coefficient type; reject nonfinite transformed coefficients and
 validate numerical parity for applications requiring tight tolerances.
 
-`max_encoded_variables` / `MaxEncodedVariables()` defaults to256 and checks the
+`max_encoded_variables` / `MaxEncodedVariables()` defaults to 256 and checks the
 complete digit count before dense expansion matrices are allocated. This is a
 configurable allocation guard, not a verified device limit. It does not restrict
 the default native path. Extensions must also bound their own layout construction;
@@ -56,7 +56,7 @@ the hook receives identities, not authorization to perform expensive experiments
 
 Activate/instantiate the repository project to run this example. The namespace
 alias below uses ToQUIO's existing MOI dependency. The demonstration supports only
-interval widths0–2 and can be used for original variables and slacks.
+interval widths 0–2 and can be used for original variables and slacks.
 
 ```@example integer_encoding
 using ToQUIO
@@ -65,7 +65,7 @@ const EMOI = ToQUIO.MOI
 struct DemoPair <: AbstractIntegerEncoding end
 function ToQUIO.variable_encoding(::DemoPair, lower, upper; context)
     width = upper - lower
-    0 <= width <= 2 || throw(ArgumentError("DemoPair supports only widths0–2."))
+    0 <= width <= 2 || throw(ArgumentError("DemoPair supports only widths 0–2."))
     IntegerVariableEncoding(lower, ones(Int, Int(width)), ones(Int, Int(width)))
 end
 ToQUIO.encoding_descriptor(::DemoPair) = Dict("name" => "demo-pair", "max_width" => 2)
@@ -98,7 +98,11 @@ digits = lift_native_state(optimizer, native_point)
 Fixed source values are restored even with no allocated digit, but still require
 a valid backend result index. `MOI.ObjectiveValue` evaluates the original source
 objective; `PenalizedObjectiveValue` reports the backend's actual target objective.
-Noncontiguous source indices and remapped backend indices are supported.
+Encoded MOI primal values use the optimizer coefficient type when conversion is
+lossless, including fixed coordinates. Wider decoded values are retained when
+conversion would round or overflow; explicit projection helpers also retain exact
+or widened values. Noncontiguous source indices and remapped backend indices are
+supported.
 
 `project_original_state` and `project_native_state` accept a full encoded vector
 in the recorded target order. They preserve fractional samples without rounding
@@ -124,11 +128,11 @@ unchanged; nonpoint records are not silently treated as feasible samples.
 | `:encoded_variables, :encoded_n, :encoded_Q, :encoded_L, :encoded_c, :encoded_l, :encoded_u` | Actual encoded target order, polynomial and bounds |
 | `:target_to_backend_variables` | Actual target-to-backend map, populated when a backend is used |
 
-Native metadata remains **version1**. Optional encoding uses **version2**:
+Native metadata remains **version 1**. Optional encoding uses **version 2**:
 `target_variable_order` and bounds describe actual digits, `original_variables`
 contains the composed source maps, `auxiliary_variables` lists slack-owned digits,
 and `native_variables` records all native affine expansions and typed slack
-ownership. The complete version1 snapshot, including penalties and canonical row
+ownership. The complete version 1 snapshot, including penalties and canonical row
 signs, is nested in `native_reformulation`. Fixed native coordinates still have
 entries with constant expansions. Unknown/malformed schemas, shared or unowned
 digits, wrong native coverage, forged source compositions and wrong slack owners

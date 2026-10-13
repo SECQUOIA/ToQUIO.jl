@@ -49,7 +49,15 @@ function MOI.get(solver::Optimizer{T}, attr::MOI.VariablePrimal, vi::VI) where {
         MOI.get(solver.inner, attr, _backend_variable(solver, solver.data[:encoded_variables][i]))
         for i in solver.data[:encoding_digit_positions][position]
     ]
-    return _decode_layout(layout, digits)
+    decoded = _decode_layout(layout, digits)
+    value = try
+        convert(T, decoded)
+    catch error
+        error isa Union{InexactError,OverflowError} || rethrow()
+        return decoded
+    end
+    # Normalize fixed and ordinary values without rounding a widened decode.
+    return isfinite(value) && value == decoded ? value : decoded
 end
 
 function MOI.supports(solver::Optimizer{T}, attr::MOI.TerminationStatus) where {T}

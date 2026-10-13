@@ -10,6 +10,14 @@ struct TranslatedIdentity <: ToQUIO.AbstractIntegerEncoding end
 ToQUIO.variable_encoding(::TranslatedIdentity, lower, upper; context) =
     ToQUIO.variable_encoding(ToQUIO.NativeEncoding(), lower, upper; context)
 
+struct TestWeightedDigits <: ToQUIO.AbstractIntegerEncoding end
+function ToQUIO.variable_encoding(::TestWeightedDigits, lower, upper; context)
+    width = upper - lower
+    width == 4 && return ToQUIO.IntegerVariableEncoding(lower, [2, 1], [1, 2])
+    width == 3 && return ToQUIO.IntegerVariableEncoding(lower, [2, 1], [1, 1])
+    return ToQUIO.variable_encoding(ToQUIO.NativeEncoding(), lower, upper; context)
+end
+
 struct WrongInterval <: ToQUIO.AbstractIntegerEncoding end
 ToQUIO.variable_encoding(::WrongInterval, lower, upper; context) =
     ToQUIO.IntegerVariableEncoding(lower + 1, [1], [1])
@@ -159,6 +167,51 @@ end
               Dict("offset" => 3.0, "scale" => 0.1)
     end
 
+    @testset "compiled nonunit weights, nonbinary bounds and independent decoding" begin
+        for sense in (RMOI.MIN_SENSE, RMOI.MAX_SENSE)
+            source, x, y, fixed, _, _ = encoding_fixture(sense)
+            bounds = RMOI.ConstraintIndex{RMOI.VariableIndex,RMOI.Interval{Float64}}(x.value)
+            RMOI.set(source, RMOI.ConstraintSet(), bounds, RMOI.Interval(-2.0, 2.0))
+            varmap = vi -> vi == x ? 2 : vi == y ? 1 : 3
+            target, data = ToQUIO.to_quio(Float64, varmap, _ -> 1, source;
+                                        encoding = TestWeightedDigits())
+            expected_uppers = [1, 1, 2, 1, 1, 1, 1]
+            @test data[:encoded_u] == expected_uppers
+            for (vi, upper) in zip(data[:encoded_variables], expected_uppers)
+                ci = RMOI.ConstraintIndex{RMOI.VariableIndex,RMOI.Interval{Float64}}(vi.value)
+                @test RMOI.get(target, RMOI.ConstraintSet(), ci) == RMOI.Interval(0.0, Float64(upper))
+            end
+            metadata = ToQUIO.reformulation_metadata(data)
+            images = Set{Tuple}()
+            sign = sense == RMOI.MIN_SENSE ? 1 : -1
+            for state in Iterators.product((0:u for u in expected_uppers)...)
+                d = collect(state)
+                # Hand-written coordinate map, independent of all compiler/decode helpers.
+                z = [d[1], -2 + 2d[2] + d[3], 2, 2d[4] + d[5], 2d[6] + d[7]]
+                push!(images, Tuple(z))
+                @test ToQUIO.project_native_state(data, d) == z
+                @test ToQUIO.project_native_state(metadata, d) == z
+                @test ToQUIO.project_original_state(data, d) == Dict(x => z[2], y => z[1], fixed => 2)
+                xv, yv = z[2], z[1]
+                expected = 2xv^2 + 3xv*yv + yv^2 + 10xv - 4yv + 7 + sign * (
+                    data[:rho][1] * (xv - yv + z[4])^2 +
+                    data[:rho][2] * (-xv - yv + z[5])^2)
+                @test encoded_value(target, data, d) == expected
+                @test ToQUIO.is_feasible(data, d) == (xv <= yv && xv + yv >= 0)
+            end
+            @test images == Set(Tuple(z) for z in Iterators.product(0:1, -2:2, 2:2, 0:3, 0:3))
+            shifted = ToQUIO.Optimizer(; encoding = TranslatedIdentity())
+            RMOI.optimize!(shifted, source)
+            @test shifted.data[:encoded_u] == [4, 1, 3, 3]
+            for d in Iterators.product(0:4, 0:1, 0:3, 0:3)
+                state = collect(d)
+                z = [-2 + d[1], d[2], 2, d[3], d[4]]
+                @test ToQUIO.project_native_state(shifted, state) == z
+                @test encoded_value(shifted.target_model, shifted.data, state) == penalized_value(shifted.data, z)
+            end
+        end
+    end
+
     @testset "backend remapping, results and source versus target objective" begin
         source, x, y, fixed, _, _ = encoding_fixture(RMOI.MIN_SENSE)
         compiled = ToQUIO.Optimizer(; encoding = TestDigits())
@@ -168,6 +221,7 @@ end
         RMOI.optimize!(optimizer, source)
         @test all(v != backend for (v, backend) in optimizer.data[:target_to_backend_variables])
         @test [RMOI.get(optimizer, RMOI.VariablePrimal(1), v) for v in (x, y, fixed)] == [0, 1, 2]
+        @test all(RMOI.get(optimizer, RMOI.VariablePrimal(1), v) isa Float64 for v in (x, y, fixed))
         @test [RMOI.get(optimizer, RMOI.VariablePrimal(2), v) for v in (x, y, fixed)] == [1, 0, 2]
         @test RMOI.get(optimizer, RMOI.ObjectiveValue(1)) == 4
         @test RMOI.get(optimizer, RMOI.ObjectiveValue(2)) == 19
@@ -213,6 +267,7 @@ end
         RMOI.optimize!(optimizer, source)
         @test optimizer.data[:encoded_n] == 0
         @test RMOI.get(optimizer, RMOI.VariablePrimal(), x) == 2
+        @test RMOI.get(optimizer, RMOI.VariablePrimal(), x) isa Float64
         @test RMOI.get(optimizer, RMOI.ObjectiveValue()) == 7
         @test RMOI.get(optimizer, ToQUIO.PenalizedObjectiveValue()) == 7
         @test ToQUIO.is_feasible(optimizer)
@@ -275,6 +330,17 @@ end
         @test decoded isa BigFloat && decoded == -2 + digit
         @test ToQUIO.project_original_state(ToQUIO.reformulation_metadata(optimizer), state)[x.value] == decoded
         @test_throws ArgumentError ToQUIO.project_original_state(optimizer, [Inf, 0, 0])
+
+        wide = RMOI.Utilities.Model{Float64}()
+        v = add_interval_integer_variable(wide, 2.0^64, 2.0^64 + 8192)
+        set_affine_objective!(wide, RMOI.MIN_SENSE, affine_term(1, v))
+        wide_backend = ToQUIO.Optimizer(() -> multi_result_backend([[1.0]]);
+                                       encoding = TranslatedIdentity())
+        RMOI.optimize!(wide_backend, wide)
+        @test wide_backend.data[:encoding_layouts][1].offset isa BigInt
+        @test RMOI.get(wide_backend, RMOI.VariablePrimal(), v) isa BigFloat
+        @test RMOI.get(wide_backend, RMOI.VariablePrimal(), v) == big(2)^64 + 1
+        @test ToQUIO.project_original_state(wide_backend, [1.0])[v] == big(2)^64 + 1
 
         small, _, _, _, _, _ = encoding_fixture(RMOI.MIN_SENSE)
         malformed = ToQUIO.Optimizer(() -> multi_result_backend([fill(NaN, 7)]); encoding = TestDigits())
