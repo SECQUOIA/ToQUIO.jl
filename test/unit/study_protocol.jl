@@ -51,6 +51,15 @@ using TOML
         end
         @test Base.invokelatest(lift, 5, [1, 4, 3], [3, 2, 1]) == [1, 1, 0]
         @test Base.invokelatest(lift, 1, [1, 1], [1, 1]) == [1, 0]
+        for (width, value, levels, expected) in ((14, 5, 4, [1, 1, 0]), (2, 1, 2, [1, 0]))
+            source = moi.Utilities.Model{Float64}()
+            x = add_interval_integer_variable(source, -7, width - 7)
+            set_affine_objective!(source, moi.MIN_SENSE, affine_term(1, x))
+            optimizer = ToQUIO.Optimizer(; encoding = ToQUIO.RadixEncoding(; levels))
+            moi.optimize!(optimizer, source)
+            @test ToQUIO.lift_native_state(optimizer, [value - 7]) == expected
+            @test ToQUIO.lift_native_state(ToQUIO.reformulation_metadata(optimizer), [value - 7]) == expected
+        end
     end
     # Independent DP checks an emitted layout, rather than trusting its formula.
     function reachable_sums(weights, uppers; offset = 0)
