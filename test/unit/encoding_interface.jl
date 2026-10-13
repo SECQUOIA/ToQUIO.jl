@@ -331,16 +331,41 @@ end
         @test ToQUIO.project_original_state(ToQUIO.reformulation_metadata(optimizer), state)[x.value] == decoded
         @test_throws ArgumentError ToQUIO.project_original_state(optimizer, [Inf, 0, 0])
 
-        wide = RMOI.Utilities.Model{Float64}()
-        v = add_interval_integer_variable(wide, 2.0^64, 2.0^64 + 8192)
-        set_affine_objective!(wide, RMOI.MIN_SENSE, affine_term(1, v))
-        wide_backend = ToQUIO.Optimizer(() -> multi_result_backend([[1.0]]);
-                                       encoding = TranslatedIdentity())
-        RMOI.optimize!(wide_backend, wide)
-        @test wide_backend.data[:encoding_layouts][1].offset isa BigInt
-        @test RMOI.get(wide_backend, RMOI.VariablePrimal(), v) isa BigFloat
-        @test RMOI.get(wide_backend, RMOI.VariablePrimal(), v) == big(2)^64 + 1
-        @test ToQUIO.project_original_state(wide_backend, [1.0])[v] == big(2)^64 + 1
+        for exponent in (60, 63, 64), sign in (-1, 1)
+            wide = RMOI.Utilities.Model{Float64}()
+            lower = sign * 2.0^exponent
+            exact_lower = sign * big(2)^exponent
+            v = add_interval_integer_variable(wide, lower, lower + 8192)
+            set_affine_objective!(wide, RMOI.MIN_SENSE, affine_term(1, v))
+            wide_backend = ToQUIO.Optimizer(() -> multi_result_backend([[1.0]]);
+                                           encoding = TranslatedIdentity())
+            RMOI.optimize!(wide_backend, wide)
+            @test (wide_backend.data[:encoding_layouts][1].offset isa BigInt) ==
+                  !(typemin(Int) <= exact_lower <= typemax(Int))
+            @test RMOI.get(wide_backend, RMOI.VariablePrimal(), v) isa BigFloat
+            @test RMOI.get(wide_backend, RMOI.VariablePrimal(), v) == exact_lower + 1
+            @test ToQUIO.project_original_state(wide_backend, [1.0])[v] == exact_lower + 1
+            metadata = ToQUIO.reformulation_metadata(wide_backend)
+            @test ToQUIO.project_original_state(metadata, [0.5])[v.value] ==
+                  BigFloat(exact_lower) + big"0.5"
+        end
+        edge = ToQUIO.IntegerVariableEncoding(2^53 - 1, [1], [4])
+        @test ToQUIO._decode_layout(edge, [2.0]) == big(2)^53 + 1
+        for F in (Float16, Float32, Float64)
+            offset = big(2)^precision(F)
+            layout = ToQUIO.IntegerVariableEncoding(offset, [1, 1], [1, 1])
+            @test ToQUIO._decode_layout(layout, F[1, 0]) == offset + 1
+            @test ToQUIO._decode_layout(layout, F[0, 1]) == offset + 1
+        end
+        rational = big(1) // big(3)
+        rational_decode = ToQUIO._decode_layout(ToQUIO.IntegerVariableEncoding(2, [1], [1]), [rational])
+        @test rational_decode == 2 + rational
+        @test rational_decode isa Rational{BigInt}
+        huge = ToQUIO.IntegerVariableEncoding(big(2)^1000, [1, 1], [1, 1])
+        @test ToQUIO._decode_layout(huge, [1.0, 0.0]) == big(2)^1000 + 1
+        @test ToQUIO._decode_layout(huge, [0.0, 1.0]) == big(2)^1000 + 1
+        @test ToQUIO._decode_layout(huge, [2.0^-1000, 0.0]) ==
+              BigFloat((big(2)^2000 + 1) // (big(2)^1000); precision = 2001)
 
         small, _, _, _, _, _ = encoding_fixture(RMOI.MIN_SENSE)
         malformed = ToQUIO.Optimizer(() -> multi_result_backend([fill(NaN, 7)]); encoding = TestDigits())

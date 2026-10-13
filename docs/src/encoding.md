@@ -104,6 +104,13 @@ conversion would round or overflow; explicit projection helpers also retain exac
 or widened values. Noncontiguous source indices and remapped backend indices are
 supported.
 
+Large-magnitude sums of integer offsets/weights and hardware floating digits
+(`Float16`, `Float32`, `Float64`) use an exact dyadic accumulator and return a
+`BigFloat` with enough significand bits when ordinary arithmetic would lose an
+integer-scale increment. This is independent of Int/BigInt storage. BigFloat
+samples use their normal arithmetic precision; transformed polynomial coefficients
+still use the compiler coefficient type as described above.
+
 `project_original_state` and `project_native_state` accept a full encoded vector
 in the recorded target order. They preserve fractional samples without rounding
 or repairing them; malformed lengths, nonfinite values and decoding overflow are

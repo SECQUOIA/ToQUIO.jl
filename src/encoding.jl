@@ -115,7 +115,7 @@ function _decode_layout(layout::IntegerVariableEncoding, digits::AbstractVector)
         value = _affine_add(value, w, d)
         isfinite(value) || throw(ArgumentError("Decoded value overflowed."))
     end
-    return value
+    return _finish_affine_decode(value)
 end
 
 function _affine_add(value, coefficient, sample)
@@ -127,8 +127,38 @@ function _affine_add(value, coefficient, sample)
         end
         return result
     end
+    hardware = Union{Float16,Float32,Float64}
+    if value isa Union{Integer,Rational{BigInt},hardware} && coefficient isa Integer &&
+       sample isa Union{Integer,hardware}
+        floating = sample isa hardware ? typeof(sample) :
+                   value isa hardware ? typeof(value) : Float64
+        limit = maxintfloat(floating)
+        product = coefficient * sample
+        rounded = value + product
+        magnitude = value isa Integer ? abs(big(value)) : abs(value)
+        if value isa Rational{BigInt} || magnitude >= limit || abs(big(coefficient)) >= limit ||
+           !isfinite(product) || abs(product) >= limit || !isfinite(rounded) || abs(rounded) >= limit
+            # Hardware floats are exact dyadic rationals. Retain this accumulator
+            # until decoding finishes, rather than rounding between digit terms.
+            exact = Rational{BigInt}(value) + big(coefficient) * Rational{BigInt}(sample)
+            if rounded isa hardware && isfinite(rounded) && Rational{BigInt}(rounded) == exact
+                return rounded
+            end
+            return exact
+        end
+        return rounded
+    end
     return value + coefficient * sample
 end
+
+function _finish_affine_decode(value::Rational{BigInt})
+    ispow2(denominator(value)) || return value
+    # A dyadic denominator needs no extra significand bits. This is per-value
+    # precision and does not change the process-wide BigFloat precision.
+    bits = max(precision(BigFloat), ndigits(abs(numerator(value)); base = 2))
+    return BigFloat(value; precision = bits)
+end
+_finish_affine_decode(value) = value
 
 function _canonical_digits(layout::IntegerVariableEncoding, value)
     value isa Real && isfinite(value) && isinteger(value) ||
