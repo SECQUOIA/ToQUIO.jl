@@ -49,6 +49,10 @@ function _source_constraint_positions(::Type{T}, source::MOI.ModelLike) where {T
 end
 
 function MOI.optimize!(solver::Optimizer{T}, model::MOI.ModelLike) where {T}
+    # A failed new reformulation must not expose the previous model's mappings.
+    # Replace the dictionary so externally retained raw data remains usable.
+    solver.data = Dict{Symbol,Any}()
+    solver.target_model = nothing
     solver.source_model = model
     variable_positions = _source_variable_positions(solver.source_model)
     constraint_positions = _source_constraint_positions(T, solver.source_model)

@@ -357,7 +357,8 @@ Schema version 1 is a string-keyed dictionary with the following fields:
 | `constraint_encodings` | Penalized affine constraints in equality, `<=`, then `>=` order, with source/canonical relations, row multipliers, slack positions and automatic/applied/hinted penalties |
 | `guarantees` | Explicit projection, feasibility-check and repair boundaries |
 
-Constraint identities include their function and set types: a numeric MOI
+Constraint identities use fully qualified, context-independent function and set
+type strings (for example `MathOptInterface.LessThan{Core.Float64}`): a numeric MOI
 constraint ID alone is not unique across constraint types. A `>=` row is negated
 to `<=` before introducing its slack; metadata records its row multiplier `-1`.
 Bounds and integer-domain constraints are represented by target bounds and the
@@ -380,7 +381,10 @@ wrong length or nonfinite/non-real values. It preserves fractional samples and
 does not certify source feasibility, check target-domain/slack consistency, or
 repair auxiliaries. For example, projecting `[1.5, -10]` yields `x = 1.5` even
 though that sample violates the target's integer and slack domains. Unknown
-schema versions are rejected. Existing raw keys such as `:target_variables`
+schema versions and malformed document fields are rejected with `ArgumentError`.
+IDs, positions and numeric expansion fields reject booleans. A failed new
+reformulation invalidates the optimizer's current metadata; a previously retained
+raw dictionary or metadata snapshot remains usable. Existing raw keys such as `:target_variables`
 (original-variable targets only), `:rho` and `:Q` keep their previous meaning;
 `:quio_variables` adds the full target order and `:slack_constraints` adds ownership.
 

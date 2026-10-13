@@ -16,18 +16,109 @@ end
 
 function _serialized_reformulation(data::AbstractDict)
     version = get(data, "schema_version", nothing)
-    version isa Integer && version == REFORMULATION_SCHEMA_VERSION ||
+    _metadata_integer(version) && version == REFORMULATION_SCHEMA_VERSION ||
         throw(ArgumentError("Unsupported ToQUIO reformulation schema version."))
     package = get(data, "package", nothing)
     package isa AbstractDict && get(package, "name", nothing) == "ToQUIO" ||
         throw(ArgumentError("Not a ToQUIO reformulation metadata document."))
-    return _validate_metadata_values(data)
+    _validate_metadata_values(data)
+    _validate_metadata_structure(data)
+    return data
 end
 
+_metadata_integer(value) = value isa Integer && !(value isa Bool)
+
 function _metadata_number(value)
-    value isa Union{Integer,AbstractFloat} && isfinite(value) ||
+    !(value isa Bool) && value isa Union{Integer,AbstractFloat} && isfinite(value) ||
         throw(ArgumentError("Metadata numbers must be finite integers or floating-point values."))
     return value
+end
+
+function _metadata_field(data::AbstractDict, key::String, ::Type{T}) where {T}
+    haskey(data, key) && data[key] isa T ||
+        throw(ArgumentError("Missing or invalid metadata field '$key'."))
+    return data[key]
+end
+
+function _metadata_ids(data::AbstractDict, key::String)
+    ids = _metadata_field(data, key, AbstractVector)
+    all(_metadata_integer, ids) && length(unique(ids)) == length(ids) ||
+        throw(ArgumentError("Metadata field '$key' must contain unique integer IDs."))
+    return ids
+end
+
+function _validate_constraint_identity(identity::AbstractDict)
+    _metadata_integer(_metadata_field(identity, "id", Integer)) ||
+        throw(ArgumentError("A constraint ID must be an integer, not a boolean."))
+    _metadata_field(identity, "function_type", String)
+    _metadata_field(identity, "set_type", String)
+    return nothing
+end
+
+function _validate_metadata_structure(data::AbstractDict)
+    _metadata_field(data["package"], "version", String)
+    source_ids = _metadata_ids(data, "source_variable_order")
+    target_ids = _metadata_ids(data, "target_variable_order")
+    auxiliary_ids = _metadata_ids(data, "auxiliary_variables")
+    target_id_set = Set(target_ids)
+    auxiliary_id_set = Set(auxiliary_ids)
+    all(id in target_id_set for id in auxiliary_ids) ||
+        throw(ArgumentError("Auxiliary IDs must refer to target variables."))
+    for key in ("target_lower_bounds", "target_upper_bounds")
+        bounds = _metadata_field(data, key, AbstractVector)
+        length(bounds) == length(target_ids) ||
+            throw(ArgumentError("Target bounds must match the target variable order."))
+        foreach(_metadata_number, bounds)
+    end
+    originals = _metadata_field(data, "original_variables", AbstractVector)
+    length(originals) == length(source_ids) ||
+        throw(ArgumentError("Source projections must match the source variable order."))
+    for (id, entry) in zip(source_ids, originals)
+        entry isa AbstractDict || throw(ArgumentError("A source projection must be a dictionary."))
+        entry_id = _metadata_field(entry, "id", Integer)
+        _metadata_integer(entry_id) && entry_id == id ||
+            throw(ArgumentError("Source projection IDs must match source order without duplicates."))
+        expansion = _metadata_field(entry, "expansion", AbstractDict)
+        _metadata_field(expansion, "kind", String) == "affine" ||
+            throw(ArgumentError("Unsupported projection expansion kind."))
+        _metadata_number(_metadata_field(expansion, "offset", Real))
+        for term in _metadata_field(expansion, "terms", AbstractVector)
+            term isa AbstractDict || throw(ArgumentError("A projection term must be a dictionary."))
+            position = _metadata_field(term, "target_position", Integer)
+            _metadata_integer(position) && 1 <= position <= length(target_ids) ||
+                throw(ArgumentError("Projection references an invalid target position."))
+            _metadata_number(_metadata_field(term, "coefficient", Real))
+        end
+    end
+    for slack in _metadata_field(data, "slack_variables", AbstractVector)
+        slack isa AbstractDict || throw(ArgumentError("A slack entry must be a dictionary."))
+        id = _metadata_field(slack, "id", Integer)
+        position = _metadata_field(slack, "target_position", Integer)
+        _metadata_integer(id) && _metadata_integer(position) &&
+            1 <= position <= length(target_ids) && target_ids[position] == id &&
+            id in auxiliary_id_set || throw(ArgumentError("Invalid slack target identity or position."))
+        _validate_constraint_identity(_metadata_field(slack, "source_constraint", AbstractDict))
+    end
+    for entry in _metadata_field(data, "constraint_encodings", AbstractVector)
+        entry isa AbstractDict || throw(ArgumentError("A constraint entry must be a dictionary."))
+        _validate_constraint_identity(_metadata_field(entry, "source_constraint", AbstractDict))
+        for key in ("source_relation", "canonical_relation")
+            _metadata_field(entry, key, String)
+        end
+        multiplier = _metadata_field(entry, "row_multiplier", Integer)
+        _metadata_integer(multiplier) && multiplier in (-1, 1) ||
+            throw(ArgumentError("A canonical row multiplier must be -1 or 1."))
+        position = _metadata_field(entry, "slack_target_position", Union{Nothing,Integer})
+        isnothing(position) || (_metadata_integer(position) && 1 <= position <= length(target_ids)) ||
+            throw(ArgumentError("Invalid constraint slack target position."))
+        for key in ("applied_penalty", "automatic_penalty")
+            _metadata_number(_metadata_field(entry, key, Real))
+        end
+        hint = _metadata_field(entry, "penalty_hint", Union{Nothing,Real})
+        isnothing(hint) || _metadata_number(hint)
+    end
+    _metadata_field(data, "guarantees", AbstractDict)
+    return nothing
 end
 
 function _validate_metadata_values(value)
@@ -46,8 +137,8 @@ end
 function _constraint_identity(ci::CI{F,S}) where {F,S}
     return Dict{String,Any}(
         "id" => ci.value,
-        "function_type" => string(F),
-        "set_type" => string(S),
+        "function_type" => sprint(show, F; context = :module => nothing),
+        "set_type" => sprint(show, S; context = :module => nothing),
     )
 end
 
@@ -177,6 +268,7 @@ repair slacks. Serialized affine expansion terms use one-based target positions,
 not variable IDs, allowing future schema extensions to multiple target digits.
 """
 function project_original_state(input, state::AbstractVector)
+    Base.require_one_based_indexing(state)
     all(x -> x isa Real && isfinite(x), state) ||
         throw(ArgumentError("Target state values must be finite real numbers."))
     if input isa AbstractDict && haskey(input, "schema_version")
@@ -205,7 +297,7 @@ function _project_expansion(expansion::AbstractDict, state::AbstractVector)
     value = _metadata_number(expansion["offset"])
     for term in expansion["terms"]
         position = term["target_position"]
-        position isa Integer && 1 <= position <= length(state) ||
+        _metadata_integer(position) && 1 <= position <= length(state) ||
             throw(ArgumentError("Projection references an invalid target position."))
         value += _metadata_number(term["coefficient"]) * state[position]
     end
