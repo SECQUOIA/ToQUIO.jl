@@ -72,13 +72,13 @@ function canonical_polynomial(optimizer)
 end
 
 function multiplicity_statistics(optimizer; max_native_states = 10_000)
-    lower, upper = ceil.(Int, optimizer.data[:l]), floor.(Int, optimizer.data[:u])
-    native_states = prod(big(u - l + 1) for (l, u) in zip(lower, upper); init = big(1))
+    lower, upper = ceil.(BigInt, optimizer.data[:l]), floor.(BigInt, optimizer.data[:u])
+    native_states = prod(u - l + 1 for (l, u) in zip(lower, upper); init = big(1))
     native_states <= max_native_states ||
         throw(ArgumentError("Multiplicity DP exceeds the native-state budget."))
     target_states, smallest, largest = big(1), big(1), big(1)
     if haskey(optimizer.data, :encoding_layouts)
-        for layout in optimizer.data[:encoding_layouts]
+        for (layout, l, u) in zip(optimizer.data[:encoding_layouts], lower, upper)
             counts = BigInt[1]
             assignments = big(1)
             for (weight, bound) in zip(layout.weights, layout.upper_bounds)
@@ -90,6 +90,7 @@ function multiplicity_statistics(optimizer; max_native_states = 10_000)
                 assignments *= bound + 1
             end
             @assert all(>(0), counts)
+            @assert length(counts) == u - l + 1
             @assert sum(counts) == assignments
             target_states *= assignments
             smallest *= minimum(counts)

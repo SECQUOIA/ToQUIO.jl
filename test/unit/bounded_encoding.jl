@@ -277,5 +277,31 @@ end
             @test measured.preimages_min == minimum(values(preimages))
             @test measured.preimages_max == maximum(values(preimages))
         end
+        for strategy in (ToQUIO.NativeEncoding(), ToQUIO.RadixEncoding())
+            source = RMOI.Utilities.Model{Float64}()
+            x = add_interval_integer_variable(source, -2.0^62, 2.0^62)
+            set_affine_objective!(source, RMOI.MIN_SENSE, affine_term(1, x))
+            optimizer = ToQUIO.Optimizer(; encoding = strategy)
+            RMOI.optimize!(optimizer, source)
+            @test_throws ArgumentError Base.invokelatest(multiplicities, optimizer)
+        end
+        for strategy in (ToQUIO.RadixEncoding(), ToQUIO.BoundedEncoding())
+            source, _, _, _ = Base.invokelatest(make_source, "slack-heavy")
+            optimizer = ToQUIO.Optimizer(; encoding = strategy)
+            RMOI.optimize!(optimizer, source)
+            bounds = optimizer.data[:encoded_u]
+            assignments = prod(big(m) + 1 for m in bounds; init = big(1))
+            assignments <= 50_000 || throw(ArgumentError("Multiplicity enumeration exceeds its budget."))
+            preimages = Dict{Tuple,Int}()
+            for state in Iterators.product((0:Int(m) for m in bounds)...)
+                native = Tuple(ToQUIO.project_native_state(optimizer, collect(state)))
+                preimages[native] = get(preimages, native, 0) + 1
+            end
+            measured = Base.invokelatest(multiplicities, optimizer)
+            @test measured.target_states == sum(values(preimages)) == assignments
+            @test measured.native_states == length(preimages)
+            @test measured.preimages_min == minimum(values(preimages))
+            @test measured.preimages_max == maximum(values(preimages))
+        end
     end
 end
