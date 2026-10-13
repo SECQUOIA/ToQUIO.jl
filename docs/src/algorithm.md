@@ -126,7 +126,9 @@ First, compute an objective range bound over the region defined by variable boun
 Δ_bound ≥ max{f(x) : l ≤ x ≤ u} - min{f(x) : l ≤ x ≤ u}
 ```
 
-For linear objectives `f(x) = ℓ'x + β`, this bound is exact:
+For affine objectives `f(x) = ℓ'x + β` with each variable's terms combined,
+this bound is exact. Raw noncanonical objectives are bounded term by term;
+cancelling duplicate terms can therefore give a conservative overestimate:
 
 ```
 Δ_bound = Σᵢ |ℓᵢ|(uᵢ - lᵢ)

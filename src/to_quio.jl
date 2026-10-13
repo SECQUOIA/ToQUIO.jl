@@ -250,6 +250,7 @@ function to_quio(
 ) where {T}
     offset = _positive_penalty_control(T, ϵ, "Penalty offset")
     scale = _positive_penalty_control(T, penalty_scale, "Penalty scale")
+    source_constraints = _capture_source_constraints(T, source)
     # opt f(x)
     #  st A_eq x = b_eq
     #     A_lt x ≤ b_lt
@@ -398,6 +399,7 @@ function to_quio(
         :source_to_target_variables => source_to_target_variables,
         :quio_variables => z,
         :slack_constraints => penalty_constraints[(length(b_eq) + 1):end],
+        :source_constraints => source_constraints,
     )
 
     return (target, data)
@@ -423,7 +425,7 @@ function get_eq_matrices(::Type{T}, varmap::Function, conmap::Function, source) 
             c  = t.coefficient::T
             j  = varmap(vi)
 
-            A[i, j] = c
+            A[i, j] += c
         end
 
         b[i] = s.value - f.constant
@@ -547,7 +549,7 @@ function get_lt_matrices(::Type{T}, varmap::Function, conmap::Function, source) 
             c  = t.coefficient::T
             j  = varmap(vi)
 
-            A[i, j] = c
+            A[i, j] += c
         end
 
         b[i] = s.upper - f.constant
@@ -576,7 +578,7 @@ function get_gt_matrices(::Type{T}, varmap::Function, conmap::Function, source) 
             c  = t.coefficient::T
             j  = varmap(vi)
 
-            A[i, j] = c
+            A[i, j] += c
         end
 
         b[i] = s.lower - f.constant
