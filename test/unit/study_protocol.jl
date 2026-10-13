@@ -35,6 +35,14 @@ using TOML
     @test result.weak_optimum == 7
     @test !result.weak_source_feasible
     layout = Base.invokelatest(getproperty, proof, :protocol_layout)
+    @testset "bounded strategy matches frozen protocol layouts" begin
+        for width in 0:64, cap in specification["bounded_weight_candidates"]
+            strategy = ToQUIO.BoundedEncoding(; levels = specification["levels"], max_weight = cap)
+            actual = ToQUIO.variable_encoding(strategy, -3, width - 3; context = nothing)
+            expected = Base.invokelatest(layout, width; levels = specification["levels"], max_weight = cap)
+            @test (actual.weights, actual.upper_bounds) == expected
+        end
+    end
     lift = Base.invokelatest(getproperty, proof, :protocol_canonical_lift)
     state_count = Base.invokelatest(getproperty, proof, :protocol_state_count)
     substitute = Base.invokelatest(getproperty, proof, :protocol_affine_substitution)

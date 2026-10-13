@@ -4,6 +4,10 @@ Select `BoundedEncoding(; max_weight=2, levels=4)` through the
 [common interface](encoding.md). The global default remains `NativeEncoding()`.
 The strategy applies to originals and generated slacks and records both caps,
 the allocation limit and every actual affine map in schema version 2 metadata.
+Strategy identity uses `name`, `construction` and the recorded parameters
+together, plus the compiler revision for replay. Radix and bounded intentionally
+share the bounded-tail construction identifier; their names and caps distinguish
+the arms. Consumers must not key an arm on `construction` alone.
 It preserves the already selected native penalties without adding enforcement
 penalties. Strategy composition can use the interface's per-coordinate context.
 
@@ -46,8 +50,10 @@ integer intervals and nonfinite native bounds are rejected. Construction uses
 BigInt arithmetic; compilation checks exact representability in its coefficient
 type and rejects nonfinite transformed coefficients. `max_digits=256` limits
 each coordinate before construction grows without bound. `MaxEncodedVariables()`
-independently limits the full target. Both are configurable software guards;
-continuous variables are not discretized. Float64/BigFloat polynomial checks
+independently limits the full target. Both are configurable software guards.
+Refused layouts report the width, caps, required digit count and configured limit
+before allocating digits. Raise `max_digits`, `max_weight` or `levels` as appropriate.
+Continuous variables are not discretized. Float64/BigFloat polynomial checks
 retain the chosen arithmetic precision described in [the interface](encoding.md).
 
 ## Weight caps and final coefficients
@@ -77,6 +83,11 @@ penalty vector `[76,76,76,76]` in all arms. It records dimensions, active variab
 slack-owned auxiliaries, digit levels/weights, coupling structure and raw/canonical
 coefficient ranges. It invokes no optimizer backend or hardware.
 
+Raw G is the stored matrix in `z'G*z + g'z + c`: its diagonal is the square
+coefficient and a unique off-diagonal coefficient is `G_ij+G_ji`. MOI quadratic
+diagonal terms use twice `G_ii`. Raw entry maxima describe storage; compare
+the unique canonical coefficients for polynomial coefficient ranges.
+
 | Case / arm | Variables | Max weight | Max raw G | Max raw linear | Couplers | Canonical min/max abs |
 |---|---:|---:|---:|---:|---:|---:|
 | Scalar / native | 1 | 1 | 1 | 3 | 0 | 1 / 1 |
@@ -95,6 +106,23 @@ The script also reports minimum nonzero magnitude, maximum magnitude and their
 ratio. The scalar bounded example's ratio is 4 versus radix's 24; this is a
 structural measurement on this model, not a solve-time or quality conclusion.
 
+The artifact also records exact state counts and preimage multiplicities under
+projection to the **full native state, including inequality slacks**. Independent
+per-coordinate counting uses bounded dynamic programming, avoiding enumeration
+of the full digit product. The native-state budget is 10,000.
+
+| Case / arm | Target states | Native states | Min/max preimages |
+|---|---:|---:|---:|
+| Scalar / native | 11 | 11 | 1 / 1 |
+| Scalar / radix | 16 | 11 | 1 / 2 |
+| Scalar / bounded | 32 | 11 | 1 / 4 |
+| Slack-heavy / native | 8064 | 8064 | 1 / 1 |
+| Slack-heavy / radix | 12288 | 8064 | 1 / 4 |
+| Slack-heavy / bounded | 24576 | 8064 | 1 / 8 |
+
+These counts describe representations, not sampler quality or source-only
+multiplicity after dropping slacks.
+
 ```@example bounded_structure
 using ToQUIO
 include(joinpath(pkgdir(ToQUIO), "benchmarks", "bounded_structure.jl"))
@@ -105,7 +133,7 @@ include(joinpath(pkgdir(ToQUIO), "benchmarks", "bounded_structure.jl"))
 [Karimi and Ronagh's primary preprint](https://arxiv.org/abs/1706.01945),
 *Practical Integer-to-Binary Mapping for Quantum Annealers*, motivates bounded
 coefficients in binary encoding. The inspected
-[ToQUBO source](https://github.com/JuliaQUBO/ToQUBO.jl/blob/69ac52592f4c/src/encoding/variables/interval/bounded.jl)
+[ToQUBO source](https://github.com/JuliaQUBO/ToQUBO.jl/blob/69ac52592f4c47ed2168bf480c9947d1fcbbfc2c/src/encoding/variables/interval/bounded.jl)
 at revision `69ac52592f4c47ed2168bf480c9947d1fcbbfc2c` is MPL 2.0 (PSR, 2022).
 Its pinned residual-map coverage findings are recorded in
 [the study protocol](study.md). This implementation independently derives that

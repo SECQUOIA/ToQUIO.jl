@@ -71,6 +71,37 @@ function canonical_polynomial(optimizer)
             active = active, offset = offset, widths = widths)
 end
 
+function multiplicity_statistics(optimizer; max_native_states = 10_000)
+    lower, upper = ceil.(Int, optimizer.data[:l]), floor.(Int, optimizer.data[:u])
+    native_states = prod(big(u - l + 1) for (l, u) in zip(lower, upper); init = big(1))
+    native_states <= max_native_states ||
+        throw(ArgumentError("Multiplicity DP exceeds the native-state budget."))
+    target_states, smallest, largest = big(1), big(1), big(1)
+    if haskey(optimizer.data, :encoding_layouts)
+        for layout in optimizer.data[:encoding_layouts]
+            counts = BigInt[1]
+            assignments = big(1)
+            for (weight, bound) in zip(layout.weights, layout.upper_bounds)
+                next_counts = zeros(BigInt, length(counts) + Int(weight * bound))
+                for i in eachindex(counts), digit in 0:Int(bound)
+                    next_counts[i + Int(weight) * digit] += counts[i]
+                end
+                counts = next_counts
+                assignments *= bound + 1
+            end
+            @assert all(>(0), counts)
+            @assert sum(counts) == assignments
+            target_states *= assignments
+            smallest *= minimum(counts)
+            largest *= maximum(counts)
+        end
+    else
+        target_states = native_states
+    end
+    return (target_states = target_states, native_states = native_states,
+            preimages_min = smallest, preimages_max = largest)
+end
+
 function structure_statistics(optimizer)
     G, g, _, lower, upper = target_polynomial(optimizer)
     canonical = canonical_polynomial(optimizer)
@@ -87,7 +118,7 @@ function structure_statistics(optimizer)
     else
         isempty(canonical.active) ? 0 : 1
     end
-    return (
+    return merge((
         variables = length(lower), active = n,
         auxiliaries = length(auxiliary_variables(optimizer)),
         max_levels = maximum(floor.(Int, upper) - ceil.(Int, lower) .+ 1; init = 0),
@@ -97,7 +128,7 @@ function structure_statistics(optimizer)
         density = n < 2 ? 0.0 : 2length(couplers) / (n * (n - 1)),
         coefficient_min = lo, coefficient_max = hi,
         coefficient_ratio = isnothing(lo) ? nothing : hi / lo,
-    )
+    ), multiplicity_statistics(optimizer))
 end
 
 function bounded_structural_comparison()
