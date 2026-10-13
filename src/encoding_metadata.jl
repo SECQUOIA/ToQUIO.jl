@@ -20,6 +20,10 @@ function _compose_encoded_expansion(expansion, native_entries)
                                           term["coefficient"], digit["coefficient"])
         end
     end
+    offset = _finish_affine_decode(offset)
+    for position in keys(coefficients)
+        coefficients[position] = _finish_affine_decode(coefficients[position])
+    end
     return Dict{String,Any}(
         "kind" => "affine", "offset" => offset,
         "terms" => [Dict{String,Any}("target_position" => p, "coefficient" => coefficients[p])
