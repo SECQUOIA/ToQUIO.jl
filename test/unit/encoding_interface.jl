@@ -352,6 +352,12 @@ end
             @test RMOI.get(wide_backend, RMOI.VariablePrimal(), v) == exact_lower + 1
             @test ToQUIO.project_original_state(wide_backend, [1.0])[v] == exact_lower + 1
             metadata = ToQUIO.reformulation_metadata(wide_backend)
+            numeric_shape = deepcopy(metadata)
+            native_source = numeric_shape["native_reformulation"]["original_variables"][1]["expansion"]
+            native_source["offset"] = 0.0
+            native_source["terms"][1]["coefficient"] = big(1)
+            @test ToQUIO.reformulation_metadata(numeric_shape) == numeric_shape
+            @test ToQUIO.project_original_state(numeric_shape, [1.0])[v.value] == exact_lower + 1
             @test ToQUIO.project_original_state(metadata, [0.5])[v.value] ==
                   BigFloat(exact_lower) + big"0.5"
         end
@@ -379,12 +385,22 @@ end
         compiled = ToQUIO.Optimizer(; encoding = TestBigDigitBounds())
         RMOI.optimize!(compiled, large_bounds)
         saved = ToQUIO.reformulation_metadata(compiled)
+        floating_saved = deepcopy(saved)
+        for field in ("native_variables", "original_variables"), entry in floating_saved[field]
+            entry["expansion"]["offset"] = Float64(entry["expansion"]["offset"])
+            for term in entry["expansion"]["terms"]
+                term["coefficient"] = Float64(term["coefficient"])
+            end
+        end
+        @test ToQUIO.reformulation_metadata(floating_saved) == floating_saved
         default_precision, default_rounding = precision(BigFloat), rounding(BigFloat)
         for digits in ([1.0, 2.0^299], [2.0^299, 1.0])
             expected = big(2)^299 + 1
             @test ToQUIO.project_native_state(compiled, digits) == [expected]
             @test ToQUIO.project_native_state(saved, digits) == [expected]
             @test ToQUIO.project_original_state(saved, digits)[v.value] == expected
+            @test ToQUIO.project_native_state(floating_saved, digits) == [expected]
+            @test ToQUIO.project_original_state(floating_saved, digits)[v.value] == expected
         end
         @test precision(BigFloat) == default_precision
         @test rounding(BigFloat) == default_rounding

@@ -304,7 +304,8 @@ function project_original_state(input, state::AbstractVector)
         length(state) == length(metadata["target_variable_order"]) ||
             throw(DimensionMismatch("Expected a full target state including auxiliary variables."))
         return Dict(
-            entry["id"] => _project_expansion(entry["expansion"], state)
+            entry["id"] => _project_expansion(entry["expansion"], state;
+                                              integer_encoding = metadata["schema_version"] == 2)
             for entry in metadata["original_variables"]
         )
     end
@@ -323,16 +324,24 @@ function _project_original_native(data, state)
     )
 end
 
-function _project_expansion(expansion::AbstractDict, state::AbstractVector)
+function _project_expansion(expansion::AbstractDict, state::AbstractVector; integer_encoding = false)
     expansion["kind"] == "affine" ||
         throw(ArgumentError("Unsupported projection expansion kind."))
     value = _metadata_number(expansion["offset"])
+    integer_encoding && (value = _integer_metadata_number(value))
     for term in expansion["terms"]
         position = term["target_position"]
         _metadata_integer(position) && 1 <= position <= length(state) ||
             throw(ArgumentError("Projection references an invalid target position."))
-        value = _affine_add(value, _metadata_number(term["coefficient"]), state[position])
+        coefficient = _metadata_number(term["coefficient"])
+        integer_encoding && (coefficient = _integer_metadata_number(coefficient))
+        value = _affine_add(value, coefficient, state[position])
         isfinite(value) || throw(ArgumentError("Decoded value overflowed."))
     end
     return _finish_affine_decode(value)
+end
+
+function _integer_metadata_number(value)
+    value isa AbstractFloat && isinteger(value) || return value
+    return typemin(Int) <= value <= typemax(Int) ? Int(value) : BigInt(value)
 end

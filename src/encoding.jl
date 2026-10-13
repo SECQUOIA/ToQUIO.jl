@@ -297,7 +297,11 @@ function project_native_state(input, state::AbstractVector)
         length(state) == length(metadata["target_variable_order"]) ||
             throw(DimensionMismatch("Expected a full target state."))
         metadata["schema_version"] == 1 && return copy(state)
-        return [_project_expansion(e["expansion"], state) for e in metadata["native_variables"]]
+        return [
+            _decode_layout(layout, state[positions])
+            for entry in metadata["native_variables"]
+            for (layout, positions) in (_metadata_layout(metadata, entry),)
+        ]
     end
     data = _reformulation_data(input)
     length(state) == length(_sample_variables(data)) || throw(DimensionMismatch("Expected a full target state."))
