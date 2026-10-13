@@ -103,6 +103,10 @@ Core function that performs the QUIO reformulation.
   - `:u`: Upper bounds vector
 
 **Input validation:**
+- Direct source models must implement `MOI.ListOfConstraintTypesPresent`.
+  Unsupported types, including scalar affine functions in `MOI.Interval`, are
+  rejected with `ArgumentError` rather than silently omitted.
+- MathOptInterface 1.11 or later is required for source distance evaluation.
 - Every source variable must have finite lower and upper bounds and be marked
   `MOI.Integer` or `MOI.ZeroOne`.
 - Affine constraint coefficients and right-hand sides must be integer-valued.
@@ -442,8 +446,19 @@ raw dictionary or metadata snapshot remains usable across that failed call.
 metadata snapshot when a record must survive this reset. Existing raw keys such as `:target_variables`
 (original-variable targets only), `:rho` and `:Q` keep their previous meaning;
 `:quio_variables` adds the full target order and `:slack_constraints` adds ownership.
+`:source_constraints` stores copied `(index, func, set)` named tuples for source
+feasibility evaluation. These MOI functions/sets stay in raw data and are not
+part of the portable projection snapshot.
 
 ## Original Source Feasibility
+
+Aggregate optimizer reports retain every result record, with `result_index`,
+`primal_status` and `evaluated`. Only feasible, nearly feasible, and infeasible
+primal points are evaluated; absent solutions, certificates and unknown statuses
+are skipped. `feasible_fraction` divides by `primal_point_count`, not
+`result_count`, and is `nothing` if there are no points. Requesting a nonpoint
+result explicitly raises `ArgumentError`. Direct state calls have no backend
+status and evaluate the supplied values.
 
 ```@docs
 ToQUIO.ConstraintViolation

@@ -178,7 +178,7 @@ end
     @test project["version"] == INITIAL_REGISTRATION_VERSION
     @test compat["julia"] == first(SUPPORTED_JULIA_VERSIONS)
     @test compat["LinearAlgebra"] == "1"
-    @test compat["MathOptInterface"] == "1"
+    @test compat["MathOptInterface"] == "1.11"
 end
 
 @testset "Release workflow policy" begin

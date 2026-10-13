@@ -425,7 +425,7 @@ function get_eq_matrices(::Type{T}, varmap::Function, conmap::Function, source) 
             c  = t.coefficient::T
             j  = varmap(vi)
 
-            A[i, j] = c
+            A[i, j] += c
         end
 
         b[i] = s.value - f.constant
@@ -549,7 +549,7 @@ function get_lt_matrices(::Type{T}, varmap::Function, conmap::Function, source) 
             c  = t.coefficient::T
             j  = varmap(vi)
 
-            A[i, j] = c
+            A[i, j] += c
         end
 
         b[i] = s.upper - f.constant
@@ -578,7 +578,7 @@ function get_gt_matrices(::Type{T}, varmap::Function, conmap::Function, source) 
             c  = t.coefficient::T
             j  = varmap(vi)
 
-            A[i, j] = c
+            A[i, j] += c
         end
 
         b[i] = s.lower - f.constant

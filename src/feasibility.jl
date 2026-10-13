@@ -69,6 +69,8 @@ _constraint_variables(func::SAF) = unique(VI[term.variable for term in func.term
 
 function _source_evaluations(input, state::AbstractVector; atol)
     tolerance = _feasibility_tolerance(atol)
+    input isa AbstractDict && haskey(input, "schema_version") &&
+        throw(ArgumentError("Serialized projection metadata lacks source constraint functions."))
     data = _reformulation_data(input)
     haskey(data, :source_constraints) ||
         throw(ArgumentError("Source constraint snapshots are unavailable; reformulate with this version."))
@@ -104,12 +106,22 @@ function _source_evaluations(input, state::AbstractVector; atol)
     return projected, evaluations
 end
 
-function _optimizer_state(solver::Optimizer, result)
-    data = _reformulation_data(solver)
+function _optimizer_result_status(solver::Optimizer, result)
+    _reformulation_data(solver)
     count = MOI.get(solver, MOI.ResultCount())
     result isa Integer && !(result isa Bool) ||
         throw(ArgumentError("Result index must be an integer."))
     1 <= result <= count || throw(MOI.ResultIndexBoundsError(MOI.VariablePrimal(result), count))
+    return MOI.get(solver.inner, MOI.PrimalStatus(result))
+end
+
+_is_primal_point(status) = status in (MOI.FEASIBLE_POINT, MOI.NEARLY_FEASIBLE_POINT, MOI.INFEASIBLE_POINT)
+
+function _optimizer_state(solver::Optimizer, result)
+    status = _optimizer_result_status(solver, result)
+    _is_primal_point(status) ||
+        throw(ArgumentError("Result $result has no primal point (status $status)."))
+    data = _reformulation_data(solver)
     return [
         MOI.get(solver.inner, MOI.VariablePrimal(result), _backend_variable(solver, vi))
         for vi in _quio_variables(data)
@@ -183,8 +195,12 @@ end
 Return source feasibility, all per-constraint distances/residuals, projected
 values and optional target residuals. Optimizer `result=nothing` (the default)
 summarizes every available result; specify an index for one result. The aggregate
-counts result records, not read multiplicities, and its `feasible_fraction` is
-`nothing` for zero results. Max/sum violation diagnostics use native constraint
+counts result records, not read multiplicities. Only `FEASIBLE_POINT`,
+`NEARLY_FEASIBLE_POINT`, and `INFEASIBLE_POINT` records are evaluated; unavailable,
+certificate and unknown-status records are retained with `evaluated=false`.
+`feasible_fraction` uses `primal_point_count` as its denominator and is `nothing`
+when no points are available. Selecting a nonpoint result explicitly raises
+`ArgumentError`. Max/sum violation diagnostics use native constraint
 units without normalization. Source feasibility does not certify target slack
 consistency; target residuals remain separate and can be nonzero at a feasible
 source point. The source snapshot remains independent of later model edits.
@@ -199,16 +215,27 @@ function feasibility_report(solver::Optimizer; result = nothing, atol = 1e-6)
         return _state_feasibility_report(solver, _optimizer_state(solver, result); atol)
     end
     count = MOI.get(solver, MOI.ResultCount())
-    reports = [
-        _state_feasibility_report(solver, _optimizer_state(solver, i); atol)
-        for i in 1:count
-    ]
-    feasible_count = Base.count(report -> report["feasible"], reports)
+    reports = Dict{String,Any}[]
+    for i in 1:count
+        status = _optimizer_result_status(solver, i)
+        evaluated = _is_primal_point(status)
+        report = evaluated ?
+            _state_feasibility_report(solver, _optimizer_state(solver, i); atol) :
+            Dict{String,Any}("feasible" => nothing)
+        report["result_index"] = i
+        report["primal_status"] = string(status)
+        report["evaluated"] = evaluated
+        push!(reports, report)
+    end
+    points = filter(report -> report["evaluated"], reports)
+    feasible_count = Base.count(report -> report["feasible"], points)
+    point_count = length(points)
     return Dict{String,Any}(
-        "result_count" => count, "feasible_count" => feasible_count,
-        "feasible_fraction" => count == 0 ? nothing : feasible_count / count,
-        "max_violation" => isempty(reports) ? nothing : maximum(r["max_violation"] for r in reports),
-        "total_violation" => sum((r["total_violation"] for r in reports); init = 0),
+        "result_count" => count, "primal_point_count" => point_count,
+        "feasible_count" => feasible_count,
+        "feasible_fraction" => point_count == 0 ? nothing : feasible_count / point_count,
+        "max_violation" => isempty(points) ? nothing : maximum(r["max_violation"] for r in points),
+        "total_violation" => sum((r["total_violation"] for r in points); init = 0),
         "results" => reports,
     )
 end

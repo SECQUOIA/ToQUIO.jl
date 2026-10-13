@@ -10,15 +10,16 @@ function feasibility_fixture()
     return source, x, y, eq, lt, gt
 end
 
-function multi_result_backend(states)
+function multi_result_backend(states; statuses = fill(RMOI.FEASIBLE_POINT, length(states)))
     mock = RMOI.Utilities.MockOptimizer(RMOI.Utilities.Model{Float64}())
     RMOI.Utilities.set_mock_optimize!(mock, backend -> begin
         RMOI.set(backend, RMOI.TerminationStatus(), RMOI.OPTIMAL)
         RMOI.set(backend, RMOI.ResultCount(), length(states))
         variables = RMOI.get(backend, RMOI.ListOfVariableIndices())
         for (i, state) in enumerate(states)
-            RMOI.set(backend, RMOI.PrimalStatus(i), RMOI.FEASIBLE_POINT)
-            RMOI.set(backend, RMOI.VariablePrimal(i), variables, Float64[state...])
+            RMOI.set(backend, RMOI.PrimalStatus(i), statuses[i])
+            isnothing(state) ||
+                RMOI.set(backend, RMOI.VariablePrimal(i), variables, Float64[state...])
         end
     end)
     return mock
@@ -157,5 +158,71 @@ end
         legacy = copy(optimizer.data)
         delete!(legacy, :source_constraints)
         @test_throws ArgumentError ToQUIO.violations(legacy, [1])
+    end
+end
+
+# A source adapter may retain legal, noncanonical MOI affine terms.
+struct NoncanonicalSource <: RMOI.ModelLike
+    inner::RMOI.Utilities.Model{Float64}
+    rows::Dict{Any,SAF64}
+end
+RMOI.get(source::NoncanonicalSource, attr::RMOI.AbstractModelAttribute) = RMOI.get(source.inner, attr)
+RMOI.get(source::NoncanonicalSource, attr::RMOI.AbstractVariableAttribute, vi::RMOI.VariableIndex) =
+    RMOI.get(source.inner, attr, vi)
+RMOI.get(source::NoncanonicalSource, attr::RMOI.AbstractConstraintAttribute, ci::RMOI.ConstraintIndex) =
+    RMOI.get(source.inner, attr, ci)
+RMOI.get(source::NoncanonicalSource, ::RMOI.ConstraintFunction, ci::RMOI.ConstraintIndex) =
+    get(source.rows, ci, RMOI.get(source.inner, RMOI.ConstraintFunction(), ci))
+
+@testset "Feasibility review regressions" begin
+    @testset "noncanonical affine rows agree with compiled penalties" begin
+        for set in (RMOI.EqualTo(2.0), RMOI.LessThan(2.0), RMOI.GreaterThan(2.0))
+            source = RMOI.Utilities.Model{Float64}()
+            x = add_interval_integer_variable(source, 0, 3)
+            set_affine_objective!(source, RMOI.MIN_SENSE)
+            f = affine_function(affine_term(1, x), affine_term(1, x))
+            ci = RMOI.add_constraint(source, f, set)
+            raw = NoncanonicalSource(source, Dict{Any,SAF64}(ci => f))
+            _, data = reformulate(raw)
+            for value in 0:3
+                state = set isa RMOI.EqualTo ? [value] : [value, 0]
+                row = only(filter(r -> r["constraint"] == ToQUIO._constraint_identity(ci),
+                                  ToQUIO.feasibility_report(data, state)["constraints"]))
+                @test penalized_value(data, state) == only(data[:rho]) * row["target_residual"]^2
+            end
+        end
+    end
+
+    @testset "unsupported rows and projection-only snapshots" begin
+        source, _, _, _, _, _ = feasibility_fixture()
+        _, data = reformulate(source)
+        @test_throws r"lacks source constraint functions" ToQUIO.violations(
+            ToQUIO.reformulation_metadata(data), [1, 2, 1, 1])
+        source, x, _ = penalty_fixture()
+        RMOI.add_constraint(source, affine_function(affine_term(1, x)), RMOI.Interval(0.0, 2.0))
+        @test_throws ArgumentError reformulate(source)
+    end
+
+    @testset "missing primals and certificates are not sampled points" begin
+        source, _, _, _, _, _ = feasibility_fixture()
+        statuses = [RMOI.FEASIBLE_POINT, RMOI.NO_SOLUTION, RMOI.INFEASIBILITY_CERTIFICATE,
+                    RMOI.INFEASIBLE_POINT]
+        states = Any[[1, 2, 1, 1], nothing, [0, 0, 0, 0], [3, 0, 0, 0]]
+        optimizer = ToQUIO.Optimizer(() -> multi_result_backend(states; statuses))
+        RMOI.optimize!(optimizer, source)
+        report = ToQUIO.feasibility_report(optimizer)
+        @test report["result_count"] == 4
+        @test report["primal_point_count"] == 2
+        @test report["feasible_count"] == 1
+        @test report["feasible_fraction"] == 0.5
+        @test getindex.(report["results"], "evaluated") == [true, false, false, true]
+        @test getindex.(report["results"], "primal_status") == string.(statuses)
+        @test report["results"][2]["feasible"] === nothing
+        @test_throws r"no primal point" ToQUIO.violations(optimizer; result = 2)
+        @test_throws r"no primal point" ToQUIO.feasibility_report(optimizer; result = 3)
+        @test !ToQUIO.is_feasible(optimizer; result = 4)
+        empty = ToQUIO.Optimizer(() -> multi_result_backend([nothing]; statuses = [RMOI.NO_SOLUTION]))
+        RMOI.optimize!(empty, source)
+        @test ToQUIO.feasibility_report(empty)["feasible_fraction"] === nothing
     end
 end
