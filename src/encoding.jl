@@ -212,6 +212,8 @@ end
 function _encode_native_quio(::Type{T}, native, data, strategy, limit) where {T}
     strategy, limit = _encoding_options(strategy, limit)
     strategy isa NativeEncoding && return native, data
+    all(isfinite, data[:l]) && all(isfinite, data[:u]) ||
+        throw(ArgumentError("Integer encoding requires finite native variable bounds."))
     native_metadata = reformulation_metadata(data)
     variables = _quio_variables(data)
     source_owner = Dict(target => source for (source, target) in data[:source_to_target_variables])

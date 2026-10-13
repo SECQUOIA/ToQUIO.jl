@@ -145,6 +145,9 @@ Nonunique representations are allowed, and all are decoded identically. They
 change state multiplicity and local-search neighborhoods; polynomial equivalence
 does not imply equal sampling distributions. A deterministic right inverse
 (canonical lift) is required for shared controlled initialization and replay;
+`lift_native_state` is authoritative for ToQUIO arms. Experiment adapters and
+the executable protocol helper use the same decreasing-weight order, with ties
+in original digit order. Archive the actual ordered maps and initial digit state;
 its roundtrip must be tested on every tiny native state. Source feasibility
 reuses #34 after full composed decoding; no rounding, repair or target-energy
 inference is permitted. Source objective values come from original functions.

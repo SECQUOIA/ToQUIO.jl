@@ -1,4 +1,4 @@
-# Deliberately test-only: the production radix/bounded strategies are later issues.
+# Test-only strategies exercise the interface independently of production encoders.
 struct TestDigits <: ToQUIO.AbstractIntegerEncoding end
 function ToQUIO.variable_encoding(::TestDigits, lower, upper; context)
     width = Int(upper - lower)
