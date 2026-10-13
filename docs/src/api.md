@@ -306,6 +306,90 @@ model = Model(() -> optimizer)
 MOI.set(backend(model), ToQUIO.ConstraintPenaltyHint(), index(con), 100.0)
 ```
 
+## Reformulation Metadata and Projection
+
+These helpers accept the dictionary returned by `to_quio` or an `Optimizer`
+after reformulation. Variable-list helpers return copies. The metadata snapshot
+can also be saved with a JSON serializer and used for projection without keeping
+the MOI model alive.
+
+```@docs
+ToQUIO.reformulation_metadata
+ToQUIO.original_variables
+ToQUIO.auxiliary_variables
+ToQUIO.project_original_state
+```
+
+For example, this reformulation introduces one integer slack for `x <= 2`:
+
+```julia
+using ToQUIO
+import MathOptInterface as MOI
+
+source = MOI.Utilities.Model{Float64}()
+x = MOI.add_variable(source)
+MOI.add_constraint(source, x, MOI.Interval(0.0, 3.0))
+MOI.add_constraint(source, x, MOI.Integer())
+f = MOI.ScalarAffineFunction([MOI.ScalarAffineTerm(1.0, x)], 0.0)
+MOI.set(source, MOI.ObjectiveSense(), MOI.MIN_SENSE)
+MOI.set(source, MOI.ObjectiveFunction{typeof(f)}(), f)
+MOI.add_constraint(source, f, MOI.LessThan(2.0))
+
+optimizer = ToQUIO.Optimizer()
+MOI.optimize!(optimizer, source) # Reformulation only; no backend is required.
+metadata = reformulation_metadata(optimizer)
+original_variables(optimizer)  # MOI.VariableIndex[MOI.VariableIndex(1)]
+auxiliary_variables(metadata)  # [2]
+project_original_state(optimizer, [1, 1]) # Dict(x => 1)
+project_original_state(metadata, [1, 1])  # Dict(1 => 1), using source IDs
+```
+
+Schema version 1 is a string-keyed dictionary with the following fields:
+
+| Field | Meaning |
+|:--|:--|
+| `schema_version`, `package` | Schema version and producing package name/version |
+| `source_variable_order` | Original source IDs in source-model order |
+| `target_variable_order` | Full target IDs in state-vector order, including slacks |
+| `target_lower_bounds`, `target_upper_bounds` | Bounds aligned with the full target order |
+| `original_variables` | Source IDs and affine projection expansions |
+| `auxiliary_variables`, `slack_variables` | Slack IDs, target positions and typed source-constraint identities |
+| `constraint_encodings` | Penalized affine constraints in equality, `<=`, then `>=` order, with source/canonical relations, row multipliers, slack positions and automatic/applied/hinted penalties |
+| `guarantees` | Explicit projection, feasibility-check and repair boundaries |
+
+Constraint identities use fully qualified, context-independent function and set
+type strings (for example `MathOptInterface.LessThan{Core.Float64}`): a numeric MOI
+constraint ID alone is not unique across constraint types. A `>=` row is negated
+to `<=` before introducing its slack; metadata records its row multiplier `-1`.
+Bounds and integer-domain constraints are represented by target bounds and the
+native QUIO domain, rather than included in the penalized-constraint list.
+
+Each source expansion has `kind = "affine"`, an `offset`, and `terms` containing
+a `target_position` and `coefficient`. Positions are **one-based state-vector
+positions**, independent of MOI variable IDs. Native reformulation uses one term
+with coefficient 1 and offset 0; the format permits later multi-digit affine
+projections without changing the legacy one-to-one raw mapping.
+
+Metadata contains finite integer or floating-point numbers, strings, booleans,
+`nothing`, vectors and string-keyed dictionaries. Numeric precision is retained;
+the chosen JSON serializer/reader must support the number type when using
+arbitrary precision. Matrices `Q`, `L`, `D` and `c` stay in the internal data
+dictionary and are excluded from the stable snapshot.
+
+Projection accepts a full target vector, including all slacks, and rejects a
+wrong length or nonfinite/non-real values. It preserves fractional samples and
+does not certify source feasibility, check target-domain/slack consistency, or
+repair auxiliaries. For example, projecting `[1.5, -10]` yields `x = 1.5` even
+though that sample violates the target's integer and slack domains. Unknown
+schema versions and malformed document fields are rejected with `ArgumentError`.
+IDs, positions and numeric expansion fields reject booleans. A failed new
+reformulation invalidates the optimizer's current metadata; a previously retained
+raw dictionary or metadata snapshot remains usable across that failed call.
+`MOI.empty!(optimizer)` clears the live raw dictionary and models; save a returned
+metadata snapshot when a record must survive this reset. Existing raw keys such as `:target_variables`
+(original-variable targets only), `:rho` and `:Q` keep their previous meaning;
+`:quio_variables` adds the full target order and `:slack_constraints` adds ownership.
+
 ## Internal Functions
 
 These functions are used internally and are not part of the public API, but may be useful for understanding or extending the package.
