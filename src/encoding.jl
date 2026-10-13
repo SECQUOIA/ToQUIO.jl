@@ -118,7 +118,19 @@ function _decode_layout(layout::IntegerVariableEncoding, digits::AbstractVector)
     return _finish_affine_decode(value)
 end
 
+struct _ExactFloatSum
+    value::Rational{BigInt}
+end
+Base.isfinite(value::_ExactFloatSum) = isfinite(value.value)
+
 function _affine_add(value, coefficient, sample)
+    hardware = Union{Float16,Float32,Float64}
+    if value isa _ExactFloatSum
+        if coefficient isa Integer && sample isa Union{Integer,Rational,hardware}
+            return _ExactFloatSum(value.value + big(coefficient) * Rational{BigInt}(sample))
+        end
+        return value.value + coefficient * sample
+    end
     if value isa Integer && coefficient isa Integer && sample isa Integer
         result = big(value) + big(coefficient) * sample
         I = promote_type(typeof(value), typeof(coefficient), typeof(sample))
@@ -127,8 +139,7 @@ function _affine_add(value, coefficient, sample)
         end
         return result
     end
-    hardware = Union{Float16,Float32,Float64}
-    if value isa Union{Integer,Rational{BigInt},hardware} && coefficient isa Integer &&
+    if value isa Union{Integer,hardware} && coefficient isa Integer &&
        sample isa Union{Integer,hardware}
         floating = sample isa hardware ? typeof(sample) :
                    value isa hardware ? typeof(value) : Float64
@@ -136,7 +147,7 @@ function _affine_add(value, coefficient, sample)
         product = coefficient * sample
         rounded = value + product
         magnitude = value isa Integer ? abs(big(value)) : abs(value)
-        if value isa Rational{BigInt} || magnitude >= limit || abs(big(coefficient)) >= limit ||
+        if value isa BigInt || coefficient isa BigInt || magnitude >= limit || abs(big(coefficient)) >= limit ||
            !isfinite(product) || abs(product) >= limit || !isfinite(rounded) || abs(rounded) >= limit
             # Hardware floats are exact dyadic rationals. Retain this accumulator
             # until decoding finishes, rather than rounding between digit terms.
@@ -144,19 +155,25 @@ function _affine_add(value, coefficient, sample)
             if rounded isa hardware && isfinite(rounded) && Rational{BigInt}(rounded) == exact
                 return rounded
             end
-            return exact
+            return _ExactFloatSum(exact)
         end
         return rounded
     end
     return value + coefficient * sample
 end
 
-function _finish_affine_decode(value::Rational{BigInt})
+function _finish_affine_decode(accumulator::_ExactFloatSum)
+    value = accumulator.value
     ispow2(denominator(value)) || return value
     # A dyadic denominator needs no extra significand bits. This is per-value
     # precision and does not change the process-wide BigFloat precision.
     bits = max(precision(BigFloat), ndigits(abs(numerator(value)); base = 2))
-    return BigFloat(value; precision = bits)
+    exponent = ndigits(denominator(value); base = 2) - 1
+    sign = value < 0 ? "-" : ""
+    binary = sign * "0b" * string(abs(numerator(value)); base = 2) * "p-" * string(exponent)
+    # The string constructor initializes MPFR storage at the requested precision;
+    # unlike the Julia 1.10 rational constructor, it does not set global defaults.
+    return BigFloat(binary; precision = bits)
 end
 _finish_affine_decode(value) = value
 

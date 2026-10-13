@@ -18,6 +18,12 @@ function ToQUIO.variable_encoding(::TestWeightedDigits, lower, upper; context)
     return ToQUIO.variable_encoding(ToQUIO.NativeEncoding(), lower, upper; context)
 end
 
+struct TestBigDigitBounds <: ToQUIO.AbstractIntegerEncoding end
+function ToQUIO.variable_encoding(::TestBigDigitBounds, lower, upper; context)
+    upper - lower == big(2)^300 || throw(ArgumentError("TestBigDigitBounds needs width 2^300."))
+    return ToQUIO.IntegerVariableEncoding(lower, [1, 1], [big(2)^299, big(2)^299])
+end
+
 struct WrongInterval <: ToQUIO.AbstractIntegerEncoding end
 ToQUIO.variable_encoding(::WrongInterval, lower, upper; context) =
     ToQUIO.IntegerVariableEncoding(lower + 1, [1], [1])
@@ -366,6 +372,38 @@ end
         @test ToQUIO._decode_layout(huge, [0.0, 1.0]) == big(2)^1000 + 1
         @test ToQUIO._decode_layout(huge, [2.0^-1000, 0.0]) ==
               BigFloat((big(2)^2000 + 1) // (big(2)^1000); precision = 2001)
+
+        large_bounds = RMOI.Utilities.Model{Float64}()
+        v = add_interval_integer_variable(large_bounds, 0, 2.0^300)
+        set_affine_objective!(large_bounds, RMOI.MIN_SENSE, affine_term(1, v))
+        compiled = ToQUIO.Optimizer(; encoding = TestBigDigitBounds())
+        RMOI.optimize!(compiled, large_bounds)
+        saved = ToQUIO.reformulation_metadata(compiled)
+        default_precision, default_rounding = precision(BigFloat), rounding(BigFloat)
+        for digits in ([1.0, 2.0^299], [2.0^299, 1.0])
+            expected = big(2)^299 + 1
+            @test ToQUIO.project_native_state(compiled, digits) == [expected]
+            @test ToQUIO.project_native_state(saved, digits) == [expected]
+            @test ToQUIO.project_original_state(saved, digits)[v.value] == expected
+        end
+        @test precision(BigFloat) == default_precision
+        @test rounding(BigFloat) == default_rounding
+
+        small_rational = RMOI.Utilities.Model{Float64}()
+        rv = add_interval_integer_variable(small_rational, 0, 4)
+        set_affine_objective!(small_rational, RMOI.MIN_SENSE, affine_term(1, rv))
+        for encoding in (ToQUIO.NativeEncoding(), TranslatedIdentity())
+            compiled = ToQUIO.Optimizer(; encoding)
+            RMOI.optimize!(compiled, small_rational)
+            saved = ToQUIO.reformulation_metadata(compiled)
+            for value in (big(1)//2, big(3)//1)
+                raw = ToQUIO.project_original_state(compiled, [value])[rv]
+                portable = ToQUIO.project_original_state(saved, [value])[rv.value]
+                @test raw == portable == value
+                @test raw isa Rational{BigInt} && portable isa Rational{BigInt}
+                @test ToQUIO.project_native_state(saved, [value])[1] isa Rational{BigInt}
+            end
+        end
 
         small, _, _, _, _, _ = encoding_fixture(RMOI.MIN_SENSE)
         malformed = ToQUIO.Optimizer(() -> multi_result_backend([fill(NaN, 7)]); encoding = TestDigits())
