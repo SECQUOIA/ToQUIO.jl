@@ -22,6 +22,7 @@ makedocs(;
         "Examples" => "examples.md",
         "Penalty Tuning" => "penalties.md",
         "Integer Encoding" => "encoding.md",
+        "Radix Encoding" => "radix.md",
         "Encoding Study" => "study.md",
         "API Reference" => "api.md",
         "Algorithm" => "algorithm.md",

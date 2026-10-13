@@ -16,8 +16,9 @@ extension may choose a different layout for a particular source variable or
 slack. There are no separate per-variable/slack MOI settings in this interface.
 Parameters live in the strategy object and its provenance descriptor.
 
-The production radix and bounded-weight strategies are separate work items
-(#48/#49). This page's small strategy only demonstrates the extension point.
+The production [radix strategy](radix.md) is available as `RadixEncoding`;
+the bounded-weight strategy remains separate work item #49.
+This page's small strategy only demonstrates the extension point.
 No solver, hardware driver, continuous discretization or automatic selection is
 included.
 

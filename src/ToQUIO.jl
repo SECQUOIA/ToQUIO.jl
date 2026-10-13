@@ -22,6 +22,7 @@ function to_quio end
 
 include("MOI_wrapper/QUIO_model.jl")
 include("encoding.jl")
+include("radix_encoding.jl")
 include("MOI_wrapper/MOI_wrapper.jl")
 
 include("to_quio.jl")
@@ -34,5 +35,6 @@ export ConstraintViolation, violations, is_feasible, feasibility_report
 export AbstractIntegerEncoding, NativeEncoding, IntegerVariableEncoding
 export variable_encoding, encoding_descriptor, EncodingStrategy, MaxEncodedVariables
 export project_native_state, lift_native_state
+export RadixEncoding
 
 end # module ToQUIO
