@@ -3,7 +3,7 @@ using ToQUIO
 const protocol_dot = ToQUIO.LinearAlgebra.dot
 const PMOI = ToQUIO.MOI
 
-function protocol_layout(width::Integer; levels::Integer, max_weight = nothing, max_digits = 128)
+function protocol_layout(width::Integer; levels::Integer, max_weight = nothing, max_digits = 256)
     width >= 0 && levels >= 2 || throw(ArgumentError("Invalid interval/level limit."))
     isnothing(max_weight) || (max_weight isa Integer && max_weight >= 1) ||
         throw(ArgumentError("Invalid weight cap."))
@@ -58,8 +58,8 @@ function protocol_affine_substitution(G, g, gamma, offset, expansion)
     return result
 end
 
-function protocol_knapsack()
-    source = PMOI.Utilities.Model{Float64}()
+function protocol_knapsack(; penalty_hint = nothing)
+    source = PMOI.Utilities.UniversalFallback(PMOI.Utilities.Model{Float64}())
     x, y = PMOI.add_variables(source, 2)
     for (vi, upper) in ((x, 2.0), (y, 1.0))
         PMOI.add_constraint(source, vi, PMOI.Interval(0.0, upper))
@@ -73,8 +73,9 @@ function protocol_knapsack()
     capacity = PMOI.ScalarAffineFunction([
         PMOI.ScalarAffineTerm(2.0, x), PMOI.ScalarAffineTerm(1.0, y),
     ], 0.0)
-    PMOI.add_constraint(source, capacity, PMOI.LessThan(3.0))
+    ci = PMOI.add_constraint(source, capacity, PMOI.LessThan(3.0))
     optimizer = ToQUIO.Optimizer()
+    isnothing(penalty_hint) || PMOI.set(source, ToQUIO.ConstraintPenaltyHint(), ci, penalty_hint)
     PMOI.optimize!(optimizer, source)
     return optimizer
 end
@@ -100,8 +101,12 @@ function protocol_example()
     native_optimum = maximum(native_value(z) for z in native_states)
     binary_optimum = maximum(binary_value(d) for d in binary_states)
     @assert all(ToQUIO.is_feasible(data, z) for z in native_states if native_value(z) == native_optimum)
-    # Independent low-penalty failure illustration; no automatic penalty claim.
-    weak_value(z) = 3z[1] + 2z[2] - 0.25 * (2z[1] + z[2] + z[3] - 3)^2
+    # Exercise the actual hint override; retain an independent formula check.
+    weak_data = protocol_knapsack(; penalty_hint = 0.25).data
+    weak_value(z) = protocol_dot(z, weak_data[:Q] * z) + protocol_dot(weak_data[:L], z) + weak_data[:c]
+    @assert only(weak_data[:rho]) == 0.25
+    @assert all(weak_value(z) == 3z[1] + 2z[2] - 0.25 * (2z[1] + z[2] + z[3] - 3)^2
+                for z in native_states)
     weak_best = native_states[argmax(weak_value.(native_states))]
     return (
         source_optimum = reference, automatic_penalty = only(data[:rho]),

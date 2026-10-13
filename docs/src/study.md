@@ -52,18 +52,28 @@ include #47–#49 and be recorded exactly; the foundation pin alone lacks encode
 The pinned [ToQUBO bounded interval source](https://github.com/JuliaQUBO/ToQUBO.jl/blob/69ac52592f4c47ed2168bf480c9947d1fcbbfc2c/src/encoding/variables/interval/bounded.jl)
 uses a residual interval of width `d+r` plus `r-1` digits of weight `mu`, where
 `W=r*mu+d`. An independent source-formula enumeration finds width3/cap2 maps to
-`0:2`, and width6/cap2 maps to `0:7`. This audit is not full compiler execution.
+`0:2`, and width6/cap2 maps to `0:7`. Width20/cap2 produces weights
+`[1,2,4,3,2,2,2,2,2,2,2,2,2]`, image `0:28` and a weight4 exceeding cap2.
+For `0<W<mu`, the formula also calls its allocator with `r-1=-1`; this is an
+invalid allocation request, not a verified full-compiler exception here.
+Pure-arithmetic regression fixtures preserve these failures without a dependency.
+This audit is not full compiler execution.
 It fails the exact box-image contract needed here. The native `Bounded` method
 therefore cannot be an unchecked baseline at this pin.
 
 Freeze the arm name **toqubo_bounded_shim**. #50 owns a small experiment-only
-ToQUBO interval-method adapter implementing the bounded binary layout below,
-using the pinned Binary primitive/ToQUBO compiler and returning an affine map
+ToQUBO interval-method adapter emitting exactly
+`protocol_layout(W; levels=2, max_weight=mu)` and offset L. It uses the pinned
+compiler's binary variable allocator, not `Binary` on an upstream residual,
+and returns an affine map
 without digit-enforcement penalties. Apply it to original integers and slacks.
 Record adapter revision/hash and distinguish it from upstream `Bounded` in every
 result. No vendor source patch, silent alternate pin, or native-method performance
 claim is allowed. If its actual compile/decode preflight fails, stop the campaign
 and report the failed arm; do not drop it and call the comparison complete.
+The shim is ToQUIO-authored and shares a construction with the QUIO bounded arm;
+it is not an independent encoder. The emitted-map coverage and polynomial gates
+below protect against common-mode mistakes instead of trusting layout agreement.
 
 ## Five arms and two regimes
 
@@ -80,6 +90,9 @@ Encode that complete native QUIO model, including its slacks, for every arm.
 The two ToQUBO arms compile the native QUIO model (only bounds/integer constraints)
 with the specified variable method. This preserves the same source penalty
 magnitudes/residuals; any additional enforcement penalty invalidates this arm.
+Set and record ToQUBO `Discretize=false` for this bounds/integer-only input,
+and record the actual objective sense; no residual or polynomial rescaling is
+permitted. The pin parses integer originals without real-ATol encoding.
 Compare the sense-normalized polynomial after decoding, including the constant.
 Native intervals may exceed four levels: this is a CPU control whose hypothetical
 device ineligibility must be reported, not hidden by changing its domain.
@@ -90,6 +103,11 @@ ToQUBO's defaults except the named encoding method: QuadraticPenalty,
 ObjectiveRangePenalty with its recorded fallback behavior, offset1/scale1,
 MaxPenaltyUpdates=0 and the same method for slack encoding. Preserve and archive
 actual applied coefficients, slack widths, preprocessing and target sense.
+Retain and record `Discretize=true`: pinned affine-inequality compilation then
+calls `variable_ℤ!` for slacks rather than real-ATol encoding. Its GCD residual
+scaling and removed rows must be archived and included in reconstruction; these
+are compiler-default differences. This source inspection is not proof that a
+future compiled instance passes the mandatory emitted-map gates.
 Automatic policies can differ. This is an end-to-end comparison, not a matched
 penalty causal estimate. No weak-penalty sweep or precision perturbation enters
 the primary campaign; the worked failure below is a diagnostic control.
@@ -152,6 +170,19 @@ Use Julia MersenneTwister with the stated instance seed, integer inclusive draws
 and fixed index traversal. Archive concrete parameters, source models and hashes
 so replay uses saved data rather than an assumed future RNG version. Pilot IDs
 identify constant fixtures and are not claimed effective random-generator seeds.
+Freeze those parameters and hashes in the manifest before any arm compiles or
+reference solve starts. #50 must record the explicit draw order and construction
+code hash; compilation cannot change a generator draw or replace an instance.
+
+The family-major ordinal order is fixed (each row is pilot, tuning, evaluation1,
+evaluation2); use these ordinals for every stage, including seeded pilot warmups:
+
+| Family | Pilot | Tuning | Evaluation 1 | Evaluation 2 |
+|---|---:|---:|---:|---:|
+| Knapsack | 1 | 2 | 3 | 4 |
+| Facility | 5 | 6 | 7 | 8 |
+| Inventory | 9 | 10 | 11 | 12 |
+| CVRP | 13 | 14 | 15 | 16 |
 
 | Family | Fixed pilot | Tuning/evaluation generator |
 |---|---|---|
@@ -177,6 +208,44 @@ preflight to four million, stream states, and never allocate a Cartesian state
 array for an unchecked domain. Verify full image coverage, all-state polynomial
 parity and source-optimum agreement. Any refused/exhausted check is incomplete
 validation and stops the full campaign; no larger substituted pilot is permitted.
+
+### Generated-instance exactness gates
+
+Tiny level4 pilots use identity maps for the QUIO arms and cannot alone validate
+multi-digit encoding. Before sampling, #50 must apply the following checks to all
+12 generated models, both regimes, all arms and every tuning candidate:
+
+- Read **emitted** original/slack expansions and target bounds from ToQUIO
+  metadata or ToQUBO `VariableEncodingFunction`/`SlackVariableEncodingFunction`.
+  Require exact integer offsets, weights and digit bounds with no lossy real-ATol
+  path, and compare with the declared layout (identity for native, levels4 radix
+  or bounded, levels2 Binary or shim). Account explicitly for any removed fixed
+  variables/slacks and compiler-default residual scaling.
+- Independently compute reachable sums by dynamic programming on those emitted
+  digits, not by calling the construction again. Require image exactly
+  `L+{0,...,W}`, with no holes or out-of-domain sums. Limit W to64 before allocation;
+  test the canonical-lift roundtrip for every value of every original and slack
+  interval. This avoids an exponentially large full-state enumeration.
+- Check constant- and sense-inclusive polynomial parity on 64 seeded random digit
+  states per compiled cell, plus canonical lifts of the source witness and frozen
+  reference incumbent with the corresponding exact residual slacks. For preflight
+  RNG use MersenneTwister seed `98001+10000*ordinal+100*arm_index+10*regime_index+cap`,
+  taking cap0 for unbounded arms and the listed arm/regime order. These checks are
+  not sampler restarts. Controlled arms compare with the single native polynomial;
+  default arms compare with their own independently reconstructed pre-encoding
+  polynomial, using archived original objective, applied penalties, residual
+  scales, slack domains, removed rows and sense. Defaults must not be compared as
+  if source penalties matched. Use the TOML absolute/relative energy tolerances.
+
+Any missing map, noninteger coefficient, incomplete roundtrip or parity failure
+stops the full campaign. These gates are required runner work in #50, not a claim
+that this protocol PR has already executed future encoders. Unit tests extend
+independent coverage/lifts through width64. Archive gate inputs/results and RNG
+seeds. Record each instance/arm's normalized offset/weight/digit-bound layout
+equality with native and radix (order-independent within each native variable);
+report the number of structurally distinct instances for every contrast. Widths
+up to3 yield native identity, and cap4 equals radix through width15: zero contrasts
+on those cells are structural degeneracy, not evidence of an empirical null effect.
 
 ## Independent references and targets
 
@@ -210,7 +279,7 @@ confounder. No source optimum or reference witness seeds the competing samplers.
 Use separate MersenneTwister streams: initialization seed=effective run seed,
 proposal seed=effective run seed+1000000000; these seed values are identical
 across paired arms. Record both identities. Effective run seed=listed replicate seed+10000*instance
-ordinal (ordinals1:16 in family order, pilot/tuning/evaluation order).
+ordinal from the family-major table. Warmups use replicate seed39001.
 
 Normalize minimization energy as `sigma_target*P_target/S`, with
 `S=max(1,source objective box range)` shared across arms. Read actual compiled
@@ -219,6 +288,15 @@ schedule from T=2 to 0.01 across the reserved proposal count (T=2 for one propos
 and Metropolis acceptance `min(1,exp(-delta_energy/T))`. Consume a declared fixed
 RNG draw sequence per proposal, including rejects, and validate incremental energy
 changes against full evaluation, boundary rejections and exact tiny-state behavior.
+Retain +/-1 even for binary digits, as the declared reference kernel requires;
+one direction is then always invalid. Record per-run boundary rejections,
+in-domain proposals, accepted moves and energy rejections. Require boundary
+rejections+accepted moves+energy rejections=completed work, and
+in-domain proposals=accepted moves+energy rejections. The binary arms' boundary
+waste is an explicit confounder.
+Replay an interrupted run using the original reserved proposal count for its
+temperature schedule, stopping at the archived completed-work count; seeds alone
+cannot reproduce a wall-clock stop, and shortening the schedule changes the path.
 This is a local-search control, not a physical QCI simulator.
 
 A sweep is N_active proposals. Schedule `min(proposal_cap,sweep_cap*N_active)`;
@@ -236,12 +314,17 @@ the same ledger but never contribute measured outcomes.
 | Evaluation | 8*5*2*5 | 400 | 10000 |
 
 Reserve at most 680 starts and 5,325,120 proposals, including warmups; at most
-one hour wall time, one CPU/BLAS thread, 4GiB resident memory, no swap, 128 compiled
+one hour wall time, one CPU/BLAS thread, 4GiB resident memory, no swap, 256 compiled
 variables and 512MiB artifacts. Apply OS limits to compiler/reference/sampler
 processes too. Check dimensions before dense matrices; reserve counts before any
 sampler/enumerator call. Keep failed attempts and their consumed/reserved budgets;
 no extra restarts, enlarged search or silent data replacement. An interruption
 retains incomplete evidence. Campaign completion requires all planned cells.
+The worst frozen CVRP unary binary layout needs 216 variables: 20 arcs,
+4 loads of width7 and 12 slacks of width14. Every arm/cap/regime is bounded by
+that dimension; tests derive conservative family widths from the generator
+ranges. A 256-square Float64 matrix uses 512KiB, so the dimension allowance is
+compatible with the memory cap; OS enforcement still covers compiler overhead.
 
 Select one global weight cap independently for each bounded arm on tuning data:
 highest mean per-instance target-success fraction, then lowest mean capped target
@@ -253,15 +336,25 @@ both regimes. Radix levels and all temperatures/penalties stay fixed. Record all
 
 For every visited state, decode and check the original model to observe first
 target attainment and the best feasible objective; include this observation cost
-in measured solve latency. Retain initial-state target hits separately. Record
+in measured solve latency. Use monotonic `time_ns`: start immediately before
+initialization and canonical lift, after compilation/warmup, and stop after the
+final observation. First-hit latency includes initialization/lift and decoding;
+timely hits require the observation to finish within2s. This is an instrumented
+sampler latency, not bare kernel/device latency. Retain initial-state target hits
+separately with proposal index0. Record
 sample observations after each complete sweep and the final partial sweep;
 rejected/duplicate states retain multiplicity and ordering. Read counts are not
 independent experimental replicates. No-feasible-state runs have missing gap,
 not zero. Record first feasible/target time, proposal index, actual elapsed time,
 completed work, termination and censoring flags; unavailable timings stay missing.
 
-Primary quality outputs are source feasibility probability and signed best-feasible
-gap with its missingness count. Primary time output is first-target latency with
+Primary feasibility is `F_imr=1` iff planned run r visits at least one original-
+model-feasible state (including initialization), else0. Estimate it per instance/
+arm as `sum(F_imr)/5` over **all five planned evaluation restarts**. Final-state
+feasibility and the correlated per-sweep feasible-read fraction are secondary
+diagnostics, with explicit sample counts; they cannot replace this endpoint.
+Primary quality also includes signed best-feasible gap with its missingness count.
+Primary time output is first-target latency with
 failures plus a **capped target-time score**: observed first hit, or the common
 2-second failure penalty if no hit. The score is not actual spent time when a
 proposal cap ended early and is not a 99%-reliability claim. Report raw censored
@@ -269,7 +362,27 @@ observations and target-success fractions alongside it; zero successes remain
 zero with all raw target times missing and score2, never fabricated finite hits.
 Hits observed after the run deadline do not count as timely successes and are
 retained as overshoot diagnostics. Missing timings invalidate the corresponding
-time comparison, not the quality data.
+time comparison, not the quality data when source observations remain validated.
+Also report proposals to first target (initial hit0), raw no-hit proposal censoring
+and a capped work score: first-hit index or the common stage proposal cap for no
+timely hit. The work score is not actual spent work; record the smaller actual
+work at clock censoring. It supplies a common work penalty alongside uneven
+wall censoring and exposes observation overhead; the 2s time score can largely
+track the success indicator and must not be called a pure speed metric.
+
+A run interrupted by its ordinary 2s cap is a valid partial trajectory: its
+validated feasible visits/gap remain, and an absent timely target receives score2.
+A crash, corrupted/missing trajectory or unverifiable decoding is an **invalid
+planned run**: assign F=0, target failure, time score2, work score equal to its
+stage cap and gap missing, even if a partial file suggests a hit. Count and
+describe these separately; no rerun or selective deletion is allowed. Missing
+clock data invalidate raw latency comparisons, not validated quality; show the
+missing count and mark any affected time-score contrast incomplete rather than
+silently dropping its replicate. A preflight-refused cell, global quota exhaustion
+or externally interrupted campaign is an incomplete campaign with no completed-
+campaign aggregate; preserve partial records and the reason, never relabel it a
+sampler failure or report a completed result. All planned cells must be accounted
+for before a complete exploratory report is allowed.
 
 Structural outputs include allocated original/native/encoded integer and binary
 counts, each domain's levels, active variables, build time, allocated bytes and
@@ -292,9 +405,22 @@ secondary. Aggregate repeat outcomes within each instance first; instances are
 the cross-instance unit. Report paired instance differences, stratified by family,
 and 95% percentile cluster bootstrap intervals with 2000 resamples/seed99001.
 Resample instances within each family, retaining paired method records and
-resampling paired restart IDs within selected instances. Gaps use only jointly
-feasible pairs and report the reduced count; feasibility and target-time scores
-use all valid planned runs. Describe gap comparisons as conditional and do not
+resampling paired restart IDs within selected instances. Pair methods by the
+same instance and listed replicate seed. For gaps, compute run-level differences
+only where both F=1 and both gaps are validated, then the per-instance mean over
+those pairs, reporting its count (0 means missing). Report all eight paired
+instance differences, including missing entries. Feasibility/time/work-score
+differences use each arm's mean over all five planned runs, including the failure
+rules above. Bootstrap gap statistics retain this pairing and missingness rule.
+Label the percentile intervals **descriptive**: two instances per family produce
+coarse resampling and potentially narrow intervals, not reliable confirmatory
+uncertainty. Also report the two-sided paired sign-flip sensitivity p-value for
+each contrast/endpoint by enumerating all2^n sign assignments of its n observed
+instance differences and counting `abs(mean(flipped))>=abs(mean(observed))`;
+n=8 gives256 assignments, gaps may have n<8 (n=0 means missing). This diagnostic
+assumes exchangeable signs, is not a randomized experiment test, and is not
+confirmatory. There is no multiplicity control across two contrasts and at least
+three primary endpoints. Describe gap comparisons as conditional and do not
 hide failure rates. Eight evaluation instances/five repeats support a bounded
 exploratory result, not a broad superiority or quantum-speedup claim.
 
