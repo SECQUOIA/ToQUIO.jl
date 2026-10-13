@@ -21,13 +21,18 @@ const Maybe{T} = Union{T,Nothing}
 function to_quio end
 
 include("MOI_wrapper/QUIO_model.jl")
+include("encoding.jl")
 include("MOI_wrapper/MOI_wrapper.jl")
 
 include("to_quio.jl")
 include("reformulation.jl")
+include("encoding_metadata.jl")
 include("feasibility.jl")
 
 export reformulation_metadata, original_variables, auxiliary_variables, project_original_state
 export ConstraintViolation, violations, is_feasible, feasibility_report
+export AbstractIntegerEncoding, NativeEncoding, IntegerVariableEncoding
+export variable_encoding, encoding_descriptor, EncodingStrategy, MaxEncodedVariables
+export project_native_state, lift_native_state
 
 end # module ToQUIO

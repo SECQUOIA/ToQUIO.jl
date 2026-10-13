@@ -16,13 +16,17 @@ end
 
 function _serialized_reformulation(data::AbstractDict)
     version = get(data, "schema_version", nothing)
-    _metadata_integer(version) && version == REFORMULATION_SCHEMA_VERSION ||
+    _metadata_integer(version) && version in (REFORMULATION_SCHEMA_VERSION, 2) ||
         throw(ArgumentError("Unsupported ToQUIO reformulation schema version."))
     package = get(data, "package", nothing)
     package isa AbstractDict && get(package, "name", nothing) == "ToQUIO" ||
         throw(ArgumentError("Not a ToQUIO reformulation metadata document."))
     _validate_metadata_values(data)
-    _validate_metadata_structure(data)
+    if version == REFORMULATION_SCHEMA_VERSION
+        _validate_metadata_structure(data)
+    else
+        _validate_encoded_metadata_structure(data)
+    end
     return data
 end
 
@@ -156,12 +160,16 @@ _source_relation(::CI{F,S}) where {F,S<:GT} = ">="
 @doc raw"""
     reformulation_metadata(data_or_optimizer)
 
-Return a fresh, string-keyed metadata snapshot for a completed native QUIO
-reformulation. Schema version 1 records source and full target variable ordering,
+Return a fresh, string-keyed metadata snapshot for a completed QUIO
+reformulation. Native schema version 1 records source and full target variable ordering,
 affine source projections, target bounds, slack ownership, constraint
 canonicalization, and automatic/applied penalties. Matrices remain in the raw
 `data` dictionary. Numbers retain their integer or floating-point type and must
 be finite; use a JSON serializer supporting that numeric type (e.g. BigFloat).
+Optional encodings use schema version 2: target order/bounds and source expansions
+refer to encoded digits, native_variables records each coordinate's affine map
+and slack ownership, and native_reformulation contains the complete version 1
+snapshot with the unchanged penalties. The raw legacy keys remain native.
 
 The returned snapshot can be passed to [`project_original_state`](@ref),
 [`original_variables`](@ref), and [`auxiliary_variables`](@ref). Projection does
@@ -173,6 +181,8 @@ function reformulation_metadata(input)
         return deepcopy(_serialized_reformulation(input))
     end
     data = _reformulation_data(input)
+    haskey(data, :encoding_metadata) &&
+        return deepcopy(_serialized_reformulation(data[:encoding_metadata]))
     variables = _quio_variables(data)
     positions = Dict(vi => i for (i, vi) in enumerate(variables))
     original = [
@@ -259,27 +269,31 @@ end
 @doc raw"""
     auxiliary_variables(data_or_optimizer_or_metadata)
 
-Return the target slack variables introduced by native reformulation. Raw data
-and optimizers return `MOI.VariableIndex` values; serialized metadata returns
-integer target IDs. The returned vector is a copy.
+Return target auxiliaries: native slacks for schema 1, or every encoded digit
+owned by a generated slack for schema 2. Fixed slacks need no encoded digit.
+Raw data and optimizers return `MOI.VariableIndex` values; serialized metadata
+returns integer target IDs. The returned vector is a copy.
 """
 function auxiliary_variables(input)
     if input isa AbstractDict && haskey(input, "schema_version")
         return copy(_serialized_reformulation(input)["auxiliary_variables"])
     end
-    return copy(_reformulation_data(input)[:slack_variables])
+    data = _reformulation_data(input)
+    return copy(get(data, :encoded_auxiliary_variables, data[:slack_variables]))
 end
 
 @doc raw"""
     project_original_state(data_or_optimizer_or_metadata, state::AbstractVector)
 
-Project a full target state, in `target_variable_order` (native `[x; s]` order),
+Project a full target state, in `target_variable_order` (native `[x; s]` order
+or encoded digit order),
 to a dictionary of source values. Keys are `MOI.VariableIndex` for raw data or
 an optimizer, and integer source IDs for serialized metadata. The vector length
 must match the full target dimension and values must be finite real numbers.
 Projection preserves input precision and does not round, check feasibility or
 repair slacks. Serialized affine expansion terms use one-based target positions,
-not variable IDs, allowing future schema extensions to multiple target digits.
+not variable IDs. Optional encodings compose native and encoded maps; all fixed
+source values are restored. Native coordinates can be read with project_native_state.
 """
 function project_original_state(input, state::AbstractVector)
     Base.require_one_based_indexing(state)
@@ -290,11 +304,16 @@ function project_original_state(input, state::AbstractVector)
         length(state) == length(metadata["target_variable_order"]) ||
             throw(DimensionMismatch("Expected a full target state including auxiliary variables."))
         return Dict(
-            entry["id"] => _project_expansion(entry["expansion"], state)
+            entry["id"] => _project_expansion(entry["expansion"], state;
+                                              integer_encoding = metadata["schema_version"] == 2)
             for entry in metadata["original_variables"]
         )
     end
     data = _reformulation_data(input)
+    return _project_original_native(data, project_native_state(data, state))
+end
+
+function _project_original_native(data, state)
     variables = _quio_variables(data)
     length(state) == length(variables) ||
         throw(DimensionMismatch("Expected a full target state including auxiliary variables."))
@@ -305,15 +324,24 @@ function project_original_state(input, state::AbstractVector)
     )
 end
 
-function _project_expansion(expansion::AbstractDict, state::AbstractVector)
+function _project_expansion(expansion::AbstractDict, state::AbstractVector; integer_encoding = false)
     expansion["kind"] == "affine" ||
         throw(ArgumentError("Unsupported projection expansion kind."))
     value = _metadata_number(expansion["offset"])
+    integer_encoding && (value = _integer_metadata_number(value))
     for term in expansion["terms"]
         position = term["target_position"]
         _metadata_integer(position) && 1 <= position <= length(state) ||
             throw(ArgumentError("Projection references an invalid target position."))
-        value += _metadata_number(term["coefficient"]) * state[position]
+        coefficient = _metadata_number(term["coefficient"])
+        integer_encoding && (coefficient = _integer_metadata_number(coefficient))
+        value = _affine_add(value, coefficient, state[position])
+        isfinite(value) || throw(ArgumentError("Decoded value overflowed."))
     end
-    return value
+    return _finish_affine_decode(value)
+end
+
+function _integer_metadata_number(value)
+    value isa AbstractFloat && isinteger(value) || return value
+    return typemin(Int) <= value <= typemax(Int) ? Int(value) : BigInt(value)
 end

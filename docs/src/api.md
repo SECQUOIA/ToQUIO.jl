@@ -404,7 +404,7 @@ project_original_state(optimizer, [1, 1]) # Dict(x => 1)
 project_original_state(metadata, [1, 1])  # Dict(1 => 1), using source IDs
 ```
 
-Schema version 1 is a string-keyed dictionary with the following fields:
+Native schema version 1 is a string-keyed dictionary with the following fields:
 
 | Field | Meaning |
 |:--|:--|
@@ -429,7 +429,9 @@ Each source expansion has `kind = "affine"`, an `offset`, and `terms` containing
 a `target_position` and `coefficient`. Positions are **one-based state-vector
 positions**, independent of MOI variable IDs. Native reformulation uses one term
 with coefficient 1 and offset 0; the format permits later multi-digit affine
-projections without changing the legacy one-to-one raw mapping.
+projections without changing the legacy one-to-one raw mapping. Optional integer
+encodings use schema version 2 with composed source maps, encoded target order and
+a nested complete native snapshot; see [Integer Encoding](encoding.md).
 
 Metadata contains finite integer or floating-point numbers, strings, booleans,
 `nothing`, vectors and string-keyed dictionaries. Numeric precision is retained;
@@ -452,7 +454,11 @@ metadata snapshot when a record must survive this reset. Existing raw keys such 
 `:quio_variables` adds the full target order and `:slack_constraints` adds ownership.
 `:source_constraints` stores copied `(index, func, set)` named tuples for source
 feasibility evaluation. These MOI functions/sets stay in raw data and are not
-part of the portable projection snapshot.
+part of the portable projection snapshot. With optional encoding, those raw keys
+continue to describe native coordinates; `:encoded_variables` and
+`:encoded_Q, :encoded_L, :encoded_c` describe the actual backend target.
+`auxiliary_variables` returns actual slack-owned target digits, while
+`project_native_state` restores the native coordinates.
 
 ## Original Source Feasibility
 

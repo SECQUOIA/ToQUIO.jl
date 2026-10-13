@@ -74,7 +74,8 @@ function _source_evaluations(input, state::AbstractVector; atol)
     data = _reformulation_data(input)
     haskey(data, :source_constraints) ||
         throw(ArgumentError("Source constraint snapshots are unavailable; reformulate with this version."))
-    projected = project_original_state(data, state)
+    native_state = project_native_state(data, state)
+    projected = _project_original_native(data, native_state)
     positions = Dict(vi => i for (i, vi) in enumerate(_quio_variables(data)))
     slack_positions = Dict(
         ci => positions[vi] for (ci, vi) in zip(data[:slack_constraints], data[:slack_variables])
@@ -90,7 +91,7 @@ function _source_evaluations(input, state::AbstractVector; atol)
             throw(ArgumentError("Evaluating a source residual overflowed."))
         involved = Dict{VI,Any}(vi => projected[vi] for vi in _constraint_variables(entry.func))
         target_residual = if haskey(slack_positions, entry.index)
-            residual + state[slack_positions[entry.index]]
+            residual + native_state[slack_positions[entry.index]]
         elseif entry.func isa SAF && entry.set isa EQ
             residual
         else
@@ -124,7 +125,7 @@ function _optimizer_state(solver::Optimizer, result)
     data = _reformulation_data(solver)
     return [
         MOI.get(solver.inner, MOI.VariablePrimal(result), _backend_variable(solver, vi))
-        for vi in _quio_variables(data)
+        for vi in _sample_variables(data)
     ]
 end
 

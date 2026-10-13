@@ -70,6 +70,50 @@ the applied penalty is below the unscaled sufficient value.
 """
 struct PenaltyScale <: OptimizerReformulationAttribute end
 
+@doc raw"""
+    EncodingStrategy()
+
+Global AbstractIntegerEncoding strategy for original variables and generated
+slacks, default NativeEncoding(). Set through MOI.set or the encoding constructor
+keyword. A strategy's variable_encoding method may select by native context.
+Changing it affects the next reformulation; settings persist across empty!.
+"""
+struct EncodingStrategy <: OptimizerReformulationAttribute end
+
+@doc raw"""
+    MaxEncodedVariables()
+
+Positive allocation limit for an optional encoded model, default 256. Set with
+MOI.set or the max_encoded_variables keyword. It is a software allocation guard,
+not a device limit; the default native path retains its existing dimensions.
+"""
+struct MaxEncodedVariables <: OptimizerReformulationAttribute end
+
+MOI.get(solver::Optimizer, ::EncodingStrategy) = get(solver.settings, :encoding, NativeEncoding())
+MOI.get(solver::Optimizer, ::MaxEncodedVariables) = get(solver.settings, :max_encoded_variables, 256)
+
+function MOI.set(solver::Optimizer, ::EncodingStrategy, strategy)
+    strategy, _ = _encoding_options(strategy, MOI.get(solver, MaxEncodedVariables()))
+    solver.settings[:encoding] = strategy
+    return nothing
+end
+
+function MOI.set(solver::Optimizer, ::MaxEncodedVariables, limit)
+    _, limit = _encoding_options(MOI.get(solver, EncodingStrategy()), limit)
+    solver.settings[:max_encoded_variables] = limit
+    return nothing
+end
+
+function MOI.set(solver::Optimizer, ::EncodingStrategy, ::Nothing)
+    delete!(solver.settings, :encoding)
+    return nothing
+end
+
+function MOI.set(solver::Optimizer, ::MaxEncodedVariables, ::Nothing)
+    delete!(solver.settings, :max_encoded_variables)
+    return nothing
+end
+
 MOI.get(solver::Optimizer{T}, ::PenaltyOffset) where {T} =
     get(solver.settings, :penalty_offset, one(T))
 MOI.get(solver::Optimizer{T}, ::PenaltyScale) where {T} =

@@ -13,6 +13,7 @@ Welcome to the ToQUIO.jl documentation! This directory contains detailed documen
 - **[Encoding study protocol](study.md)** - Versioned CQT comparison, budgets and acceptance gates
 
 ### For Developers
+- **[Integer encoding interface](encoding.md)** - Exact transforms, selection and composed decoding
 - **[QUICKSTART](QUICKSTART.md)** - Quick reference for developers (5-minute setup)
 - **[Contributing Guide](https://github.com/SECQUOIA/ToQUIO.jl/blob/main/CONTRIBUTING.md)** - Development setup, code style, PR process
 - **[Algorithm Details](algorithm.md)** - Mathematical formulation and derivation
