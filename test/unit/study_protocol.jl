@@ -166,8 +166,10 @@ using TOML
         transformed = Base.invokelatest(substitute, G, g, 7, offset, expansion)
         function moi_polynomial(G, g, constant)
             n = length(g)
-            quadratic = [RMOI.ScalarQuadraticTerm(2.0 * G[i, i], RMOI.VariableIndex(i), RMOI.VariableIndex(i)) for i in 1:n]
-            append!(quadratic, [RMOI.ScalarQuadraticTerm(Float64(G[i, j] + G[j, i]), RMOI.VariableIndex(i), RMOI.VariableIndex(j))
+            quadratic = [RMOI.ScalarQuadraticTerm(2.0 * G[i, i],
+                         RMOI.VariableIndex(i), RMOI.VariableIndex(i)) for i in 1:n]
+            append!(quadratic, [RMOI.ScalarQuadraticTerm(Float64(G[i, j] + G[j, i]),
+                               RMOI.VariableIndex(i), RMOI.VariableIndex(j))
                                for i in 1:n for j in (i + 1):n])
             affine = [RMOI.ScalarAffineTerm(Float64(g[i]), RMOI.VariableIndex(i)) for i in 1:n]
             return RMOI.ScalarQuadraticFunction(quadratic, affine, Float64(constant))
