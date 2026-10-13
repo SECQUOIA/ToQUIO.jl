@@ -334,5 +334,5 @@ function _project_expansion(expansion::AbstractDict, state::AbstractVector)
         value = _affine_add(value, _metadata_number(term["coefficient"]), state[position])
         isfinite(value) || throw(ArgumentError("Decoded value overflowed."))
     end
-    return value
+    return _finish_affine_decode(value)
 end
