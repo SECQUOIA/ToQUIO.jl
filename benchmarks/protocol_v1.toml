@@ -1,0 +1,126 @@
+schema_version = 1
+protocol_id = "cqt-y4-quio-v1"
+status = "frozen-for-human-review"
+source_foundation_revision = "56a2abd075575038efd53ac1ce97ea0d12c3fc5a"
+toqubo_revision = "69ac52592f4c47ed2168bf480c9947d1fcbbfc2c"
+number_type = "Float64"
+source_feasibility_atol = 0.000001
+energy_parity_atol = 0.000000001
+energy_parity_rtol = 0.000000000001
+arms = ["native", "radix", "bounded", "toqubo_binary", "toqubo_bounded_shim"]
+regimes = ["controlled", "compiler_defaults"]
+primary_contrasts = ["radix-native", "bounded-native"]
+levels = 4
+bounded_weight_candidates = [1, 2, 4]
+pilot_bounded_weight = 2
+
+[resources]
+cpu_threads = 1
+blas_threads = 1
+memory_bytes = 4294967296
+swap_bytes = 0
+campaign_wall_seconds = 3600
+artifact_bytes = 536870912
+max_target_variables = 128
+max_states_per_enumeration = 1000000
+max_total_enumerated_states = 4000000
+max_sampler_starts = 680
+max_reserved_proposals = 5325120
+
+[metropolis]
+implementation_owner = "issue-50"
+rng = "MersenneTwister"
+initialization_seed_offset = 0
+proposal_seed_offset = 1000000000
+run_order_seed = 99011
+proposal = "uniform-active-site-and-independent-plus-or-minus-one"
+initialization = "shared-native-state-then-canonical-lift-controlled"
+temperature_start = 2.0
+temperature_end = 0.01
+energy_scale = "max(1,source-objective-box-range)"
+max_seconds_per_run = 2.0
+check_clock_every_proposals = 1
+observe_target_every_visited_state = true
+
+[warmup]
+starts = 40
+max_proposals = 128
+max_sweeps = 128
+
+[pilot]
+instance_count = 4
+replicate_seeds = [40001, 40002, 40003]
+max_proposals = 1000
+max_sweeps = 1000
+starts = 120
+
+[tuning]
+instance_count = 4
+arms = ["bounded", "toqubo_bounded_shim"]
+regime = "controlled"
+replicate_seeds = [40501, 40502, 40503, 40504, 40505]
+max_proposals = 10000
+max_sweeps = 10000
+starts = 120
+selection = "success-fraction-then-capped-target-time-then-smallest-weight"
+
+[evaluation]
+instance_count = 8
+replicate_seeds = [41001, 41002, 41003, 41004, 41005]
+max_proposals = 10000
+max_sweeps = 10000
+starts = 400
+
+[reference]
+solver = "HiGHS"
+solver_version = "1.26.0"
+max_seconds_per_instance = 10.0
+threads = 1
+random_seed = 777
+mip_relative_gap = 0.0
+mip_absolute_gap = 0.0
+pilot_target = "exhaustive-source-optimum"
+evaluation_target = "frozen-reference-feasible-incumbent"
+target_relative_gap = 0.01
+target_absolute_tolerance = 0.000000001
+
+[statistics]
+unit = "instance"
+bootstrap_replicates = 2000
+bootstrap_seed = 99001
+confidence = 0.95
+stratify_by = "family"
+missing_gap = "missing-with-no-feasible-point-flag"
+failed_target_time = "two-second-failure-penalty-not-actual-spent-time"
+
+[[families]]
+name = "knapsack"
+pilot_id = "knapsack-pilot"
+pilot_size = [2]
+campaign_size = [6]
+tuning_seed = 2001
+evaluation_seeds = [3001, 3002]
+
+[[families]]
+name = "facility"
+pilot_id = "facility-pilot"
+pilot_size = [2, 2]
+campaign_size = [3, 4]
+tuning_seed = 2002
+evaluation_seeds = [3011, 3012]
+
+[[families]]
+name = "inventory"
+pilot_id = "inventory-pilot"
+pilot_size = [2]
+campaign_size = [4]
+tuning_seed = 2003
+evaluation_seeds = [3021, 3022]
+
+[[families]]
+name = "cvrp"
+pilot_id = "cvrp-pilot"
+pilot_size = [2, 1, 2]
+campaign_size = [4, 2, 8]
+tuning_seed = 2004
+evaluation_seeds = [3031, 3032]

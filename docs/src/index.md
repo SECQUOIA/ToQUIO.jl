@@ -9,6 +9,9 @@ Welcome to the ToQUIO.jl documentation! This directory contains detailed documen
 - **[Examples](examples.md)** - 15+ detailed examples covering various problem types
 - **[API Reference](api.md)** - Complete API documentation for all public functions
 
+### For Researchers
+- **[Encoding study protocol](study.md)** - Versioned CQT comparison, budgets and acceptance gates
+
 ### For Developers
 - **[QUICKSTART](QUICKSTART.md)** - Quick reference for developers (5-minute setup)
 - **[Contributing Guide](https://github.com/SECQUOIA/ToQUIO.jl/blob/main/CONTRIBUTING.md)** - Development setup, code style, PR process

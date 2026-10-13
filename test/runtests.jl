@@ -8,5 +8,6 @@ using ToQUIO
     include("unit/penalty_controls.jl")
     include("unit/feasibility.jl")
     include("unit/penalty_documentation.jl")
+    include("unit/study_protocol.jl")
     include("test_examples.jl")
 end
