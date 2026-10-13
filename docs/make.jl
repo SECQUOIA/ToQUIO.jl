@@ -23,6 +23,7 @@ makedocs(;
         "Penalty Tuning" => "penalties.md",
         "Integer Encoding" => "encoding.md",
         "Radix Encoding" => "radix.md",
+        "Bounded Encoding" => "bounded.md",
         "Encoding Study" => "study.md",
         "API Reference" => "api.md",
         "Algorithm" => "algorithm.md",

@@ -9,6 +9,7 @@ using ToQUIO
     include("unit/feasibility.jl")
     include("unit/encoding_interface.jl")
     include("unit/radix_encoding.jl")
+    include("unit/bounded_encoding.jl")
     include("unit/penalty_documentation.jl")
     include("unit/study_protocol.jl")
     include("test_examples.jl")

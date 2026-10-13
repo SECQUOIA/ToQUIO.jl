@@ -33,16 +33,21 @@ struct RadixEncoding{I<:Integer} <: AbstractIntegerEncoding
 end
 
 function variable_encoding(strategy::RadixEncoding, lower::Integer, upper::Integer; context)
+    return _bounded_tail_encoding(lower, upper, strategy.levels, strategy.max_digits)
+end
+
+function _bounded_tail_encoding(lower::Integer, upper::Integer, levels, max_digits; max_weight = nothing)
     !(lower isa Bool || upper isa Bool) && lower <= upper ||
-        throw(ArgumentError("Radix encoding requires a nonempty integer interval."))
+        throw(ArgumentError("Integer encoding requires a nonempty integer interval."))
     width, covered = big(upper) - lower, big(0)
     weights, uppers = BigInt[], BigInt[]
     while covered < width
-        length(weights) < strategy.max_digits ||
-            throw(ArgumentError("Radix layout exceeds max_digits."))
+        length(weights) < max_digits ||
+            throw(ArgumentError("Integer layout exceeds max_digits."))
         remaining = width - covered
         weight = min(covered + 1, remaining)
-        bound = min(big(strategy.levels) - 1, remaining ÷ weight)
+        isnothing(max_weight) || (weight = min(weight, max_weight))
+        bound = min(big(levels) - 1, remaining ÷ weight)
         push!(weights, weight)
         push!(uppers, bound)
         covered += weight * bound
