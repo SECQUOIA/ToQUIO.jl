@@ -244,7 +244,12 @@ end
 @doc raw"""
     varmap : VI -> Int
 """
-function to_quio(::Type{T}, varmap::Function, conmap::Function, source::MOI.ModelLike; ϵ = one(T)) where {T}
+function to_quio(
+    ::Type{T}, varmap::Function, conmap::Function, source::MOI.ModelLike;
+    ϵ = one(T), penalty_scale = one(T),
+) where {T}
+    offset = _positive_penalty_control(T, ϵ, "Penalty offset")
+    scale = _positive_penalty_control(T, penalty_scale, "Penalty scale")
     # opt f(x)
     #  st A_eq x = b_eq
     #     A_lt x ≤ b_lt
@@ -282,10 +287,10 @@ function to_quio(::Type{T}, varmap::Function, conmap::Function, source::MOI.Mode
 
     # Compute Penalties!
     # NOTE: This gives priority to user-defined penalties.
-    ρ_auto_eq = (Δ ./ (ε_eq .^ 2)) .+ ϵ
-    ρ_auto_ie = (Δ ./ (ε_ie .^ 2)) .+ ϵ
-    ρ_eq = apply_penalty_hints(θ_eq, ρ_auto_eq, :equality)
-    ρ_ie = apply_penalty_hints(θ_ie, ρ_auto_ie, :inequality)
+    ρ_auto_eq = (Δ ./ (ε_eq .^ 2)) .+ offset
+    ρ_auto_ie = (Δ ./ (ε_ie .^ 2)) .+ offset
+    ρ_eq = apply_penalty_hints(θ_eq, ρ_auto_eq, :equality; scale)
+    ρ_ie = apply_penalty_hints(θ_ie, ρ_auto_ie, :inequality; scale)
     ρ    = T[ρ_eq; ρ_ie]
     ρ_auto = T[ρ_auto_eq; ρ_auto_ie]
     θ = Maybe{T}[θ_eq; θ_ie]
@@ -354,6 +359,10 @@ function to_quio(::Type{T}, varmap::Function, conmap::Function, source::MOI.Mode
     ]
 
     γ = b' * D * b + β
+    all(isfinite, G) && all(isfinite, g) && isfinite(γ) ||
+        throw(ArgumentError(
+            "Reformulation coefficients overflowed; rescale or use a wider numeric type.",
+        ))
 
     # p_eq = A_eq * x - b_eq
     # p_ie = A_ie * x - b_ie + s
@@ -379,6 +388,8 @@ function to_quio(::Type{T}, varmap::Function, conmap::Function, source::MOI.Mode
         :rho_auto => ρ_auto,
         :penalty_hints => θ,
         :penalty_constraints => penalty_constraints,
+        :penalty_offset => offset,
+        :penalty_scale => scale,
         :l => T[l; zeros(T, length(s))], # lower
         :u => T[u; sb],                  # upper
         :source_variables => source_variables,
@@ -456,14 +467,33 @@ function get_constraint_penalty_hint(::Type{T}, source, ci) where {T}
     return θ
 end
 
-function apply_penalty_hints(θ::AbstractVector{Maybe{T}}, ρ_auto::AbstractVector{T}, constraint_kind::Symbol) where {T}
+function apply_penalty_hints(
+    θ::AbstractVector{Maybe{T}}, ρ_auto::AbstractVector{T}, constraint_kind::Symbol;
+    scale = one(T),
+) where {T}
     ρ = similar(ρ_auto)
 
     for i in eachindex(ρ_auto)
+        isfinite(ρ_auto[i]) && ρ_auto[i] > zero(T) ||
+            throw(ArgumentError("Automatic penalty overflowed; rescale or use a wider numeric type."))
         hint = θ[i]
 
         if isnothing(hint)
-            ρ[i] = ρ_auto[i]
+            applied = scale * ρ_auto[i]
+            isfinite(applied) && applied > zero(T) ||
+                throw(ArgumentError("Applied penalty must remain finite and positive."))
+            if applied < ρ_auto[i]
+                @warn(
+                    "Applied automatic penalty is below the unscaled sufficient penalty; " *
+                    "constrained-problem equivalence is not guaranteed.",
+                    constraint_kind = constraint_kind,
+                    constraint_index = i,
+                    scale = scale,
+                    applied_penalty = applied,
+                    automatic_penalty = ρ_auto[i],
+                )
+            end
+            ρ[i] = applied
         else
             if hint < ρ_auto[i]
                 @warn "Constraint penalty hint is below the automatic sufficient penalty; constrained-problem equivalence is not guaranteed." constraint_kind=constraint_kind constraint_index=i hint=hint automatic_penalty=ρ_auto[i]

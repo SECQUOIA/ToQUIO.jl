@@ -5,5 +5,6 @@ using ToQUIO
     include("unit/maintenance.jl")
     include("unit/to_quio_regression.jl")
     include("unit/reformulation_metadata.jl")
+    include("unit/penalty_controls.jl")
     include("test_examples.jl")
 end

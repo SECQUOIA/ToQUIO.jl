@@ -118,6 +118,13 @@ function _validate_metadata_structure(data::AbstractDict)
         isnothing(hint) || _metadata_number(hint)
     end
     _metadata_field(data, "guarantees", AbstractDict)
+    if haskey(data, "penalty_controls")
+        controls = _metadata_field(data, "penalty_controls", AbstractDict)
+        for key in ("offset", "scale")
+            _metadata_number(_metadata_field(controls, key, Real)) > 0 ||
+                throw(ArgumentError("Serialized penalty controls must be positive."))
+        end
+    end
     return nothing
 end
 
@@ -206,7 +213,7 @@ function reformulation_metadata(input)
                 _metadata_number(data[:penalty_hints][i]),
         ) for (i, ci) in enumerate(data[:penalty_constraints])
     ]
-    return Dict{String,Any}(
+    metadata = Dict{String,Any}(
         "schema_version" => REFORMULATION_SCHEMA_VERSION,
         "package" => Dict{String,Any}(
             "name" => "ToQUIO", "version" => string(pkgversion(@__MODULE__)),
@@ -226,6 +233,13 @@ function reformulation_metadata(input)
             "auxiliary_repair" => false,
         ),
     )
+    if haskey(data, :penalty_offset) && haskey(data, :penalty_scale)
+        metadata["penalty_controls"] = Dict{String,Any}(
+            "offset" => _metadata_number(data[:penalty_offset]),
+            "scale" => _metadata_number(data[:penalty_scale]),
+        )
+    end
+    return metadata
 end
 
 @doc raw"""

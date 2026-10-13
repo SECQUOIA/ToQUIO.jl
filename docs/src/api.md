@@ -306,6 +306,51 @@ model = Model(() -> optimizer)
 MOI.set(backend(model), ToQUIO.ConstraintPenaltyHint(), index(con), 100.0)
 ```
 
+### Automatic Penalty Controls
+
+```@docs
+ToQUIO.PenaltyOffset
+ToQUIO.PenaltyScale
+ToQUIO.AppliedPenalty
+```
+
+For an unhinted constraint, ToQUIO applies
+`scale * (Δ_bound / ε^2 + offset)`. Defaults are `offset = 1` and `scale = 1`,
+reproducing the existing objective exactly. A `ConstraintPenaltyHint` remains an
+exact per-constraint magnitude and bypasses both controls. ToQUIO uses the same
+control names as ToQUBO but keeps its own squared-residual penalty formula.
+
+```julia
+optimizer = ToQUIO.Optimizer(; penalty_offset = 1.0, penalty_scale = 1.0)
+MOI.set(optimizer, ToQUIO.PenaltyScale(), 2.0)
+MOI.optimize!(optimizer, source)
+MOI.get(optimizer, ToQUIO.AppliedPenalty(), constraint_index)
+```
+
+`source` and `constraint_index` refer to the supported MOI source model and an
+affine constraint index. Setting a control changes the **next** reformulation;
+applied-penalty queries and snapshots retain the values from the last one.
+Use `nothing` with either control attribute to reset its default. Global controls
+persist across `MOI.empty!`; computed penalties do not. Offset and scale must be
+finite positive real values representable in the optimizer's numeric type.
+Invalid controls and overflowing target coefficients are rejected.
+
+Direct calls keep the existing additive `ϵ` keyword and add `penalty_scale`:
+
+```julia
+target, data = ToQUIO.to_quio(
+    Float64, varmap, conmap, source; ϵ = 1.0, penalty_scale = 2.0,
+)
+```
+
+`:rho_auto` records the **unscaled** automatic value with the chosen offset;
+`:rho` records the actual scaled or hinted magnitude. Maximization subtracts
+the applied magnitude in the objective, while `AppliedPenalty()` returns its
+positive value. Scales below 1 can weaken feasibility protection and warn when
+the applied value falls below the unscaled sufficient coefficient. Existing
+low-hint warnings retain their meaning; a hint is compared to that unscaled
+reference even when a global scale is set.
+
 ## Reformulation Metadata and Projection
 
 These helpers accept the dictionary returned by `to_quio` or an `Optimizer`
@@ -355,6 +400,7 @@ Schema version 1 is a string-keyed dictionary with the following fields:
 | `original_variables` | Source IDs and affine projection expansions |
 | `auxiliary_variables`, `slack_variables` | Slack IDs, target positions and typed source-constraint identities |
 | `constraint_encodings` | Penalized affine constraints in equality, `<=`, then `>=` order, with source/canonical relations, row multipliers, slack positions and automatic/applied/hinted penalties |
+| `penalty_controls` | Offset and scale used at compilation; optional in older v1 snapshots |
 | `guarantees` | Explicit projection, feasibility-check and repair boundaries |
 
 Constraint identities use fully qualified, context-independent function and set

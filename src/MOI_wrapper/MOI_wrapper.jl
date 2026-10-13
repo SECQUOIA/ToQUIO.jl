@@ -3,17 +3,24 @@ mutable struct Optimizer{T,O<:Maybe{MOI.AbstractOptimizer}} <: MOI.AbstractOptim
     source_model::Maybe{MOI.ModelLike}
     target_model::Maybe{QUIOModel}
     data::Dict{Symbol,Any}
+    settings::Dict{Symbol,Any}
 end
 
-function Optimizer{T}(::Nothing = nothing) where {T}
-    return Optimizer{T,Nothing}(nothing, nothing, nothing, Dict{Symbol,Any}())
+function Optimizer{T}(::Nothing = nothing; penalty_offset = one(T), penalty_scale = one(T)) where {T}
+    settings = _penalty_settings(T, penalty_offset, penalty_scale)
+    return Optimizer{T,Nothing}(nothing, nothing, nothing, Dict{Symbol,Any}(), settings)
 end
 
-function Optimizer{T}(callable::Any) where {T}
+function Optimizer{T}(callable::Any; penalty_offset = one(T), penalty_scale = one(T)) where {T}
+    settings = _penalty_settings(T, penalty_offset, penalty_scale)
     optimizer = callable()
 
-    return Optimizer{T,typeof(optimizer)}(optimizer, nothing, nothing, Dict{Symbol,Any}())
+    return Optimizer{T,typeof(optimizer)}(optimizer, nothing, nothing, Dict{Symbol,Any}(), settings)
 end
+
+# Preserve the previous positional constructor for callers holding raw data.
+Optimizer{T,O}(inner, source, target, data) where {T,O} =
+    Optimizer{T,O}(inner, source, target, data, Dict{Symbol,Any}())
 
 Optimizer(args...; kws...) = Optimizer{Float64}(args...; kws...)
 
@@ -62,6 +69,8 @@ function MOI.optimize!(solver::Optimizer{T}, model::MOI.ModelLike) where {T}
         vi -> variable_positions[vi], # varmap : VI -> Int
         ci -> constraint_positions[ci], # conmap : CI{F,S} -> Int
         solver.source_model,
+        ϵ = MOI.get(solver, PenaltyOffset()),
+        penalty_scale = MOI.get(solver, PenaltyScale()),
     )
 
     if !isnothing(solver.inner)
