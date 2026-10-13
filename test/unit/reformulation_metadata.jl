@@ -105,6 +105,24 @@ end
         duplicate = deepcopy(parsed)
         duplicate["original_variables"][2]["id"] = x.value
         @test_throws ArgumentError ToQUIO.project_original_state(duplicate, [1, 3, 1, 2])
+        invalid_documents = (
+            "slack identity" => m -> (m["slack_variables"][1]["id"] = 4),
+            "unknown auxiliary" => m -> (m["auxiliary_variables"] = Any[999]),
+            "slack missing from auxiliaries" => m -> (m["auxiliary_variables"] = Any[4]),
+            "boolean row multiplier" => m -> (m["constraint_encodings"][1]["row_multiplier"] = true),
+            "invalid row multiplier" => m -> (m["constraint_encodings"][1]["row_multiplier"] = 0),
+            "boolean applied penalty" => m -> (m["constraint_encodings"][1]["applied_penalty"] = false),
+            "boolean penalty hint" => m -> (m["constraint_encodings"][1]["penalty_hint"] = false),
+            "missing guarantees" => m -> delete!(m, "guarantees"),
+            "missing package version" => m -> delete!(m["package"], "version"),
+        )
+        for (label, mutate!) in invalid_documents
+            @testset "$label" begin
+                invalid = deepcopy(parsed)
+                mutate!(invalid)
+                @test_throws ArgumentError ToQUIO.reformulation_metadata(invalid)
+            end
+        end
         # Projection deliberately does not repair or reject an inconsistent slack.
         @test ToQUIO.project_original_state(data, [1.5, 3, -10, 99])[x] == 1.5
         @test_throws DimensionMismatch ToQUIO.project_original_state(data, [1, 3])

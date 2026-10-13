@@ -384,7 +384,9 @@ though that sample violates the target's integer and slack domains. Unknown
 schema versions and malformed document fields are rejected with `ArgumentError`.
 IDs, positions and numeric expansion fields reject booleans. A failed new
 reformulation invalidates the optimizer's current metadata; a previously retained
-raw dictionary or metadata snapshot remains usable. Existing raw keys such as `:target_variables`
+raw dictionary or metadata snapshot remains usable across that failed call.
+`MOI.empty!(optimizer)` clears the live raw dictionary and models; save a returned
+metadata snapshot when a record must survive this reset. Existing raw keys such as `:target_variables`
 (original-variable targets only), `:rho` and `:Q` keep their previous meaning;
 `:quio_variables` adds the full target order and `:slack_constraints` adds ownership.
 
