@@ -52,7 +52,7 @@ function MOI.get(solver::Optimizer{T}, attr::MOI.ObjectiveValue) where {T}
     F = MOI.get(solver.source_model, MOI.ObjectiveFunctionType())
     f = MOI.get(solver.source_model, MOI.ObjectiveFunction{F}())
 
-    return MOIU.eval_variables(solver.source_model, f) do vi
+    return MOIU.eval_variables(f) do vi
         return MOI.get(solver, MOI.VariablePrimal(attr.result_index), vi)
     end
 end
