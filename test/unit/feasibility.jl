@@ -206,21 +206,25 @@ RMOI.get(source::NoncanonicalSource, ::RMOI.ConstraintFunction, ci::RMOI.Constra
     @testset "missing primals and certificates are not sampled points" begin
         source, _, _, _, _, _ = feasibility_fixture()
         statuses = [RMOI.FEASIBLE_POINT, RMOI.NO_SOLUTION, RMOI.INFEASIBILITY_CERTIFICATE,
-                    RMOI.INFEASIBLE_POINT]
-        states = Any[[1, 2, 1, 1], nothing, [0, 0, 0, 0], [3, 0, 0, 0]]
+                    RMOI.INFEASIBLE_POINT, RMOI.NEARLY_FEASIBLE_POINT, RMOI.UNKNOWN_RESULT_STATUS]
+        states = Any[[1, 2, 1, 1], nothing, [0, 0, 0, 0], [3, 0, 0, 0], [1, 2, 1, 1], [0, 0, 0, 0]]
         optimizer = ToQUIO.Optimizer(() -> multi_result_backend(states; statuses))
         RMOI.optimize!(optimizer, source)
         report = ToQUIO.feasibility_report(optimizer)
-        @test report["result_count"] == 4
-        @test report["primal_point_count"] == 2
-        @test report["feasible_count"] == 1
-        @test report["feasible_fraction"] == 0.5
-        @test getindex.(report["results"], "evaluated") == [true, false, false, true]
+        @test report["result_count"] == 6
+        @test report["primal_point_count"] == 3
+        @test report["feasible_count"] == 2
+        @test report["feasible_fraction"] == 2 / 3
+        @test report["max_violation"] == 1
+        @test report["total_violation"] == 2
+        @test getindex.(report["results"], "evaluated") == [true, false, false, true, true, false]
         @test getindex.(report["results"], "primal_status") == string.(statuses)
         @test report["results"][2]["feasible"] === nothing
-        @test_throws r"no primal point" ToQUIO.violations(optimizer; result = 2)
-        @test_throws r"no primal point" ToQUIO.feasibility_report(optimizer; result = 3)
+        @test_throws r"unsupported status" ToQUIO.violations(optimizer; result = 2)
+        @test_throws r"unsupported status" ToQUIO.feasibility_report(optimizer; result = 3)
         @test !ToQUIO.is_feasible(optimizer; result = 4)
+        @test ToQUIO.is_feasible(optimizer; result = 5)
+        @test_throws r"unsupported status UNKNOWN_RESULT_STATUS" ToQUIO.violations(optimizer; result = 6)
         empty = ToQUIO.Optimizer(() -> multi_result_backend([nothing]; statuses = [RMOI.NO_SOLUTION]))
         RMOI.optimize!(empty, source)
         @test ToQUIO.feasibility_report(empty)["feasible_fraction"] === nothing

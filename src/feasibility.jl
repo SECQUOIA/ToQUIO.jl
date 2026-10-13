@@ -120,7 +120,7 @@ _is_primal_point(status) = status in (MOI.FEASIBLE_POINT, MOI.NEARLY_FEASIBLE_PO
 function _optimizer_state(solver::Optimizer, result)
     status = _optimizer_result_status(solver, result)
     _is_primal_point(status) ||
-        throw(ArgumentError("Result $result has no primal point (status $status)."))
+        throw(ArgumentError("Result $result has unsupported status $status for primal point evaluation."))
     data = _reformulation_data(solver)
     return [
         MOI.get(solver.inner, MOI.VariablePrimal(result), _backend_variable(solver, vi))

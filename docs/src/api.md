@@ -102,11 +102,12 @@ Core function that performs the QUIO reformulation.
   - `:l`: Lower bounds vector
   - `:u`: Upper bounds vector
 
+MathOptInterface 1.11 or later is required for source distance evaluation.
+
 **Input validation:**
 - Direct source models must implement `MOI.ListOfConstraintTypesPresent`.
   Unsupported types, including scalar affine functions in `MOI.Interval`, are
   rejected with `ArgumentError` rather than silently omitted.
-- MathOptInterface 1.11 or later is required for source distance evaluation.
 - Every source variable must have finite lower and upper bounds and be marked
   `MOI.Integer` or `MOI.ZeroOne`.
 - Affine constraint coefficients and right-hand sides must be integer-valued.
