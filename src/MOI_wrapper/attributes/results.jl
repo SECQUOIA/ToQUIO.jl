@@ -10,8 +10,8 @@ end
     PenalizedObjectiveValue(result_index::Int = 1)
 
 Return the objective value reported by the backend on the reformulated QUIO
-target model. `MOI.ObjectiveValue` returns the original objective evaluated at
-the mapped source-variable primal values.
+target model, including an optional integer encoding. `MOI.ObjectiveValue`
+returns the original objective evaluated at composed decoded source primals.
 """
 struct PenalizedObjectiveValue <: MOI.AbstractModelAttribute
     result_index::Int
@@ -37,8 +37,19 @@ end
 
 function MOI.get(solver::Optimizer{T}, attr::MOI.VariablePrimal, vi::VI) where {T}
     @assert !isnothing(solver.inner)
-
-    return MOI.get(solver.inner, attr, _backend_variable(solver, _target_variable(solver, vi)))
+    native_variable = _target_variable(solver, vi)
+    if !haskey(solver.data, :encoding_layouts)
+        return MOI.get(solver.inner, attr, _backend_variable(solver, native_variable))
+    end
+    # Fixed source values still require a valid result index even with no digits.
+    MOI.check_result_index_bounds(solver, attr)
+    position = solver.data[:encoding_native_positions][native_variable]
+    layout = solver.data[:encoding_layouts][position]
+    digits = [
+        MOI.get(solver.inner, attr, _backend_variable(solver, solver.data[:encoded_variables][i]))
+        for i in solver.data[:encoding_digit_positions][position]
+    ]
+    return _decode_layout(layout, digits)
 end
 
 function MOI.supports(solver::Optimizer{T}, attr::MOI.TerminationStatus) where {T}

@@ -246,8 +246,9 @@ end
 """
 function to_quio(
     ::Type{T}, varmap::Function, conmap::Function, source::MOI.ModelLike;
-    ϵ = one(T), penalty_scale = one(T),
+    ϵ = one(T), penalty_scale = one(T), encoding = NativeEncoding(), max_encoded_variables = 256,
 ) where {T}
+    encoding, max_encoded_variables = _encoding_options(encoding, max_encoded_variables)
     offset = _positive_penalty_control(T, ϵ, "Penalty offset")
     scale = _positive_penalty_control(T, penalty_scale, "Penalty scale")
     source_constraints = _capture_source_constraints(T, source)
@@ -402,7 +403,7 @@ function to_quio(
         :source_constraints => source_constraints,
     )
 
-    return (target, data)
+    return _encode_native_quio(T, target, data, encoding, max_encoded_variables)
 end
 
 function get_eq_matrices(::Type{T}, varmap::Function, conmap::Function, source) where {T}

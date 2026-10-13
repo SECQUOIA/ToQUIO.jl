@@ -6,13 +6,19 @@ mutable struct Optimizer{T,O<:Maybe{MOI.AbstractOptimizer}} <: MOI.AbstractOptim
     settings::Dict{Symbol,Any}
 end
 
-function Optimizer{T}(::Nothing = nothing; penalty_offset = one(T), penalty_scale = one(T)) where {T}
+function Optimizer{T}(::Nothing = nothing; penalty_offset = one(T), penalty_scale = one(T),
+    encoding = NativeEncoding(), max_encoded_variables = 256) where {T}
     settings = _penalty_settings(T, penalty_offset, penalty_scale)
+    strategy, limit = _encoding_options(encoding, max_encoded_variables)
+    merge!(settings, Dict(:encoding => strategy, :max_encoded_variables => limit))
     return Optimizer{T,Nothing}(nothing, nothing, nothing, Dict{Symbol,Any}(), settings)
 end
 
-function Optimizer{T}(callable::Any; penalty_offset = one(T), penalty_scale = one(T)) where {T}
+function Optimizer{T}(callable::Any; penalty_offset = one(T), penalty_scale = one(T),
+    encoding = NativeEncoding(), max_encoded_variables = 256) where {T}
     settings = _penalty_settings(T, penalty_offset, penalty_scale)
+    strategy, limit = _encoding_options(encoding, max_encoded_variables)
+    merge!(settings, Dict(:encoding => strategy, :max_encoded_variables => limit))
     optimizer = callable()
 
     return Optimizer{T,typeof(optimizer)}(optimizer, nothing, nothing, Dict{Symbol,Any}(), settings)
@@ -71,6 +77,8 @@ function MOI.optimize!(solver::Optimizer{T}, model::MOI.ModelLike) where {T}
         solver.source_model,
         ϵ = MOI.get(solver, PenaltyOffset()),
         penalty_scale = MOI.get(solver, PenaltyScale()),
+        encoding = MOI.get(solver, EncodingStrategy()),
+        max_encoded_variables = MOI.get(solver, MaxEncodedVariables()),
     )
 
     if !isnothing(solver.inner)
