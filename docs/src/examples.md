@@ -299,6 +299,11 @@ println("Number of penalties: ", size(optimizer.data[:D], 1))
 
 ## Custom Penalties
 
+The [Penalty tuning guide](penalties.md) explains defaults, global controls,
+compiled queries and an independently enumerated weak-penalty example. The
+matrix/data inspection below is explicitly low-level; prefer `AppliedPenalty`
+and `reformulation_metadata` for public inspection.
+
 ### Specifying Penalty Coefficients
 
 ```julia
@@ -407,6 +412,10 @@ println("\nUpper bounds: ", data[:u])
 ```
 
 ### Analyzing Penalty Coefficients
+
+This is low-level inspection of the signed matrix `:D`: its diagonal is `+ρ`
+for minimization and `-ρ` for maximization. For positive applied magnitudes and
+typed source identities, use the [public inspection example](penalties.md).
 
 ```julia
 using JuMP, ToQUIO

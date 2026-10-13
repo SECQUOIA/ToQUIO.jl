@@ -313,6 +313,9 @@ MOI.set(backend(model), ToQUIO.ConstraintPenaltyHint(), index(con), 100.0)
 
 ### Automatic Penalty Controls
 
+See [Penalty tuning](penalties.md) for executable inspection/sweep examples,
+hint precedence and warning semantics.
+
 ```@docs
 ToQUIO.PenaltyOffset
 ToQUIO.PenaltyScale

@@ -64,7 +64,10 @@ For each equality constraint `a'x = b`, we add a penalty term:
 P_eq(x) = ρ_eq * (a'x - b)²
 ```
 
-Where `ρ_eq > 0` is the penalty coefficient. As `ρ_eq → ∞`, minimizing the penalized objective forces the constraint to be satisfied.
+Here `ρ_eq > 0` is the penalty magnitude for minimization. Finite magnitudes
+above the sufficient objective-range threshold can enforce feasibility at a
+global target optimum. Maximization subtracts the same penalty-weighted
+squared residual `ρ * residual^2`. See [Penalty tuning](penalties.md) for controls and samples.
 
 ### Inequality Constraints
 
@@ -156,30 +159,41 @@ This ensures that any violation is at least 1 in magnitude.
 The automatic penalty coefficient for each constraint is computed as:
 
 ```
-ρ_auto = Δ_bound/ε² + ϵ
+ρ_auto = Δ_bound/ε² + offset
+ρ_applied = scale * ρ_auto  # Unless a per-constraint hint overrides it
 ```
 
 Where:
-- `Δ_bound`: Exact objective range for affine objectives, or a conservative
-  objective range bound for quadratic objectives
+- `Δ_bound`: Objective range bound (exact for combined affine terms; conservative
+  for noncanonical duplicates and quadratic terms)
 - `ε`: Minimum nonzero violation magnitude
-- `ϵ`: User-specified adjustment (default: 1.0)
+- `offset`: Positive additive margin (`PenaltyOffset`, default: 1.0)
+- `scale`: Positive multiplier (`PenaltyScale`, default: 1.0)
+
+For direct `to_quio` calls, the additive keyword is still `ϵ` and the multiplier
+keyword is `penalty_scale`. The additive `ϵ` is distinct from residual `ε`.
 
 Because the penalty term is quadratic, a minimum nonzero violation contributes
-`ρ_auto * ε²`. With positive `ϵ`, the automatic coefficient makes that
-contribution larger than the objective range bound, strongly incentivizing
-feasibility.
+`ρ_auto * ε²`. With positive `offset`, the automatic coefficient makes that
+contribution larger than the objective range bound. Scale at least 1 preserves
+that sufficient bound for a feasible supported source problem with exact
+integer/slack representation and adequate numerical precision. Smaller scales
+may lose sufficiency; arbitrary returned samples need source-feasibility checks
+even when the global target optimum would be feasible.
 
 ### User-Specified Penalties
 
 Users can override automatic penalties using the `ConstraintPenaltyHint` attribute:
 
 ```julia
-MOI.set(model, ConstraintPenaltyHint(), constraint, custom_penalty)
+MOI.set(backend(model), ToQUIO.ConstraintPenaltyHint(), index(con), custom_penalty)
 ```
 
-Custom penalty hints must be finite and positive. They override the automatic
-sufficient coefficient and are treated as user-chosen heuristic values; if a
+Here `model` and `con` are a JuMP model and constraint reference. See the
+[executable MOI examples](penalties.md) for dependency-light inspection/sweeps.
+
+Custom penalty hints must be finite and positive. They override offset and scale
+as well as the automatic sufficient coefficient and are treated as user-chosen heuristic values; if a
 hint is lower than `ρ_auto`, ToQUIO uses it but equivalence to the constrained
 problem is not guaranteed. ToQUIO emits a warning when a hint is below
 `ρ_auto`. The reformulation metadata stores the selected penalties, automatic
@@ -200,9 +214,10 @@ penalties, user hints, and corresponding source constraints for inspection.
 1. Compute objective range bound `Δ_bound`
 2. Compute sensibility factors `ε_eq`, `ε_ie`
 3. Compute penalty coefficients:
-   - `ρ_auto_eq = Δ_bound/ε_eq² + ϵ` for equalities
-   - `ρ_auto_ie = Δ_bound/ε_ie² + ϵ` for inequalities
-4. Apply user hints if provided
+   - `ρ_auto_eq = Δ_bound/ε_eq² + offset` for equalities
+   - `ρ_auto_ie = Δ_bound/ε_ie² + offset` for inequalities
+4. Multiply unhinted magnitudes by `scale`
+5. Apply exact user hints instead of the scaled automatic value, where provided
 
 ### Step 3: Add Slack Variables
 
@@ -301,7 +316,9 @@ The reformulated problem is equivalent to the original if:
 2. Slack bounds are correctly computed
 3. Numeric precision is adequate
 
-In practice, finite penalties may result in small constraint violations that are acceptable in many applications.
+Weak user penalties or nonoptimal backend samples may violate original source
+constraints. Evaluate them with `is_feasible` or `feasibility_report`; a low
+target energy does not certify source feasibility. See [Penalty tuning](penalties.md).
 
 ### Extensions
 

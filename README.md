@@ -124,6 +124,11 @@ The reformulation uses quadratic penalty functions to incorporate constraints in
 - Inequality constraints: penalized using slack variables
 - Penalty coefficients (ρ) are automatically computed or can be user-specified
 
+For penalty controls, applied-penalty inspection and source-feasibility checks
+in the development source, see the [Penalty tuning guide](docs/src/penalties.md).
+These examples follow the checked-out source; tagged releases determine registry
+availability.
+
 ## API Documentation
 
 ### Optimizer
