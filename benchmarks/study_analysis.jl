@@ -85,7 +85,14 @@ function paired_contrast(pairs, endpoint; bootstrap_replicates = 2000, seed = 99
         "interpretation" => "descriptive-exploratory-nested-instance-bootstrap-no-multiplicity-control")
 end
 
-function validate_trajectory_scores(record, reference, instance)
+function source_target_predicate(instance, reference)
+    # Reuse the actual runner observer, rather than duplicating its tolerance.
+    cell = compile_quio(instance, "native", "controlled")
+    observe = cell_observer(cell, reference["objective"])
+    return point -> observe(reference_lift(cell, point)).target
+end
+
+function validate_trajectory_scores(record, reference, instance; target_predicate = nothing)
     t = record["trajectory"]
     cap = record["job"]["reserved_proposals"]
     if record["status"] == "invalid"
@@ -105,15 +112,25 @@ function validate_trajectory_scores(record, reference, instance)
         expected_gap = sigma * (value - reference["objective"]) / max(1, abs(reference["objective"]))
     end
     get(t, "signed_gap", "missing") == expected_gap || error("Signed gap differs from frozen reference.")
+    reaches_target = false
+    if t["any_feasible"]
+        isnothing(target_predicate) && (target_predicate = source_target_predicate(instance, reference))
+        reaches_target = target_predicate(t["best_feasible_source"])
+    end
     hit = t["first_target_seconds"] != "missing"
     hit == t["timely_target"] || error("Timely-target flag differs from observed hit.")
     if hit
-        t["any_feasible"] && isfinite(t["first_target_seconds"]) &&
+        reaches_target && isfinite(t["first_target_seconds"]) &&
             0 <= t["first_target_seconds"] <= PROTOCOL["metropolis"]["max_seconds_per_run"] &&
             t["first_target_proposal"] isa Integer &&
             0 <= t["first_target_proposal"] <= t["completed_proposals"] || error("Invalid first-hit fields.")
     else
         t["first_target_proposal"] == "missing" || error("Unobserved hit has a proposal index.")
+        if reaches_target
+            overshoot = get(t, "overshoot_target_proposal", "missing")
+            overshoot isa Integer && 0 <= overshoot <= t["completed_proposals"] ||
+                error("A best point reaching the target needs a timely hit or recorded overshoot.")
+        end
     end
     expected_time = hit ? t["first_target_seconds"] : PROTOCOL["metropolis"]["max_seconds_per_run"]
     expected_work = hit ? t["first_target_proposal"] : cap
@@ -149,19 +166,26 @@ function load_complete_campaign(root)
     end
     Set(keys(expected)) == Set(r["key"] for r in records) || error("Run records differ from archived stage plans.")
     references = Dict{String,Any}()
-    read_archive(root, "reference_freeze.toml"; expected_hash = ledger["reference_freeze_hash"])
+    freeze = read_archive(root, "reference_freeze.toml"; expected_hash = ledger["reference_freeze_hash"])
+    freeze["references"] == ledger["references"] || error("Ledger references differ from frozen references.")
+    all(e["status"] == "complete" for e in freeze["references"]) || error("Incomplete frozen reference.")
     for entry in ledger["references"]
         reference = read_archive(root, entry["file"]; expected_hash = entry["hash"])
         reference["source_hash"] == entry["source_hash"] || error("Reference source binding differs.")
         references[entry["source_hash"]] = reference
     end
+    predicates = Dict{String,Any}()
     for record in records
         record["job"] == expected[record["key"]] || error("Trajectory job differs from frozen plan.")
         instance = only(filter(i -> i.id == record["job"]["instance_id"], instances))
         if record["status"] == "complete"
             record["reference_freeze_hash"] == ledger["reference_freeze_hash"] || error("Run reference freeze differs.")
         end
-        validate_trajectory_scores(record, references[instance_hash(instance)], instance)
+        hash = instance_hash(instance)
+        predicate = get!(predicates, hash) do
+            source_target_predicate(instance, references[hash])
+        end
+        validate_trajectory_scores(record, references[hash], instance; target_predicate = predicate)
     end
     return (manifest = manifest, ledger = ledger, records = records, selection = selection, instances = instances)
 end

@@ -62,5 +62,23 @@ class StudyArtifactTests(unittest.TestCase):
                 compare(source, root / "absent")
 
 
+    def test_documentation_is_required(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            parent = root / "repo" / "benchmarks" / "results"
+            parent.mkdir(parents=True)
+            source, _ = self.fixture(parent)
+            generated = root / "generated"
+            generated.mkdir()
+            for target in (source, generated):
+                (target / "evaluation.csv").write_text("a\n1\n")
+                (target / "TABLES.md").write_text("table\n")
+                (target / "hardware_subset.toml").write_text("schema_version=1\n")
+            (generated / "statistics.toml").write_bytes(b"a=1\n")
+            (source / "hardware_subset.json").write_text('{"schema_version":1}')
+            with self.assertRaisesRegex(ValueError, "documentation"):
+                compare(source, generated)
+
+
 if __name__ == "__main__":
     unittest.main()

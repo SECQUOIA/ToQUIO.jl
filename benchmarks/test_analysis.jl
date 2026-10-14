@@ -69,7 +69,25 @@ end
     nohit["trajectory"]["timely_target"] = false
     nohit["trajectory"]["target_time_score"] = 2.0
     nohit["trajectory"]["target_work_score"] = 128
+    @test_throws ErrorException A.validate_trajectory_scores(nohit, reference, instance)
+    nohit["trajectory"]["overshoot_target_proposal"] = 128
     @test A.validate_trajectory_scores(nohit, reference, instance)
+    for (field, value) in (("best_feasible_objective", reference["objective"] + 1),
+                           ("first_target_proposal", 129))
+        bad = deepcopy(record)
+        bad["trajectory"][field] = value
+        @test_throws ErrorException A.validate_trajectory_scores(bad, reference, instance)
+    end
+    invalid = Dict("status" => "invalid", "job" => Dict("reserved_proposals" => 128),
+        "trajectory" => A.invalid_trajectory(Dict("reserved_proposals" => 128), "fixture"))
+    @test A.validate_trajectory_scores(invalid, reference, instance)
+    invalid["trajectory"]["target_time_score"] = 0.0
+    @test_throws ErrorException A.validate_trajectory_scores(invalid, reference, instance)
+    falsehit = deepcopy(record)
+    falsehit["trajectory"]["best_feasible_source"] = [0, 0]
+    falsehit["trajectory"]["best_feasible_objective"] = 0
+    falsehit["trajectory"]["signed_gap"] = 1.0
+    @test_throws ErrorException A.validate_trajectory_scores(falsehit, reference, instance)
 end
 
 end

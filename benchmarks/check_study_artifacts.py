@@ -77,6 +77,8 @@ def compare(source, generated):
     if subset != json.loads((source / "hardware_subset.json").read_text()):
         raise ValueError("Hardware JSON differs from generated subset")
     docs = source.parents[2] / "docs" / "src"
+    if not docs.is_dir():
+        raise ValueError("Required documentation directory is absent")
     if docs.is_dir():
         for name, doc in (("REPORT.md", "classical_study.md"), ("TABLES.md", "TABLES.md")):
             if (source / name).read_bytes() != (docs / doc).read_bytes():
