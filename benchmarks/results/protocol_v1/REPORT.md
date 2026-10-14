@@ -158,7 +158,7 @@ checks. No hardware job, package release or deployment was performed here.
 ## Reproduce
 
 Use reporting-code checkpoint
-`1bec7de667a5c2c81aed9d92f1b5e6ceb77dc9f2` (or its descendant with the same
+`209fcbaf1671ad49feeb1dae66e0997cc64dda36` (or its descendant with the same
 script hashes), Julia 1.10.11 and archived MOI 1.54.0. Sampling imports still
 match frozen campaign source
 `2a4f1809ebcc148748f57a8fb2772eca3899e1bb`; source-hash verification covers
