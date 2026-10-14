@@ -85,9 +85,47 @@ function paired_contrast(pairs, endpoint; bootstrap_replicates = 2000, seed = 99
         "interpretation" => "descriptive-exploratory-nested-instance-bootstrap-no-multiplicity-control")
 end
 
+function validate_trajectory_scores(record, reference, instance)
+    t = record["trajectory"]
+    cap = record["job"]["reserved_proposals"]
+    if record["status"] == "invalid"
+        !t["any_feasible"] && !t["timely_target"] && t["target_time_score"] == 2.0 &&
+            t["target_work_score"] == cap && get(t, "signed_gap", "missing") == "missing" ||
+            error("Invalid run did not retain frozen failure scores.")
+        return true
+    end
+    record["reference_objective"] == reference["objective"] || error("Run reference objective differs.")
+    expected_gap = "missing"
+    if t["any_feasible"]
+        point = t["best_feasible_source"]
+        source_feasible(instance, point; atol = 0) || error("Best point violates the source.")
+        value = source_value(instance, point)
+        value == t["best_feasible_objective"] || error("Best objective differs from source point.")
+        sigma = instance.sense == "min" ? 1 : -1
+        expected_gap = sigma * (value - reference["objective"]) / max(1, abs(reference["objective"]))
+    end
+    get(t, "signed_gap", "missing") == expected_gap || error("Signed gap differs from frozen reference.")
+    hit = t["first_target_seconds"] != "missing"
+    hit == t["timely_target"] || error("Timely-target flag differs from observed hit.")
+    if hit
+        t["any_feasible"] && isfinite(t["first_target_seconds"]) &&
+            0 <= t["first_target_seconds"] <= PROTOCOL["metropolis"]["max_seconds_per_run"] &&
+            t["first_target_proposal"] isa Integer &&
+            0 <= t["first_target_proposal"] <= t["completed_proposals"] || error("Invalid first-hit fields.")
+    else
+        t["first_target_proposal"] == "missing" || error("Unobserved hit has a proposal index.")
+    end
+    expected_time = hit ? t["first_target_seconds"] : PROTOCOL["metropolis"]["max_seconds_per_run"]
+    expected_work = hit ? t["first_target_proposal"] : cap
+    t["target_time_score"] == expected_time && t["target_work_score"] == expected_work ||
+        error("Target scores differ from observed hit/failure rule.")
+    return true
+end
+
 function load_complete_campaign(root)
     manifest, ledger = read_archive(root, "manifest.toml"), read_archive(root, "ledger.toml")
     verify_archive_execution(manifest)
+    manifest["campaign_hashes"] == campaign_hashes() || error("Frozen campaign source hashes differ.")
     ledger["manifest_hash"] == bytes2hex(SHA.sha256(read(joinpath(root, "manifest.toml")))) ||
         error("Campaign manifest/ledger binding differs.")
     ledger["status"] == "campaign-complete" && manifest["mode"] == "campaign" ||
@@ -110,15 +148,20 @@ function load_complete_campaign(root)
         merge!(expected, Dict(j["key"] => j for j in planned))
     end
     Set(keys(expected)) == Set(r["key"] for r in records) || error("Run records differ from archived stage plans.")
+    references = Dict{String,Any}()
+    read_archive(root, "reference_freeze.toml"; expected_hash = ledger["reference_freeze_hash"])
+    for entry in ledger["references"]
+        reference = read_archive(root, entry["file"]; expected_hash = entry["hash"])
+        reference["source_hash"] == entry["source_hash"] || error("Reference source binding differs.")
+        references[entry["source_hash"]] = reference
+    end
     for record in records
         record["job"] == expected[record["key"]] || error("Trajectory job differs from frozen plan.")
-        trajectory = record["trajectory"]
-        if record["status"] == "invalid"
-            !trajectory["any_feasible"] && !trajectory["timely_target"] &&
-                trajectory["target_time_score"] == 2.0 &&
-                trajectory["target_work_score"] == record["job"]["reserved_proposals"] ||
-                error("Invalid run did not retain frozen failure scores.")
+        instance = only(filter(i -> i.id == record["job"]["instance_id"], instances))
+        if record["status"] == "complete"
+            record["reference_freeze_hash"] == ledger["reference_freeze_hash"] || error("Run reference freeze differs.")
         end
+        validate_trajectory_scores(record, references[instance_hash(instance)], instance)
     end
     return (manifest = manifest, ledger = ledger, records = records, selection = selection, instances = instances)
 end

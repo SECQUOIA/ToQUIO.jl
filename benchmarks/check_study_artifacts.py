@@ -1,9 +1,10 @@
-"""Verify and safely unpack the public study; requires Python 3.11+ stdlib only."""
+"""Verify and safely unpack the public study; requires Python 3.11.4+ stdlib only."""
 import gzip
 import hashlib
 import json
 from pathlib import Path, PurePosixPath
 import sys
+import tomllib
 import tarfile
 
 LIMIT = 512 * 1024 * 1024
@@ -11,6 +12,8 @@ LIMIT = 512 * 1024 * 1024
 
 def verify_and_extract(source, destination):
     checksums = json.loads((source / "checksums.json").read_text())
+    if set(checksums["archives"]) != {"campaign.tar.gz", "statistics.toml.gz"}:
+        raise ValueError("Expected exactly the two published archives")
     for name, expected in checksums["archives"].items():
         path = source / name
         if path.parent != source or path.stat().st_size > LIMIT:
@@ -35,11 +38,25 @@ def verify_and_extract(source, destination):
 def compare(source, generated):
     with gzip.open(source / "statistics.toml.gz", "rb") as stream:
         expected = stream.read(LIMIT + 1)
+    digest = json.loads((source / "checksums.json").read_text())["statistics_sha256"]
+    if hashlib.sha256(expected).hexdigest() != digest:
+        raise ValueError("Uncompressed statistics checksum differs")
     if len(expected) > LIMIT or expected != (generated / "statistics.toml").read_bytes():
         raise ValueError("Regenerated statistics differ")
     if (source / "evaluation.csv").read_bytes() != (generated / "evaluation.csv").read_bytes():
         raise ValueError("Regenerated CSV differs")
-    print("Published statistics and CSV reproduced byte for byte")
+    for name in ("TABLES.md", "hardware_subset.toml"):
+        if (source / name).read_bytes() != (generated / name).read_bytes():
+            raise ValueError("Regenerated disclosure tables/subset differ")
+    subset = tomllib.loads((generated / "hardware_subset.toml").read_text())
+    if subset != json.loads((source / "hardware_subset.json").read_text()):
+        raise ValueError("Hardware JSON differs from generated subset")
+    docs = source.parents[2] / "docs" / "src"
+    if docs.is_dir():
+        for name, doc in (("REPORT.md", "classical_study.md"), ("TABLES.md", "TABLES.md")):
+            if (source / name).read_bytes() != (docs / doc).read_bytes():
+                raise ValueError("Documentation differs from the published study")
+    print("Published statistics, CSV, tables, subset and docs reproduced")
 
 
 if __name__ == "__main__":

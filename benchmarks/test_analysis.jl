@@ -44,4 +44,32 @@ const A = CQTBenchmarks
     @test_throws ErrorException A.paired_contrast(pairs[1:7], "feasibility")
 end
 
+@testset "Frozen reference and observed-score binding" begin
+    instance = first(A.corpus(A.PROTOCOL))
+    reference = A.exact_reference(instance)
+    trajectory = Dict{String,Any}("any_feasible" => true, "best_feasible_source" => reference["point"],
+        "best_feasible_objective" => reference["objective"], "signed_gap" => 0.0,
+        "timely_target" => true, "first_target_seconds" => 0.2, "first_target_proposal" => 3,
+        "completed_proposals" => 128, "target_time_score" => 0.2, "target_work_score" => 3)
+    record = Dict("status" => "complete", "trajectory" => trajectory,
+                  "reference_objective" => reference["objective"], "job" => Dict("reserved_proposals" => 128))
+    @test A.validate_trajectory_scores(record, reference, instance)
+    for (field, value) in (("signed_gap", 0.1), ("target_time_score", 1.0), ("target_work_score", 4),
+                           ("timely_target", false))
+        bad = deepcopy(record)
+        bad["trajectory"][field] = value
+        @test_throws ErrorException A.validate_trajectory_scores(bad, reference, instance)
+    end
+    bad_reference = deepcopy(reference)
+    bad_reference["objective"] += 1
+    @test_throws ErrorException A.validate_trajectory_scores(record, bad_reference, instance)
+    nohit = deepcopy(record)
+    nohit["trajectory"]["first_target_seconds"] = "missing"
+    nohit["trajectory"]["first_target_proposal"] = "missing"
+    nohit["trajectory"]["timely_target"] = false
+    nohit["trajectory"]["target_time_score"] = 2.0
+    nohit["trajectory"]["target_work_score"] = 128
+    @test A.validate_trajectory_scores(nohit, reference, instance)
+end
+
 end

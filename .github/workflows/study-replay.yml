@@ -6,16 +6,56 @@ on:
       - '.github/workflows/study-replay.yml'
       - 'benchmarks/study_analysis.jl'
       - 'benchmarks/report.jl'
+      - 'benchmarks/report_tables.jl'
+      - 'benchmarks/test_study_artifacts.py'
+      - 'docs/src/classical_study.md'
+      - 'docs/src/TABLES.md'
       - 'benchmarks/check_study_artifacts.py'
       - 'benchmarks/results/**'
+      - 'src/**'
+      - 'Project.toml'
+      - 'benchmarks/CQTBenchmarks.jl'
+      - 'benchmarks/protocol_helpers.jl'
+      - 'benchmarks/corpus.jl'
+      - 'benchmarks/corpus_hashes_v1.toml'
+      - 'benchmarks/metropolis.jl'
+      - 'benchmarks/compilers.jl'
+      - 'benchmarks/preflight.jl'
+      - 'benchmarks/artifacts.jl'
+      - 'benchmarks/protocol_v1.toml'
+      - 'benchmarks/runner.jl'
+      - 'benchmarks/run.jl'
+      - 'benchmarks/CQTExperiment.jl'
+      - 'benchmarks/reference.jl'
+      - 'benchmarks/toqubo_adapter.jl'
   push:
     branches: [main]
     paths:
       - '.github/workflows/study-replay.yml'
       - 'benchmarks/study_analysis.jl'
       - 'benchmarks/report.jl'
+      - 'benchmarks/report_tables.jl'
+      - 'benchmarks/test_study_artifacts.py'
+      - 'docs/src/classical_study.md'
+      - 'docs/src/TABLES.md'
       - 'benchmarks/check_study_artifacts.py'
       - 'benchmarks/results/**'
+      - 'src/**'
+      - 'Project.toml'
+      - 'benchmarks/CQTBenchmarks.jl'
+      - 'benchmarks/protocol_helpers.jl'
+      - 'benchmarks/corpus.jl'
+      - 'benchmarks/corpus_hashes_v1.toml'
+      - 'benchmarks/metropolis.jl'
+      - 'benchmarks/compilers.jl'
+      - 'benchmarks/preflight.jl'
+      - 'benchmarks/artifacts.jl'
+      - 'benchmarks/protocol_v1.toml'
+      - 'benchmarks/runner.jl'
+      - 'benchmarks/run.jl'
+      - 'benchmarks/CQTExperiment.jl'
+      - 'benchmarks/reference.jl'
+      - 'benchmarks/toqubo_adapter.jl'
 
 permissions:
   contents: read
@@ -40,6 +80,7 @@ jobs:
       - name: Verify archive and reproduce with ordinary environment
         shell: bash
         run: |
+          python3 -m unittest discover -s benchmarks -p test_study_artifacts.py
           study_source=benchmarks/results/protocol_v1
           study_temp=$(mktemp -d)
           python3 benchmarks/check_study_artifacts.py extract "$study_source" "$study_temp/campaign"

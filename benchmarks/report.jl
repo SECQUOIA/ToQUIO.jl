@@ -3,6 +3,7 @@ include("CQTBenchmarks.jl")
 Base.include(CQTBenchmarks, joinpath(@__DIR__, "runner.jl"))
 Base.include(CQTBenchmarks, joinpath(@__DIR__, "study_analysis.jl"))
 const S = CQTBenchmarks
+include("report_tables.jl")
 
 function evaluation_summary(campaign)
     rows = Dict{String,Any}[]
@@ -70,6 +71,8 @@ function structural_summary(root, campaign)
         push!(result, Dict("instance_id" => data["instance"]["id"], "arm" => arm,
             "regime" => data["regime"], "weight_cap" => cap, "structure" => data["structure"],
             "layout_identity" => data["preflight"]["layout_identity"],
+            "cell_key" => entry["key"], "cell_hash" => entry["hash"],
+            "target_signature" => S.record_hash(Dict("polynomial" => data["polynomial"], "maps" => data["maps"])),
             "warm_compiler" => timing))
     end
     length(result) == 80 || error("Missing held-out structural cell.")
@@ -94,15 +97,21 @@ function main(args)
     statistics = S.study_statistics(campaign)
     statistics["evaluation_summary"] = evaluation_summary(campaign)
     statistics["structure"] = structural_summary(root, campaign)
+    annotate_distinctness!(statistics)
+    subset = hardware_subset(campaign, statistics)
+    statistics["hardware_subset"] = subset
     statistics["selection"] = campaign.selection
     statistics["resource_ledger"] = Dict(k => campaign.ledger[k] for k in
         ("elapsed_seconds", "process_peak_rss_bytes", "sampler_starts_reserved", "proposals_reserved",
          "enumeration_states_reserved", "invocations"))
     statistics["input_manifest_sha256"] = bytes2hex(S.SHA.sha256(read(joinpath(root, "manifest.toml"))))
     statistics["report_sha256"] = bytes2hex(S.SHA.sha256(read(@__FILE__)))
+    statistics["tables_sha256"] = bytes2hex(S.SHA.sha256(read(joinpath(@__DIR__, "report_tables.jl"))))
     mkpath(output)
     hash = S.write_archive(output, "statistics.toml", statistics)
     write_evaluation_csv(output, statistics["evaluation_summary"])
+    S.write_archive(output, "hardware_subset.toml", subset)
+    S.write_archive_bytes(output, "TABLES.md", derived_tables(statistics, subset))
     println("Completed descriptive report: ", joinpath(output, "statistics.toml"), " sha256=", hash)
 end
 
