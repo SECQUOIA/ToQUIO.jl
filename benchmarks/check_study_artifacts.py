@@ -35,13 +35,38 @@ def verify_and_extract(source, destination):
         archive.extractall(destination, members=members, filter="data")
 
 
+def diagnostic_differences(left, right, path="root", limit=20):
+    differences = []
+    if isinstance(left, dict) and isinstance(right, dict):
+        for key in sorted(left.keys() | right.keys()):
+            if key not in left or key not in right:
+                differences.append((path + "." + key, "missing key"))
+            else:
+                differences.extend(diagnostic_differences(left[key], right[key], path + "." + key, limit))
+            if len(differences) >= limit:
+                break
+    elif isinstance(left, list) and isinstance(right, list):
+        if len(left) != len(right):
+            differences.append((path, f"length {len(left)} != {len(right)}"))
+        for index, (a, b) in enumerate(zip(left, right)):
+            differences.extend(diagnostic_differences(a, b, f"{path}[{index}]", limit))
+            if len(differences) >= limit:
+                break
+    elif left != right:
+        differences.append((path, f"expected={str(left)[:120]} actual={str(right)[:120]}"))
+    return differences[:limit]
+
+
 def compare(source, generated):
     with gzip.open(source / "statistics.toml.gz", "rb") as stream:
         expected = stream.read(LIMIT + 1)
     digest = json.loads((source / "checksums.json").read_text())["statistics_sha256"]
     if hashlib.sha256(expected).hexdigest() != digest:
         raise ValueError("Uncompressed statistics checksum differs")
-    if len(expected) > LIMIT or expected != (generated / "statistics.toml").read_bytes():
+    actual = (generated / "statistics.toml").read_bytes()
+    if len(expected) > LIMIT or expected != actual:
+        for path, detail in diagnostic_differences(tomllib.loads(expected.decode()), tomllib.loads(actual.decode())):
+            print("REPORT DIFFERENCE", path, detail)
         raise ValueError("Regenerated statistics differ")
     if (source / "evaluation.csv").read_bytes() != (generated / "evaluation.csv").read_bytes():
         raise ValueError("Regenerated CSV differs")

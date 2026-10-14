@@ -82,7 +82,8 @@ jobs:
         run: |
           python3 -m unittest discover -s benchmarks -p test_study_artifacts.py
           study_source=benchmarks/results/protocol_v1
-          study_temp=$(mktemp -d)
+          study_temp="$RUNNER_TEMP/cqt-study"
+          mkdir "$study_temp"
           python3 benchmarks/check_study_artifacts.py extract "$study_source" "$study_temp/campaign"
           runner_julia=$(command -v julia)
           runner_depot="${JULIA_DEPOT_PATH:-$HOME/.julia}"
@@ -98,3 +99,9 @@ jobs:
             JULIA_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 JULIA_NUM_PRECOMPILE_TASKS=1 \
             timeout 300 "$runner_julia" --project=. benchmarks/report.jl "$study_temp/campaign" "$study_temp/report"
           python3 benchmarks/check_study_artifacts.py compare "$study_source" "$study_temp/report"
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: archive-reproduction-diagnostics
+          path: ${{ runner.temp }}/cqt-study/report/
+          if-no-files-found: ignore
