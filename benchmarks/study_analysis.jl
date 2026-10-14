@@ -16,12 +16,18 @@ function sign_flip_sensitivity(differences)
     n <= 8 || error("Sign-flip enumeration exceeds the frozen eight-instance scope.")
     n == 0 && return Dict("n" => 0, "assignments" => 0, "p" => "missing")
     actual = abs(sum(observed))
+    # Each signed sum has at most n rounding steps. Bound the error of both
+    # compared sums conservatively at this data's scale, rather than applying
+    # a statistical tolerance that would include genuinely interior outcomes.
+    roundoff = 2n * eps(Float64) * sum(abs, observed)
     extreme = 0
     for mask in 0:(2^n - 1)
         flipped = sum([((mask >> (i - 1)) & 1 == 1 ? -1 : 1) * observed[i] for i in 1:n])
-        extreme += abs(flipped) >= actual
+        extreme += abs(flipped) >= actual ||
+            isapprox(abs(flipped), actual; atol = roundoff, rtol = 0)
     end
     return Dict("n" => n, "assignments" => 2^n, "p" => extreme / 2^n,
+                "tie_absolute_tolerance" => roundoff,
                 "interpretation" => "exchangeable-sign-sensitivity-not-confirmatory")
 end
 

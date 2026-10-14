@@ -53,7 +53,7 @@ Unpaired gaps use each arm's own feasible-instance set.
 | compiler_defaults | toqubo_binary-native | 8 | 8 | signed_gap | -0.108561 | [-0.181672, 0.018674] | 6 | 0.25 |
 | compiler_defaults | toqubo_binary-native | 8 | 8 | target_time_score | 0.042915 | [-0.237654, 0.277113] | 8 | 0.75 |
 | compiler_defaults | toqubo_binary-native | 8 | 8 | target_work_score | 155.175 | [-1176.308125, 1250.175] | 8 | 1.0 |
-| compiler_defaults | toqubo_bounded_shim-toqubo_binary | 8 | 8 | feasibility | 0.1 | [-0.025, 0.225] | 8 | 0.5 |
+| compiler_defaults | toqubo_bounded_shim-toqubo_binary | 8 | 8 | feasibility | 0.1 | [-0.025, 0.225] | 8 | 0.625 |
 | compiler_defaults | toqubo_bounded_shim-toqubo_binary | 8 | 8 | signed_gap | 0.028624 | [-0.045182, 0.082895] | 6 | 0.75 |
 | compiler_defaults | toqubo_bounded_shim-toqubo_binary | 8 | 8 | target_time_score | -0.067051 | [-0.374634, 0.232601] | 8 | 0.75 |
 | compiler_defaults | toqubo_bounded_shim-toqubo_binary | 8 | 8 | target_work_score | -154.95 | [-1469.374375, 1130.225] | 8 | 1.0 |
