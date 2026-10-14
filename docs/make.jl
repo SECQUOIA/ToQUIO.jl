@@ -27,6 +27,7 @@ makedocs(;
         "Benchmark Replay" => "benchmarks.md",
         "Classical Study" => "classical_study.md",
         "Study Tables" => "TABLES.md",
+        "Offline Hardware Readiness" => "hardware.md",
         "Encoding Study" => "study.md",
         "API Reference" => "api.md",
         "Algorithm" => "algorithm.md",

@@ -1,0 +1,71 @@
+name: Offline hardware interoperability
+
+on:
+  push:
+    branches: [main]
+    paths: ['benchmarks/**', 'src/**', 'Project.toml', '.github/workflows/hardware-offline.yml']
+  pull_request:
+    paths: ['benchmarks/**', 'src/**', 'Project.toml', '.github/workflows/hardware-offline.yml']
+
+permissions:
+  contents: read
+
+jobs:
+  offline:
+    name: QCI offline roundtrip and packet reproduction
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      JULIA_NUM_THREADS: '1'
+      OPENBLAS_NUM_THREADS: '1'
+      JULIA_NUM_PRECOMPILE_TASKS: '1'
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: julia-actions/setup-julia@v3
+        with:
+          version: '1.10.11'
+      - uses: julia-actions/cache@v3
+      - name: Download pinned public driver and verified campaign
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          echo "JULIA_CONDAPKG_ENV=$RUNNER_TEMP/qci-conda" >> "$GITHUB_ENV"
+          gh api repos/SECQUOIA/QCIOpt.jl/tarball/c3c3ed9e1b27150b3b39c9e98807007daf3f7a01 > "$RUNNER_TEMP/qci-source.tar.gz"
+          mkdir "$RUNNER_TEMP/qci-source"
+          python3 - <<'PY'
+          import os, tarfile
+          from pathlib import Path
+          root = Path(os.environ['RUNNER_TEMP'])
+          with tarfile.open(root / 'qci-source.tar.gz') as archive:
+              archive.extractall(root / 'qci-source', filter='data')
+          PY
+          python3 benchmarks/check_study_artifacts.py extract benchmarks/results/protocol_v1 "$RUNNER_TEMP/cqt-campaign"
+      - name: Resolve isolated software environment
+        run: |
+          runner_julia=$(command -v julia)
+          runner_depot="${JULIA_DEPOT_PATH:-$HOME/.julia}"
+          sudo systemd-run --scope --quiet -p MemoryMax=4G -p MemorySwapMax=0 -p CPUQuota=100% \
+            runuser -u "$(id -un)" -- env -u QCI_TOKEN -u QCI_RUN_LIVE_TESTS \
+            JULIA_DEPOT_PATH="$runner_depot" JULIA_CONDAPKG_ENV="$JULIA_CONDAPKG_ENV" \
+            JULIA_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 JULIA_NUM_PRECOMPILE_TASKS=1 \
+            timeout 900 "$runner_julia" --startup-file=no --project=benchmarks/hardware \
+            benchmarks/hardware/setup.jl "$RUNNER_TEMP"/qci-source/SECQUOIA-QCIOpt.jl-*
+      - name: Test and reproduce with networking disabled
+        run: |
+          runner_julia=$(command -v julia)
+          runner_depot="${JULIA_DEPOT_PATH:-$HOME/.julia}"
+          for script in test_offline.jl prepare.jl; do
+            args=()
+            if [ "$script" = prepare.jl ]; then
+              args=("$RUNNER_TEMP/cqt-campaign" "$RUNNER_TEMP/cqt-hardware")
+            fi
+            sudo systemd-run --scope --quiet -p MemoryMax=4G -p MemorySwapMax=0 -p CPUQuota=100% \
+              unshare --net runuser -u "$(id -un)" -- env -u QCI_TOKEN -u QCI_RUN_LIVE_TESTS \
+              JULIA_DEPOT_PATH="$runner_depot" JULIA_CONDAPKG_ENV="$JULIA_CONDAPKG_ENV" \
+              JULIA_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 JULIA_NUM_PRECOMPILE_TASKS=1 \
+              timeout 300 "$runner_julia" --startup-file=no --project=benchmarks/hardware \
+              "benchmarks/hardware/$script" "${args[@]}"
+          done
+          python3 benchmarks/hardware/check_packet.py benchmarks/hardware/results "$RUNNER_TEMP/cqt-hardware"

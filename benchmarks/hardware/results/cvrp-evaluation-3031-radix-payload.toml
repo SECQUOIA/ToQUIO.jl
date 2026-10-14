@@ -1,0 +1,1339 @@
+file_name = ""
+
+[file_config.polynomial]
+max_degree = 2
+min_degree = 1
+num_variables = 60
+
+    [[file_config.polynomial.data]]
+    idx = [0, 60]
+    val = -2760.0
+    [[file_config.polynomial.data]]
+    idx = [0, 59]
+    val = -690.0
+    [[file_config.polynomial.data]]
+    idx = [0, 58]
+    val = -690.0
+    [[file_config.polynomial.data]]
+    idx = [0, 57]
+    val = -2760.0
+    [[file_config.polynomial.data]]
+    idx = [0, 56]
+    val = -690.0
+    [[file_config.polynomial.data]]
+    idx = [0, 55]
+    val = -2070.0
+    [[file_config.polynomial.data]]
+    idx = [0, 54]
+    val = -2760.0
+    [[file_config.polynomial.data]]
+    idx = [0, 53]
+    val = -690.0
+    [[file_config.polynomial.data]]
+    idx = [0, 52]
+    val = -3312.0
+    [[file_config.polynomial.data]]
+    idx = [0, 51]
+    val = -828.0
+    [[file_config.polynomial.data]]
+    idx = [0, 50]
+    val = -1656.0
+    [[file_config.polynomial.data]]
+    idx = [0, 49]
+    val = -3312.0
+    [[file_config.polynomial.data]]
+    idx = [0, 48]
+    val = -828.0
+    [[file_config.polynomial.data]]
+    idx = [0, 47]
+    val = -3312.0
+    [[file_config.polynomial.data]]
+    idx = [0, 46]
+    val = -828.0
+    [[file_config.polynomial.data]]
+    idx = [0, 45]
+    val = -966.0
+    [[file_config.polynomial.data]]
+    idx = [0, 44]
+    val = -3864.0
+    [[file_config.polynomial.data]]
+    idx = [0, 43]
+    val = -966.0
+    [[file_config.polynomial.data]]
+    idx = [0, 42]
+    val = -1932.0
+    [[file_config.polynomial.data]]
+    idx = [0, 41]
+    val = -3864.0
+    [[file_config.polynomial.data]]
+    idx = [0, 40]
+    val = -966.0
+    [[file_config.polynomial.data]]
+    idx = [0, 39]
+    val = -966.0
+    [[file_config.polynomial.data]]
+    idx = [0, 38]
+    val = -3864.0
+    [[file_config.polynomial.data]]
+    idx = [0, 37]
+    val = -966.0
+    [[file_config.polynomial.data]]
+    idx = [0, 36]
+    val = -2070.0
+    [[file_config.polynomial.data]]
+    idx = [0, 35]
+    val = -2760.0
+    [[file_config.polynomial.data]]
+    idx = [0, 34]
+    val = -690.0
+    [[file_config.polynomial.data]]
+    idx = [0, 33]
+    val = -2760.0
+    [[file_config.polynomial.data]]
+    idx = [0, 32]
+    val = -690.0
+    [[file_config.polynomial.data]]
+    idx = [0, 31]
+    val = -690.0
+    [[file_config.polynomial.data]]
+    idx = [0, 30]
+    val = -2760.0
+    [[file_config.polynomial.data]]
+    idx = [0, 29]
+    val = -690.0
+    [[file_config.polynomial.data]]
+    idx = [0, 28]
+    val = 828.0
+    [[file_config.polynomial.data]]
+    idx = [0, 27]
+    val = 414.0
+    [[file_config.polynomial.data]]
+    idx = [0, 26]
+    val = -414.0
+    [[file_config.polynomial.data]]
+    idx = [0, 25]
+    val = -138.0
+    [[file_config.polynomial.data]]
+    idx = [0, 24]
+    val = -2760.0
+    [[file_config.polynomial.data]]
+    idx = [0, 23]
+    val = -690.0
+    [[file_config.polynomial.data]]
+    idx = [0, 22]
+    val = 828.0
+    [[file_config.polynomial.data]]
+    idx = [0, 21]
+    val = 414.0
+    [[file_config.polynomial.data]]
+    idx = [0, 20]
+    val = -5794.0
+    [[file_config.polynomial.data]]
+    idx = [0, 19]
+    val = -5796.0
+    [[file_config.polynomial.data]]
+    idx = [0, 18]
+    val = -5791.0
+    [[file_config.polynomial.data]]
+    idx = [0, 17]
+    val = -411.0
+    [[file_config.polynomial.data]]
+    idx = [0, 16]
+    val = -6898.0
+    [[file_config.polynomial.data]]
+    idx = [0, 15]
+    val = -6898.0
+    [[file_config.polynomial.data]]
+    idx = [0, 14]
+    val = -6893.0
+    [[file_config.polynomial.data]]
+    idx = [0, 13]
+    val = -409.0
+    [[file_config.polynomial.data]]
+    idx = [0, 12]
+    val = -8004.0
+    [[file_config.polynomial.data]]
+    idx = [0, 11]
+    val = -8002.0
+    [[file_config.polynomial.data]]
+    idx = [0, 10]
+    val = -7999.0
+    [[file_config.polynomial.data]]
+    idx = [0, 9]
+    val = -411.0
+    [[file_config.polynomial.data]]
+    idx = [0, 8]
+    val = -5791.0
+    [[file_config.polynomial.data]]
+    idx = [0, 7]
+    val = -5789.0
+    [[file_config.polynomial.data]]
+    idx = [0, 6]
+    val = -5791.0
+    [[file_config.polynomial.data]]
+    idx = [0, 5]
+    val = -412.0
+    [[file_config.polynomial.data]]
+    idx = [0, 4]
+    val = -411.0
+    [[file_config.polynomial.data]]
+    idx = [0, 3]
+    val = -409.0
+    [[file_config.polynomial.data]]
+    idx = [0, 2]
+    val = -411.0
+    [[file_config.polynomial.data]]
+    idx = [0, 1]
+    val = -412.0
+    [[file_config.polynomial.data]]
+    idx = [60, 60]
+    val = 1104.0
+    [[file_config.polynomial.data]]
+    idx = [59, 60]
+    val = 552.0
+    [[file_config.polynomial.data]]
+    idx = [59, 59]
+    val = 69.0
+    [[file_config.polynomial.data]]
+    idx = [58, 58]
+    val = 69.0
+    [[file_config.polynomial.data]]
+    idx = [57, 58]
+    val = 552.0
+    [[file_config.polynomial.data]]
+    idx = [57, 57]
+    val = 1104.0
+    [[file_config.polynomial.data]]
+    idx = [56, 58]
+    val = 138.0
+    [[file_config.polynomial.data]]
+    idx = [56, 57]
+    val = 552.0
+    [[file_config.polynomial.data]]
+    idx = [56, 56]
+    val = 69.0
+    [[file_config.polynomial.data]]
+    idx = [55, 55]
+    val = 621.0
+    [[file_config.polynomial.data]]
+    idx = [54, 55]
+    val = 1656.0
+    [[file_config.polynomial.data]]
+    idx = [54, 54]
+    val = 1104.0
+    [[file_config.polynomial.data]]
+    idx = [53, 55]
+    val = 414.0
+    [[file_config.polynomial.data]]
+    idx = [53, 54]
+    val = 552.0
+    [[file_config.polynomial.data]]
+    idx = [53, 53]
+    val = 69.0
+    [[file_config.polynomial.data]]
+    idx = [52, 52]
+    val = 1104.0
+    [[file_config.polynomial.data]]
+    idx = [51, 52]
+    val = 552.0
+    [[file_config.polynomial.data]]
+    idx = [51, 51]
+    val = 69.0
+    [[file_config.polynomial.data]]
+    idx = [50, 50]
+    val = 276.0
+    [[file_config.polynomial.data]]
+    idx = [49, 50]
+    val = 1104.0
+    [[file_config.polynomial.data]]
+    idx = [49, 49]
+    val = 1104.0
+    [[file_config.polynomial.data]]
+    idx = [48, 50]
+    val = 276.0
+    [[file_config.polynomial.data]]
+    idx = [48, 49]
+    val = 552.0
+    [[file_config.polynomial.data]]
+    idx = [48, 48]
+    val = 69.0
+    [[file_config.polynomial.data]]
+    idx = [47, 47]
+    val = 1104.0
+    [[file_config.polynomial.data]]
+    idx = [46, 47]
+    val = 552.0
+    [[file_config.polynomial.data]]
+    idx = [46, 46]
+    val = 69.0
+    [[file_config.polynomial.data]]
+    idx = [45, 45]
+    val = 69.0
+    [[file_config.polynomial.data]]
+    idx = [44, 45]
+    val = 552.0
+    [[file_config.polynomial.data]]
+    idx = [44, 44]
+    val = 1104.0
+    [[file_config.polynomial.data]]
+    idx = [43, 45]
+    val = 138.0
+    [[file_config.polynomial.data]]
+    idx = [43, 44]
+    val = 552.0
+    [[file_config.polynomial.data]]
+    idx = [43, 43]
+    val = 69.0
+    [[file_config.polynomial.data]]
+    idx = [42, 42]
+    val = 276.0
+    [[file_config.polynomial.data]]
+    idx = [41, 42]
+    val = 1104.0
+    [[file_config.polynomial.data]]
+    idx = [41, 41]
+    val = 1104.0
+    [[file_config.polynomial.data]]
+    idx = [40, 42]
+    val = 276.0
+    [[file_config.polynomial.data]]
+    idx = [40, 41]
+    val = 552.0
+    [[file_config.polynomial.data]]
+    idx = [40, 40]
+    val = 69.0
+    [[file_config.polynomial.data]]
+    idx = [39, 39]
+    val = 69.0
+    [[file_config.polynomial.data]]
+    idx = [38, 39]
+    val = 552.0
+    [[file_config.polynomial.data]]
+    idx = [38, 38]
+    val = 1104.0
+    [[file_config.polynomial.data]]
+    idx = [37, 39]
+    val = 138.0
+    [[file_config.polynomial.data]]
+    idx = [37, 38]
+    val = 552.0
+    [[file_config.polynomial.data]]
+    idx = [37, 37]
+    val = 69.0
+    [[file_config.polynomial.data]]
+    idx = [36, 36]
+    val = 621.0
+    [[file_config.polynomial.data]]
+    idx = [35, 36]
+    val = 1656.0
+    [[file_config.polynomial.data]]
+    idx = [35, 35]
+    val = 1104.0
+    [[file_config.polynomial.data]]
+    idx = [34, 36]
+    val = 414.0
+    [[file_config.polynomial.data]]
+    idx = [34, 35]
+    val = 552.0
+    [[file_config.polynomial.data]]
+    idx = [34, 34]
+    val = 69.0
+    [[file_config.polynomial.data]]
+    idx = [33, 33]
+    val = 1104.0
+    [[file_config.polynomial.data]]
+    idx = [32, 33]
+    val = 552.0
+    [[file_config.polynomial.data]]
+    idx = [32, 32]
+    val = 69.0
+    [[file_config.polynomial.data]]
+    idx = [31, 31]
+    val = 69.0
+    [[file_config.polynomial.data]]
+    idx = [30, 31]
+    val = 552.0
+    [[file_config.polynomial.data]]
+    idx = [30, 30]
+    val = 1104.0
+    [[file_config.polynomial.data]]
+    idx = [29, 31]
+    val = 138.0
+    [[file_config.polynomial.data]]
+    idx = [29, 30]
+    val = 552.0
+    [[file_config.polynomial.data]]
+    idx = [29, 29]
+    val = 69.0
+    [[file_config.polynomial.data]]
+    idx = [28, 60]
+    val = 1104.0
+    [[file_config.polynomial.data]]
+    idx = [28, 59]
+    val = 276.0
+    [[file_config.polynomial.data]]
+    idx = [28, 58]
+    val = 276.0
+    [[file_config.polynomial.data]]
+    idx = [28, 57]
+    val = 1104.0
+    [[file_config.polynomial.data]]
+    idx = [28, 56]
+    val = 276.0
+    [[file_config.polynomial.data]]
+    idx = [28, 55]
+    val = 828.0
+    [[file_config.polynomial.data]]
+    idx = [28, 54]
+    val = 1104.0
+    [[file_config.polynomial.data]]
+    idx = [28, 53]
+    val = 276.0
+    [[file_config.polynomial.data]]
+    idx = [28, 52]
+    val = -1104.0
+    [[file_config.polynomial.data]]
+    idx = [28, 51]
+    val = -276.0
+    [[file_config.polynomial.data]]
+    idx = [28, 45]
+    val = -276.0
+    [[file_config.polynomial.data]]
+    idx = [28, 44]
+    val = -1104.0
+    [[file_config.polynomial.data]]
+    idx = [28, 43]
+    val = -276.0
+    [[file_config.polynomial.data]]
+    idx = [28, 36]
+    val = -828.0
+    [[file_config.polynomial.data]]
+    idx = [28, 35]
+    val = -1104.0
+    [[file_config.polynomial.data]]
+    idx = [28, 34]
+    val = -276.0
+    [[file_config.polynomial.data]]
+    idx = [28, 28]
+    val = 1656.0
+    [[file_config.polynomial.data]]
+    idx = [27, 60]
+    val = 552.0
+    [[file_config.polynomial.data]]
+    idx = [27, 59]
+    val = 138.0
+    [[file_config.polynomial.data]]
+    idx = [27, 58]
+    val = 138.0
+    [[file_config.polynomial.data]]
+    idx = [27, 57]
+    val = 552.0
+    [[file_config.polynomial.data]]
+    idx = [27, 56]
+    val = 138.0
+    [[file_config.polynomial.data]]
+    idx = [27, 55]
+    val = 414.0
+    [[file_config.polynomial.data]]
+    idx = [27, 54]
+    val = 552.0
+    [[file_config.polynomial.data]]
+    idx = [27, 53]
+    val = 138.0
+    [[file_config.polynomial.data]]
+    idx = [27, 52]
+    val = -552.0
+    [[file_config.polynomial.data]]
+    idx = [27, 51]
+    val = -138.0
+    [[file_config.polynomial.data]]
+    idx = [27, 45]
+    val = -138.0
+    [[file_config.polynomial.data]]
+    idx = [27, 44]
+    val = -552.0
+    [[file_config.polynomial.data]]
+    idx = [27, 43]
+    val = -138.0
+    [[file_config.polynomial.data]]
+    idx = [27, 36]
+    val = -414.0
+    [[file_config.polynomial.data]]
+    idx = [27, 35]
+    val = -552.0
+    [[file_config.polynomial.data]]
+    idx = [27, 34]
+    val = -138.0
+    [[file_config.polynomial.data]]
+    idx = [27, 28]
+    val = 1656.0
+    [[file_config.polynomial.data]]
+    idx = [27, 27]
+    val = 414.0
+    [[file_config.polynomial.data]]
+    idx = [26, 60]
+    val = -1656.0
+    [[file_config.polynomial.data]]
+    idx = [26, 59]
+    val = -414.0
+    [[file_config.polynomial.data]]
+    idx = [26, 52]
+    val = 1656.0
+    [[file_config.polynomial.data]]
+    idx = [26, 51]
+    val = 414.0
+    [[file_config.polynomial.data]]
+    idx = [26, 50]
+    val = 828.0
+    [[file_config.polynomial.data]]
+    idx = [26, 49]
+    val = 1656.0
+    [[file_config.polynomial.data]]
+    idx = [26, 48]
+    val = 414.0
+    [[file_config.polynomial.data]]
+    idx = [26, 47]
+    val = 1656.0
+    [[file_config.polynomial.data]]
+    idx = [26, 46]
+    val = 414.0
+    [[file_config.polynomial.data]]
+    idx = [26, 42]
+    val = -828.0
+    [[file_config.polynomial.data]]
+    idx = [26, 41]
+    val = -1656.0
+    [[file_config.polynomial.data]]
+    idx = [26, 40]
+    val = -414.0
+    [[file_config.polynomial.data]]
+    idx = [26, 33]
+    val = -1656.0
+    [[file_config.polynomial.data]]
+    idx = [26, 32]
+    val = -414.0
+    [[file_config.polynomial.data]]
+    idx = [26, 28]
+    val = -1656.0
+    [[file_config.polynomial.data]]
+    idx = [26, 27]
+    val = -828.0
+    [[file_config.polynomial.data]]
+    idx = [26, 26]
+    val = 3726.0
+    [[file_config.polynomial.data]]
+    idx = [25, 60]
+    val = -552.0
+    [[file_config.polynomial.data]]
+    idx = [25, 59]
+    val = -138.0
+    [[file_config.polynomial.data]]
+    idx = [25, 52]
+    val = 552.0
+    [[file_config.polynomial.data]]
+    idx = [25, 51]
+    val = 138.0
+    [[file_config.polynomial.data]]
+    idx = [25, 50]
+    val = 276.0
+    [[file_config.polynomial.data]]
+    idx = [25, 49]
+    val = 552.0
+    [[file_config.polynomial.data]]
+    idx = [25, 48]
+    val = 138.0
+    [[file_config.polynomial.data]]
+    idx = [25, 47]
+    val = 552.0
+    [[file_config.polynomial.data]]
+    idx = [25, 46]
+    val = 138.0
+    [[file_config.polynomial.data]]
+    idx = [25, 42]
+    val = -276.0
+    [[file_config.polynomial.data]]
+    idx = [25, 41]
+    val = -552.0
+    [[file_config.polynomial.data]]
+    idx = [25, 40]
+    val = -138.0
+    [[file_config.polynomial.data]]
+    idx = [25, 33]
+    val = -552.0
+    [[file_config.polynomial.data]]
+    idx = [25, 32]
+    val = -138.0
+    [[file_config.polynomial.data]]
+    idx = [25, 28]
+    val = -552.0
+    [[file_config.polynomial.data]]
+    idx = [25, 27]
+    val = -276.0
+    [[file_config.polynomial.data]]
+    idx = [25, 26]
+    val = 2484.0
+    [[file_config.polynomial.data]]
+    idx = [25, 25]
+    val = 414.0
+    [[file_config.polynomial.data]]
+    idx = [24, 58]
+    val = -552.0
+    [[file_config.polynomial.data]]
+    idx = [24, 57]
+    val = -2208.0
+    [[file_config.polynomial.data]]
+    idx = [24, 56]
+    val = -552.0
+    [[file_config.polynomial.data]]
+    idx = [24, 50]
+    val = -1104.0
+    [[file_config.polynomial.data]]
+    idx = [24, 49]
+    val = -2208.0
+    [[file_config.polynomial.data]]
+    idx = [24, 48]
+    val = -552.0
+    [[file_config.polynomial.data]]
+    idx = [24, 45]
+    val = 552.0
+    [[file_config.polynomial.data]]
+    idx = [24, 44]
+    val = 2208.0
+    [[file_config.polynomial.data]]
+    idx = [24, 43]
+    val = 552.0
+    [[file_config.polynomial.data]]
+    idx = [24, 42]
+    val = 1104.0
+    [[file_config.polynomial.data]]
+    idx = [24, 41]
+    val = 2208.0
+    [[file_config.polynomial.data]]
+    idx = [24, 40]
+    val = 552.0
+    [[file_config.polynomial.data]]
+    idx = [24, 39]
+    val = 552.0
+    [[file_config.polynomial.data]]
+    idx = [24, 38]
+    val = 2208.0
+    [[file_config.polynomial.data]]
+    idx = [24, 37]
+    val = 552.0
+    [[file_config.polynomial.data]]
+    idx = [24, 31]
+    val = -552.0
+    [[file_config.polynomial.data]]
+    idx = [24, 30]
+    val = -2208.0
+    [[file_config.polynomial.data]]
+    idx = [24, 29]
+    val = -552.0
+    [[file_config.polynomial.data]]
+    idx = [24, 28]
+    val = -2208.0
+    [[file_config.polynomial.data]]
+    idx = [24, 27]
+    val = -1104.0
+    [[file_config.polynomial.data]]
+    idx = [24, 26]
+    val = -3312.0
+    [[file_config.polynomial.data]]
+    idx = [24, 25]
+    val = -1104.0
+    [[file_config.polynomial.data]]
+    idx = [24, 24]
+    val = 6624.0
+    [[file_config.polynomial.data]]
+    idx = [23, 58]
+    val = -138.0
+    [[file_config.polynomial.data]]
+    idx = [23, 57]
+    val = -552.0
+    [[file_config.polynomial.data]]
+    idx = [23, 56]
+    val = -138.0
+    [[file_config.polynomial.data]]
+    idx = [23, 50]
+    val = -276.0
+    [[file_config.polynomial.data]]
+    idx = [23, 49]
+    val = -552.0
+    [[file_config.polynomial.data]]
+    idx = [23, 48]
+    val = -138.0
+    [[file_config.polynomial.data]]
+    idx = [23, 45]
+    val = 138.0
+    [[file_config.polynomial.data]]
+    idx = [23, 44]
+    val = 552.0
+    [[file_config.polynomial.data]]
+    idx = [23, 43]
+    val = 138.0
+    [[file_config.polynomial.data]]
+    idx = [23, 42]
+    val = 276.0
+    [[file_config.polynomial.data]]
+    idx = [23, 41]
+    val = 552.0
+    [[file_config.polynomial.data]]
+    idx = [23, 40]
+    val = 138.0
+    [[file_config.polynomial.data]]
+    idx = [23, 39]
+    val = 138.0
+    [[file_config.polynomial.data]]
+    idx = [23, 38]
+    val = 552.0
+    [[file_config.polynomial.data]]
+    idx = [23, 37]
+    val = 138.0
+    [[file_config.polynomial.data]]
+    idx = [23, 31]
+    val = -138.0
+    [[file_config.polynomial.data]]
+    idx = [23, 30]
+    val = -552.0
+    [[file_config.polynomial.data]]
+    idx = [23, 29]
+    val = -138.0
+    [[file_config.polynomial.data]]
+    idx = [23, 28]
+    val = -552.0
+    [[file_config.polynomial.data]]
+    idx = [23, 27]
+    val = -276.0
+    [[file_config.polynomial.data]]
+    idx = [23, 26]
+    val = -828.0
+    [[file_config.polynomial.data]]
+    idx = [23, 25]
+    val = -276.0
+    [[file_config.polynomial.data]]
+    idx = [23, 24]
+    val = 3312.0
+    [[file_config.polynomial.data]]
+    idx = [23, 23]
+    val = 414.0
+    [[file_config.polynomial.data]]
+    idx = [22, 55]
+    val = -828.0
+    [[file_config.polynomial.data]]
+    idx = [22, 54]
+    val = -1104.0
+    [[file_config.polynomial.data]]
+    idx = [22, 53]
+    val = -276.0
+    [[file_config.polynomial.data]]
+    idx = [22, 47]
+    val = -1104.0
+    [[file_config.polynomial.data]]
+    idx = [22, 46]
+    val = -276.0
+    [[file_config.polynomial.data]]
+    idx = [22, 39]
+    val = -276.0
+    [[file_config.polynomial.data]]
+    idx = [22, 38]
+    val = -1104.0
+    [[file_config.polynomial.data]]
+    idx = [22, 37]
+    val = -276.0
+    [[file_config.polynomial.data]]
+    idx = [22, 36]
+    val = 828.0
+    [[file_config.polynomial.data]]
+    idx = [22, 35]
+    val = 1104.0
+    [[file_config.polynomial.data]]
+    idx = [22, 34]
+    val = 276.0
+    [[file_config.polynomial.data]]
+    idx = [22, 33]
+    val = 1104.0
+    [[file_config.polynomial.data]]
+    idx = [22, 32]
+    val = 276.0
+    [[file_config.polynomial.data]]
+    idx = [22, 31]
+    val = 276.0
+    [[file_config.polynomial.data]]
+    idx = [22, 30]
+    val = 1104.0
+    [[file_config.polynomial.data]]
+    idx = [22, 29]
+    val = 276.0
+    [[file_config.polynomial.data]]
+    idx = [22, 28]
+    val = -1104.0
+    [[file_config.polynomial.data]]
+    idx = [22, 27]
+    val = -552.0
+    [[file_config.polynomial.data]]
+    idx = [22, 26]
+    val = -1656.0
+    [[file_config.polynomial.data]]
+    idx = [22, 25]
+    val = -552.0
+    [[file_config.polynomial.data]]
+    idx = [22, 24]
+    val = -2208.0
+    [[file_config.polynomial.data]]
+    idx = [22, 23]
+    val = -552.0
+    [[file_config.polynomial.data]]
+    idx = [22, 22]
+    val = 1656.0
+    [[file_config.polynomial.data]]
+    idx = [21, 55]
+    val = -414.0
+    [[file_config.polynomial.data]]
+    idx = [21, 54]
+    val = -552.0
+    [[file_config.polynomial.data]]
+    idx = [21, 53]
+    val = -138.0
+    [[file_config.polynomial.data]]
+    idx = [21, 47]
+    val = -552.0
+    [[file_config.polynomial.data]]
+    idx = [21, 46]
+    val = -138.0
+    [[file_config.polynomial.data]]
+    idx = [21, 39]
+    val = -138.0
+    [[file_config.polynomial.data]]
+    idx = [21, 38]
+    val = -552.0
+    [[file_config.polynomial.data]]
+    idx = [21, 37]
+    val = -138.0
+    [[file_config.polynomial.data]]
+    idx = [21, 36]
+    val = 414.0
+    [[file_config.polynomial.data]]
+    idx = [21, 35]
+    val = 552.0
+    [[file_config.polynomial.data]]
+    idx = [21, 34]
+    val = 138.0
+    [[file_config.polynomial.data]]
+    idx = [21, 33]
+    val = 552.0
+    [[file_config.polynomial.data]]
+    idx = [21, 32]
+    val = 138.0
+    [[file_config.polynomial.data]]
+    idx = [21, 31]
+    val = 138.0
+    [[file_config.polynomial.data]]
+    idx = [21, 30]
+    val = 552.0
+    [[file_config.polynomial.data]]
+    idx = [21, 29]
+    val = 138.0
+    [[file_config.polynomial.data]]
+    idx = [21, 28]
+    val = -552.0
+    [[file_config.polynomial.data]]
+    idx = [21, 27]
+    val = -276.0
+    [[file_config.polynomial.data]]
+    idx = [21, 26]
+    val = -828.0
+    [[file_config.polynomial.data]]
+    idx = [21, 25]
+    val = -276.0
+    [[file_config.polynomial.data]]
+    idx = [21, 24]
+    val = -1104.0
+    [[file_config.polynomial.data]]
+    idx = [21, 23]
+    val = -276.0
+    [[file_config.polynomial.data]]
+    idx = [21, 22]
+    val = 1656.0
+    [[file_config.polynomial.data]]
+    idx = [21, 21]
+    val = 414.0
+    [[file_config.polynomial.data]]
+    idx = [20, 60]
+    val = 4416.0
+    [[file_config.polynomial.data]]
+    idx = [20, 59]
+    val = 1104.0
+    [[file_config.polynomial.data]]
+    idx = [20, 28]
+    val = 2208.0
+    [[file_config.polynomial.data]]
+    idx = [20, 27]
+    val = 1104.0
+    [[file_config.polynomial.data]]
+    idx = [20, 26]
+    val = -3312.0
+    [[file_config.polynomial.data]]
+    idx = [20, 25]
+    val = -1104.0
+    [[file_config.polynomial.data]]
+    idx = [20, 20]
+    val = 4554.0
+    [[file_config.polynomial.data]]
+    idx = [19, 58]
+    val = 1104.0
+    [[file_config.polynomial.data]]
+    idx = [19, 57]
+    val = 4416.0
+    [[file_config.polynomial.data]]
+    idx = [19, 56]
+    val = 1104.0
+    [[file_config.polynomial.data]]
+    idx = [19, 28]
+    val = 2208.0
+    [[file_config.polynomial.data]]
+    idx = [19, 27]
+    val = 1104.0
+    [[file_config.polynomial.data]]
+    idx = [19, 24]
+    val = -4416.0
+    [[file_config.polynomial.data]]
+    idx = [19, 23]
+    val = -1104.0
+    [[file_config.polynomial.data]]
+    idx = [19, 20]
+    val = 138.0
+    [[file_config.polynomial.data]]
+    idx = [19, 19]
+    val = 4554.0
+    [[file_config.polynomial.data]]
+    idx = [18, 55]
+    val = 3312.0
+    [[file_config.polynomial.data]]
+    idx = [18, 54]
+    val = 4416.0
+    [[file_config.polynomial.data]]
+    idx = [18, 53]
+    val = 1104.0
+    [[file_config.polynomial.data]]
+    idx = [18, 28]
+    val = 2208.0
+    [[file_config.polynomial.data]]
+    idx = [18, 27]
+    val = 1104.0
+    [[file_config.polynomial.data]]
+    idx = [18, 22]
+    val = -2208.0
+    [[file_config.polynomial.data]]
+    idx = [18, 21]
+    val = -1104.0
+    [[file_config.polynomial.data]]
+    idx = [18, 20]
+    val = 138.0
+    [[file_config.polynomial.data]]
+    idx = [18, 19]
+    val = 138.0
+    [[file_config.polynomial.data]]
+    idx = [18, 18]
+    val = 4554.0
+    [[file_config.polynomial.data]]
+    idx = [17, 20]
+    val = 138.0
+    [[file_config.polynomial.data]]
+    idx = [17, 19]
+    val = 138.0
+    [[file_config.polynomial.data]]
+    idx = [17, 18]
+    val = 138.0
+    [[file_config.polynomial.data]]
+    idx = [17, 17]
+    val = 138.0
+    [[file_config.polynomial.data]]
+    idx = [16, 52]
+    val = 4416.0
+    [[file_config.polynomial.data]]
+    idx = [16, 51]
+    val = 1104.0
+    [[file_config.polynomial.data]]
+    idx = [16, 28]
+    val = -2208.0
+    [[file_config.polynomial.data]]
+    idx = [16, 27]
+    val = -1104.0
+    [[file_config.polynomial.data]]
+    idx = [16, 26]
+    val = 3312.0
+    [[file_config.polynomial.data]]
+    idx = [16, 25]
+    val = 1104.0
+    [[file_config.polynomial.data]]
+    idx = [16, 16]
+    val = 4554.0
+    [[file_config.polynomial.data]]
+    idx = [15, 50]
+    val = 2208.0
+    [[file_config.polynomial.data]]
+    idx = [15, 49]
+    val = 4416.0
+    [[file_config.polynomial.data]]
+    idx = [15, 48]
+    val = 1104.0
+    [[file_config.polynomial.data]]
+    idx = [15, 26]
+    val = 3312.0
+    [[file_config.polynomial.data]]
+    idx = [15, 25]
+    val = 1104.0
+    [[file_config.polynomial.data]]
+    idx = [15, 24]
+    val = -4416.0
+    [[file_config.polynomial.data]]
+    idx = [15, 23]
+    val = -1104.0
+    [[file_config.polynomial.data]]
+    idx = [15, 19]
+    val = 138.0
+    [[file_config.polynomial.data]]
+    idx = [15, 16]
+    val = 138.0
+    [[file_config.polynomial.data]]
+    idx = [15, 15]
+    val = 4554.0
+    [[file_config.polynomial.data]]
+    idx = [14, 47]
+    val = 4416.0
+    [[file_config.polynomial.data]]
+    idx = [14, 46]
+    val = 1104.0
+    [[file_config.polynomial.data]]
+    idx = [14, 26]
+    val = 3312.0
+    [[file_config.polynomial.data]]
+    idx = [14, 25]
+    val = 1104.0
+    [[file_config.polynomial.data]]
+    idx = [14, 22]
+    val = -2208.0
+    [[file_config.polynomial.data]]
+    idx = [14, 21]
+    val = -1104.0
+    [[file_config.polynomial.data]]
+    idx = [14, 18]
+    val = 138.0
+    [[file_config.polynomial.data]]
+    idx = [14, 16]
+    val = 138.0
+    [[file_config.polynomial.data]]
+    idx = [14, 15]
+    val = 138.0
+    [[file_config.polynomial.data]]
+    idx = [14, 14]
+    val = 4554.0
+    [[file_config.polynomial.data]]
+    idx = [13, 17]
+    val = 138.0
+    [[file_config.polynomial.data]]
+    idx = [13, 16]
+    val = 138.0
+    [[file_config.polynomial.data]]
+    idx = [13, 15]
+    val = 138.0
+    [[file_config.polynomial.data]]
+    idx = [13, 14]
+    val = 138.0
+    [[file_config.polynomial.data]]
+    idx = [13, 13]
+    val = 138.0
+    [[file_config.polynomial.data]]
+    idx = [12, 45]
+    val = 1104.0
+    [[file_config.polynomial.data]]
+    idx = [12, 44]
+    val = 4416.0
+    [[file_config.polynomial.data]]
+    idx = [12, 43]
+    val = 1104.0
+    [[file_config.polynomial.data]]
+    idx = [12, 28]
+    val = -2208.0
+    [[file_config.polynomial.data]]
+    idx = [12, 27]
+    val = -1104.0
+    [[file_config.polynomial.data]]
+    idx = [12, 24]
+    val = 4416.0
+    [[file_config.polynomial.data]]
+    idx = [12, 23]
+    val = 1104.0
+    [[file_config.polynomial.data]]
+    idx = [12, 16]
+    val = 138.0
+    [[file_config.polynomial.data]]
+    idx = [12, 12]
+    val = 4554.0
+    [[file_config.polynomial.data]]
+    idx = [11, 42]
+    val = 2208.0
+    [[file_config.polynomial.data]]
+    idx = [11, 41]
+    val = 4416.0
+    [[file_config.polynomial.data]]
+    idx = [11, 40]
+    val = 1104.0
+    [[file_config.polynomial.data]]
+    idx = [11, 26]
+    val = -3312.0
+    [[file_config.polynomial.data]]
+    idx = [11, 25]
+    val = -1104.0
+    [[file_config.polynomial.data]]
+    idx = [11, 24]
+    val = 4416.0
+    [[file_config.polynomial.data]]
+    idx = [11, 23]
+    val = 1104.0
+    [[file_config.polynomial.data]]
+    idx = [11, 20]
+    val = 138.0
+    [[file_config.polynomial.data]]
+    idx = [11, 12]
+    val = 138.0
+    [[file_config.polynomial.data]]
+    idx = [11, 11]
+    val = 4554.0
+    [[file_config.polynomial.data]]
+    idx = [10, 39]
+    val = 1104.0
+    [[file_config.polynomial.data]]
+    idx = [10, 38]
+    val = 4416.0
+    [[file_config.polynomial.data]]
+    idx = [10, 37]
+    val = 1104.0
+    [[file_config.polynomial.data]]
+    idx = [10, 24]
+    val = 4416.0
+    [[file_config.polynomial.data]]
+    idx = [10, 23]
+    val = 1104.0
+    [[file_config.polynomial.data]]
+    idx = [10, 22]
+    val = -2208.0
+    [[file_config.polynomial.data]]
+    idx = [10, 21]
+    val = -1104.0
+    [[file_config.polynomial.data]]
+    idx = [10, 18]
+    val = 138.0
+    [[file_config.polynomial.data]]
+    idx = [10, 14]
+    val = 138.0
+    [[file_config.polynomial.data]]
+    idx = [10, 12]
+    val = 138.0
+    [[file_config.polynomial.data]]
+    idx = [10, 11]
+    val = 138.0
+    [[file_config.polynomial.data]]
+    idx = [10, 10]
+    val = 4554.0
+    [[file_config.polynomial.data]]
+    idx = [9, 17]
+    val = 138.0
+    [[file_config.polynomial.data]]
+    idx = [9, 13]
+    val = 138.0
+    [[file_config.polynomial.data]]
+    idx = [9, 12]
+    val = 138.0
+    [[file_config.polynomial.data]]
+    idx = [9, 11]
+    val = 138.0
+    [[file_config.polynomial.data]]
+    idx = [9, 10]
+    val = 138.0
+    [[file_config.polynomial.data]]
+    idx = [9, 9]
+    val = 138.0
+    [[file_config.polynomial.data]]
+    idx = [8, 36]
+    val = 3312.0
+    [[file_config.polynomial.data]]
+    idx = [8, 35]
+    val = 4416.0
+    [[file_config.polynomial.data]]
+    idx = [8, 34]
+    val = 1104.0
+    [[file_config.polynomial.data]]
+    idx = [8, 28]
+    val = -2208.0
+    [[file_config.polynomial.data]]
+    idx = [8, 27]
+    val = -1104.0
+    [[file_config.polynomial.data]]
+    idx = [8, 22]
+    val = 2208.0
+    [[file_config.polynomial.data]]
+    idx = [8, 21]
+    val = 1104.0
+    [[file_config.polynomial.data]]
+    idx = [8, 16]
+    val = 138.0
+    [[file_config.polynomial.data]]
+    idx = [8, 12]
+    val = 138.0
+    [[file_config.polynomial.data]]
+    idx = [8, 8]
+    val = 4554.0
+    [[file_config.polynomial.data]]
+    idx = [7, 33]
+    val = 4416.0
+    [[file_config.polynomial.data]]
+    idx = [7, 32]
+    val = 1104.0
+    [[file_config.polynomial.data]]
+    idx = [7, 26]
+    val = -3312.0
+    [[file_config.polynomial.data]]
+    idx = [7, 25]
+    val = -1104.0
+    [[file_config.polynomial.data]]
+    idx = [7, 22]
+    val = 2208.0
+    [[file_config.polynomial.data]]
+    idx = [7, 21]
+    val = 1104.0
+    [[file_config.polynomial.data]]
+    idx = [7, 20]
+    val = 138.0
+    [[file_config.polynomial.data]]
+    idx = [7, 11]
+    val = 138.0
+    [[file_config.polynomial.data]]
+    idx = [7, 8]
+    val = 138.0
+    [[file_config.polynomial.data]]
+    idx = [7, 7]
+    val = 4554.0
+    [[file_config.polynomial.data]]
+    idx = [6, 31]
+    val = 1104.0
+    [[file_config.polynomial.data]]
+    idx = [6, 30]
+    val = 4416.0
+    [[file_config.polynomial.data]]
+    idx = [6, 29]
+    val = 1104.0
+    [[file_config.polynomial.data]]
+    idx = [6, 24]
+    val = -4416.0
+    [[file_config.polynomial.data]]
+    idx = [6, 23]
+    val = -1104.0
+    [[file_config.polynomial.data]]
+    idx = [6, 22]
+    val = 2208.0
+    [[file_config.polynomial.data]]
+    idx = [6, 21]
+    val = 1104.0
+    [[file_config.polynomial.data]]
+    idx = [6, 19]
+    val = 138.0
+    [[file_config.polynomial.data]]
+    idx = [6, 15]
+    val = 138.0
+    [[file_config.polynomial.data]]
+    idx = [6, 8]
+    val = 138.0
+    [[file_config.polynomial.data]]
+    idx = [6, 7]
+    val = 138.0
+    [[file_config.polynomial.data]]
+    idx = [6, 6]
+    val = 4554.0
+    [[file_config.polynomial.data]]
+    idx = [5, 17]
+    val = 138.0
+    [[file_config.polynomial.data]]
+    idx = [5, 13]
+    val = 138.0
+    [[file_config.polynomial.data]]
+    idx = [5, 9]
+    val = 138.0
+    [[file_config.polynomial.data]]
+    idx = [5, 8]
+    val = 138.0
+    [[file_config.polynomial.data]]
+    idx = [5, 7]
+    val = 138.0
+    [[file_config.polynomial.data]]
+    idx = [5, 6]
+    val = 138.0
+    [[file_config.polynomial.data]]
+    idx = [5, 5]
+    val = 138.0
+    [[file_config.polynomial.data]]
+    idx = [4, 16]
+    val = 138.0
+    [[file_config.polynomial.data]]
+    idx = [4, 12]
+    val = 138.0
+    [[file_config.polynomial.data]]
+    idx = [4, 8]
+    val = 138.0
+    [[file_config.polynomial.data]]
+    idx = [4, 4]
+    val = 138.0
+    [[file_config.polynomial.data]]
+    idx = [3, 20]
+    val = 138.0
+    [[file_config.polynomial.data]]
+    idx = [3, 11]
+    val = 138.0
+    [[file_config.polynomial.data]]
+    idx = [3, 7]
+    val = 138.0
+    [[file_config.polynomial.data]]
+    idx = [3, 4]
+    val = 138.0
+    [[file_config.polynomial.data]]
+    idx = [3, 3]
+    val = 138.0
+    [[file_config.polynomial.data]]
+    idx = [2, 19]
+    val = 138.0
+    [[file_config.polynomial.data]]
+    idx = [2, 15]
+    val = 138.0
+    [[file_config.polynomial.data]]
+    idx = [2, 6]
+    val = 138.0
+    [[file_config.polynomial.data]]
+    idx = [2, 4]
+    val = 138.0
+    [[file_config.polynomial.data]]
+    idx = [2, 3]
+    val = 138.0
+    [[file_config.polynomial.data]]
+    idx = [2, 2]
+    val = 138.0
+    [[file_config.polynomial.data]]
+    idx = [1, 18]
+    val = 138.0
+    [[file_config.polynomial.data]]
+    idx = [1, 14]
+    val = 138.0
+    [[file_config.polynomial.data]]
+    idx = [1, 10]
+    val = 138.0
+    [[file_config.polynomial.data]]
+    idx = [1, 4]
+    val = 138.0
+    [[file_config.polynomial.data]]
+    idx = [1, 3]
+    val = 138.0
+    [[file_config.polynomial.data]]
+    idx = [1, 2]
+    val = 138.0
+    [[file_config.polynomial.data]]
+    idx = [1, 1]
+    val = 138.0

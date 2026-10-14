@@ -1,0 +1,36 @@
+cell_hash = "2632e7b03fb7df88e1c414cb9eed69a72aaa89205c161a1699c1ea66f0be808c"
+cell_key = "ea83f7a99021580f1b00ea35aec0ecc5c2d5e0fceed7c2f3ce5f88c3c931cfeb"
+evidence_kind = "mock"
+failure_class = "none"
+job_id = "mock-cvrp-evaluation-3031-native"
+optimality_certificate = false
+problem_file_id = "unavailable"
+provider_status = "COMPLETED"
+qci_revision = "c3c3ed9e1b27150b3b39c9e98807007daf3f7a01"
+reported_provider_energies = [-29029.0]
+request_hash = "eb3215df49c074a68c398795bfab1494ebb2f76c5e8b52951e1f88b3bba3e745"
+result_file_id = "unavailable"
+schema_version = 1
+source_hash = "e8d089bc3de2e37188a3f30c24126edf4626a81d47b1b38cf136d2918ee9a719"
+target_hash = "c9923a83313bf39d443178edf0967408c2fdc6047f5ef677158ccc4e3cbc3357"
+
+[device_config]
+device = "dirac-3"
+job_type = "sample-hamiltonian-integer"
+num_levels = [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 6, 8, 7, 6, 13, 12, 11, 13, 14, 13, 12, 14, 12, 11, 13, 12]
+num_samples_cap = 10
+relaxation_schedule = 1
+
+[[samples]]
+multiplicity = 1
+source_feasible = true
+source_objective = 20.0
+source_point = [1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 3.0, 1.0, 5.0, 4.0]
+target_objective = 20.0
+target_point = [1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 3.0, 1.0, 5.0, 4.0, 5.0, 0.0, 6.0, 7.0, 10.0, 0.0, 3.0, 3.0, 4.0, 4.0, 4.0, 7.0]
+
+[timing]
+device_usage_sec = "unavailable"
+queue_time_sec = "unavailable"
+run_time_sec = "unavailable"
+total_time_sec = "unavailable"

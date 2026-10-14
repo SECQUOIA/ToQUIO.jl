@@ -1,0 +1,36 @@
+cell_hash = "9cfb05704ccf7bc3158fba4ec3faee9f3e3e6bfd1fd0d3183a7865fb0fdf489a"
+cell_key = "0e99a611743ee425a85bf618701fdd0819862dc24ec4b16b7ef2a49978880630"
+evidence_kind = "mock"
+failure_class = "none"
+job_id = "mock-inventory-evaluation-3021-native"
+optimality_certificate = false
+problem_file_id = "unavailable"
+provider_status = "COMPLETED"
+qci_revision = "c3c3ed9e1b27150b3b39c9e98807007daf3f7a01"
+reported_provider_energies = [-1330.0]
+request_hash = "6832e91457ee4a547b4cbd1345692902d5bb811d3b33d35800cf73d8ef4cd8ab"
+result_file_id = "unavailable"
+schema_version = 1
+source_hash = "61244f914f4fb6a2a140051712677b3e9b2de9af82e2c32cdf2e3a806303febe"
+target_hash = "04661742c085352cfffa6e3c8e7e9c0640e3bff398dabaf9daa1b4bb30ed12a9"
+
+[device_config]
+device = "dirac-3"
+job_type = "sample-hamiltonian-integer"
+num_levels = [4, 4, 4, 4, 7, 7, 7, 7, 2, 2, 2, 2, 4, 4, 4, 4]
+num_samples_cap = 10
+relaxation_schedule = 1
+
+[[samples]]
+multiplicity = 1
+source_feasible = true
+source_objective = 27.0
+source_point = [3.0, 2.0, 3.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0]
+target_objective = 27.0
+target_point = [3.0, 2.0, 3.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 0.0, 1.0, 0.0, 2.0]
+
+[timing]
+device_usage_sec = "unavailable"
+queue_time_sec = "unavailable"
+run_time_sec = "unavailable"
+total_time_sec = "unavailable"
