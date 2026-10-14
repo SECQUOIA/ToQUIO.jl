@@ -67,7 +67,11 @@ The protocol uses 2,000 family-stratified instance/restart bootstrap resamples,
 seed99001, paired restart IDs and percentile intervals. Only two instances per
 family make these intervals coarse, descriptive and potentially narrow. Sign-flip
 sensitivity enumerates all 2^n assignments and assumes exchangeable signs; it is
-not a randomized or confirmatory test. There is no multiplicity control. The
+not a randomized or confirmatory test. Equal tails use a scale-aware summation
+roundoff bound, `2n * eps(Float64) * sum(abs, differences)`, recorded for each
+endpoint as `tie_absolute_tolerance`. This corrects the compiler-defaults shim
+minus binary feasibility sensitivity from 0.5 to 0.625 without changing raw data.
+There is no multiplicity control. The
 bounded-native paired signed-gap interval is negative here, while its sensitivity p is
 0.0625 with six observed instances. This is the attainable floor here with five
 nonzero same-sign differences and one zero difference. Facility-3011 contributes
@@ -152,14 +156,14 @@ checks. No hardware job, package release or deployment was performed here.
 ## Reproduce
 
 Use reporting-code checkpoint
-`8011effd71819d33f1c3f88f5b827fb510f004af` (or its descendant with the same
+`1bec7de667a5c2c81aed9d92f1b5e6ceb77dc9f2` (or its descendant with the same
 script hashes), Julia 1.10.11 and archived MOI 1.54.0. Sampling imports still
 match frozen campaign source
 `2a4f1809ebcc148748f57a8fb2772eca3899e1bb`; source-hash verification covers
 `runner.jl`/`run.jl` and all campaign imports. The checkpoint's checked script hashes are:
 
 - `report.jl`: `07d7bd17402ec1fd8bed5edca5ee442a96fbd9534f469082992057bbb25e1cf9`
-- `study_analysis.jl`: `cb5314611c6586c921df7da14ab804ecc64cc753a91ae0fb7f24d9229bab9eeb`
+- `study_analysis.jl`: `70b3625e98cd43b2318497cef092ccaf33674b2061609f7a62531a19de45f1c9`
 - `report_tables.jl`: `bdf3e16ae06b912a5778bc8f23dfdacdb619ad03a8443cfe8f3d778600155b01`
 
 They equal the recorded statistics hashes. A squash/rebase merge must retain a
