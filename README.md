@@ -14,6 +14,13 @@ A Julia package that reformulates constrained integer optimization problems into
 - **Flexible Solver Backend**: Can use any MOI-compatible QUIO solver as backend
 - **Type-Generic**: Supports arbitrary numeric types (Float64, BigFloat, etc.)
 
+The source-pinned [CQT software deliverable](docs/src/deliverable.md) connects
+native/radix/bounded encoding choices, tested JuMP examples, benchmark replay,
+classical results and offline hardware readiness. Its new APIs are development
+features absent from the tagged v0.1.0 release. See
+[release readiness](docs/src/release_readiness.md) for the separate integration,
+package publication, documentation and live-hardware gates.
+
 ## Installation
 
 ToQUIO.jl is registered in the Julia General registry. Install it from a Julia
