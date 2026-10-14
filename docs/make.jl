@@ -24,6 +24,7 @@ makedocs(;
         "Integer Encoding" => "encoding.md",
         "Radix Encoding" => "radix.md",
         "Bounded Encoding" => "bounded.md",
+        "Benchmark Replay" => "benchmarks.md",
         "Encoding Study" => "study.md",
         "API Reference" => "api.md",
         "Algorithm" => "algorithm.md",
