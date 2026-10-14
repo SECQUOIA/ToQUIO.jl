@@ -1,6 +1,8 @@
 # Protocol-v1 descriptive comparisons. Instances are the outer sampling unit;
 # the same restart IDs are resampled together within a paired instance.
-mean_or_missing(values) = isempty(values) ? "missing" : sum(values) / length(values)
+# Fix the reduction order: vector sum can choose CPU-dependent SIMD reductions,
+# which makes otherwise identical archived reports differ in their last bits.
+mean_or_missing(values) = isempty(values) ? "missing" : foldl(+, values) / length(values)
 
 function percentile(values, probability)
     isempty(values) && return "missing"
