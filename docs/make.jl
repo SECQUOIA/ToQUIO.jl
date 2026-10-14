@@ -25,6 +25,8 @@ makedocs(;
         "Radix Encoding" => "radix.md",
         "Bounded Encoding" => "bounded.md",
         "Benchmark Replay" => "benchmarks.md",
+        "Classical Study" => "classical_study.md",
+        "Study Tables" => "TABLES.md",
         "Encoding Study" => "study.md",
         "API Reference" => "api.md",
         "Algorithm" => "algorithm.md",

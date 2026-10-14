@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "wall_seconds": 13.552281702985056,
+  "scope": "fresh-Julia-process-startup-JIT-archive-read-source-QA-nested-bootstrap-statistics-and-CSV-write",
+  "cpu_quota_percent": 100,
+  "julia_threads": 1,
+  "blas_threads": 1,
+  "memory_bytes": 4294967296,
+  "swap_bytes": 0,
+  "queue_seconds": "not-applicable-local-process",
+  "per_run_source_decode_and_feasibility": "included-in-instrumented-solve",
+  "per_job_archive_persistence_seconds": "not-separately-instrumented",
+  "timestamp_utc": "2026-10-14T15:26:06.059677+00:00",
+  "competing_sampler_starts": 0
+}

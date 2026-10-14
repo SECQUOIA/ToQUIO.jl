@@ -13,5 +13,6 @@ using ToQUIO
     include("unit/penalty_documentation.jl")
     include("unit/study_protocol.jl")
     include("../benchmarks/test_core.jl")
+    include("../benchmarks/test_analysis.jl")
     include("test_examples.jl")
 end

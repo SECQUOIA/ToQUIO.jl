@@ -4,9 +4,12 @@ These repository scripts implement issue #50. They generate the frozen four-fami
 corpus, validate the five compiler arms, run a bounded integer Metropolis control,
 and archive replayable evidence. They are an experiment, not a production optimizer
 or a physical device model. A smoke run does not establish performance conclusions.
-The bounded comparison and statistical report belong to issue #51.
+The completed bounded comparison is recorded in `results/protocol_v1/REPORT.md`,
+with raw archives, checksums and an ordinary-environment report command.
 
-Use Julia 1.10 or newer from this source checkout. The separate environment pins
+Use Julia 1.10 or newer for new runs. Published protocol-v1 archive replay/report
+requires exactly Julia 1.10.11 and its archived MOI version (1.54.0).
+The separate environment pins
 ToQUBO to `69ac52592f4c47ed2168bf480c9947d1fcbbfc2c` and HiGHS.jl to 1.26.0. It
 does not change ToQUIO's runtime dependencies or MOI 1.11 compatibility floor.
 
@@ -43,7 +46,9 @@ same monotonic clock origin and byte-identical resolved environment. Reservation
 job becomes an invalid planned run with failure scores; it is not sampled again.
 Completed jobs are read by deterministic keys. Crashed references and failed
 preflight stop an incomplete campaign. Invalid/missing trajectories remain in
-the all-planned denominator. No complete-campaign aggregate is produced here.
+the all-planned denominator. The runner archives trajectories; `report.jl`
+produces the complete-campaign aggregate
+only after every planned job is accounted for.
 
 Replay an archived valid trajectory without importing ToQUBO or HiGHS:
 

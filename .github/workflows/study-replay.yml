@@ -1,0 +1,107 @@
+name: Archived study replay
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/study-replay.yml'
+      - 'benchmarks/study_analysis.jl'
+      - 'benchmarks/report.jl'
+      - 'benchmarks/report_tables.jl'
+      - 'benchmarks/test_study_artifacts.py'
+      - 'docs/src/classical_study.md'
+      - 'docs/src/TABLES.md'
+      - 'benchmarks/check_study_artifacts.py'
+      - 'benchmarks/results/**'
+      - 'src/**'
+      - 'Project.toml'
+      - 'benchmarks/CQTBenchmarks.jl'
+      - 'benchmarks/protocol_helpers.jl'
+      - 'benchmarks/corpus.jl'
+      - 'benchmarks/corpus_hashes_v1.toml'
+      - 'benchmarks/metropolis.jl'
+      - 'benchmarks/compilers.jl'
+      - 'benchmarks/preflight.jl'
+      - 'benchmarks/artifacts.jl'
+      - 'benchmarks/protocol_v1.toml'
+      - 'benchmarks/runner.jl'
+      - 'benchmarks/run.jl'
+      - 'benchmarks/CQTExperiment.jl'
+      - 'benchmarks/reference.jl'
+      - 'benchmarks/toqubo_adapter.jl'
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/study-replay.yml'
+      - 'benchmarks/study_analysis.jl'
+      - 'benchmarks/report.jl'
+      - 'benchmarks/report_tables.jl'
+      - 'benchmarks/test_study_artifacts.py'
+      - 'docs/src/classical_study.md'
+      - 'docs/src/TABLES.md'
+      - 'benchmarks/check_study_artifacts.py'
+      - 'benchmarks/results/**'
+      - 'src/**'
+      - 'Project.toml'
+      - 'benchmarks/CQTBenchmarks.jl'
+      - 'benchmarks/protocol_helpers.jl'
+      - 'benchmarks/corpus.jl'
+      - 'benchmarks/corpus_hashes_v1.toml'
+      - 'benchmarks/metropolis.jl'
+      - 'benchmarks/compilers.jl'
+      - 'benchmarks/preflight.jl'
+      - 'benchmarks/artifacts.jl'
+      - 'benchmarks/protocol_v1.toml'
+      - 'benchmarks/runner.jl'
+      - 'benchmarks/run.jl'
+      - 'benchmarks/CQTExperiment.jl'
+      - 'benchmarks/reference.jl'
+      - 'benchmarks/toqubo_adapter.jl'
+
+permissions:
+  contents: read
+
+jobs:
+  replay:
+    name: Reproduce archived study numbers
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      JULIA_NUM_THREADS: '1'
+      OPENBLAS_NUM_THREADS: '1'
+      JULIA_NUM_PRECOMPILE_TASKS: '1'
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: julia-actions/setup-julia@v3
+        with:
+          version: '1.10.11'
+      - uses: julia-actions/cache@v3
+      - name: Verify archive and reproduce with ordinary environment
+        shell: bash
+        run: |
+          python3 -m unittest discover -s benchmarks -p test_study_artifacts.py
+          study_source=benchmarks/results/protocol_v1
+          study_temp="$RUNNER_TEMP/cqt-study"
+          mkdir "$study_temp"
+          python3 benchmarks/check_study_artifacts.py extract "$study_source" "$study_temp/campaign"
+          runner_julia=$(command -v julia)
+          runner_depot="${JULIA_DEPOT_PATH:-$HOME/.julia}"
+          sudo systemd-run --scope --quiet -p MemoryMax=4G -p MemorySwapMax=0 -p CPUQuota=100% \
+            runuser -u "$(id -un)" -- env JULIA_DEPOT_PATH="$runner_depot" \
+            JULIA_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 JULIA_NUM_PRECOMPILE_TASKS=1 \
+            timeout 300 "$runner_julia" --project=. -e 'using Pkg, TOML;
+              manifest = TOML.parsefile(joinpath(ARGS[1], "manifest.toml"));
+              Pkg.add(PackageSpec(name="MathOptInterface", version=manifest["replay_moi_version"]));
+              Pkg.instantiate()' "$study_temp/campaign"
+          sudo systemd-run --scope --quiet -p MemoryMax=4G -p MemorySwapMax=0 -p CPUQuota=100% \
+            runuser -u "$(id -un)" -- env JULIA_DEPOT_PATH="$runner_depot" \
+            JULIA_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 JULIA_NUM_PRECOMPILE_TASKS=1 \
+            timeout 300 "$runner_julia" --project=. benchmarks/report.jl "$study_temp/campaign" "$study_temp/report"
+          python3 benchmarks/check_study_artifacts.py compare "$study_source" "$study_temp/report"
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: archive-reproduction-diagnostics
+          path: ${{ runner.temp }}/cqt-study/report/
+          if-no-files-found: ignore

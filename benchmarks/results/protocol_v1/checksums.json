@@ -1,0 +1,16 @@
+{
+  "protocol_id": "cqt-y4-quio-v1",
+  "source_revision": "2a4f1809ebcc148748f57a8fb2772eca3899e1bb",
+  "julia_version": "1.10.11",
+  "statistics_sha256": "77d33d0ac5927967a6e2f9edc0dc00c5a85f02b511a4334c4e193ded7ce68660",
+  "archives": {
+    "campaign.tar.gz": {
+      "sha256": "e13256a7e2bce8d7f3a6e8752c3d6594c1b3f7f0f74c70e7300707c6b03f4b8e",
+      "bytes": 3995302
+    },
+    "statistics.toml.gz": {
+      "bytes": 383115,
+      "sha256": "e5f7a63ec9cee6888122ef499cc36ceb3d4c2be18e0944f15a840601994b3f63"
+    }
+  }
+}
