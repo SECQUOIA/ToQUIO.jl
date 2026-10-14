@@ -11,6 +11,12 @@ const A = CQTBenchmarks
     @test A.sign_flip_sensitivity(zeros(8))["p"] == 1
     @test A.sign_flip_sensitivity(["missing"])["p"] == "missing"
     @test_throws ErrorException A.sign_flip_sensitivity(ones(9))
+    # Exact rational enumeration of this published contrast gives160/256.
+    ties = [0.0, 0.0, 0.8, 0.4, -0.2, 0.0, 0.0, -0.2]
+    for order in (1:8, 8:-1:1, [3, 4, 5, 8, 1, 2, 6, 7]), scale in (1.0, 1e-12, 1e12)
+        @test A.sign_flip_sensitivity(ties[order] .* scale)["p"] == 160 / 256
+        @test A.sign_flip_sensitivity([1.0, 2.0, zeros(6)...] .* scale)["p"] == 0.5
+    end
     function record(feasible, time, gap)
         return Dict("trajectory" => Dict{String,Any}("any_feasible" => feasible,
             "target_time_score" => time, "target_work_score" => 10time, "signed_gap" => gap))
