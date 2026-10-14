@@ -12,5 +12,6 @@ using ToQUIO
     include("unit/bounded_encoding.jl")
     include("unit/penalty_documentation.jl")
     include("unit/study_protocol.jl")
+    include("../benchmarks/test_core.jl")
     include("test_examples.jl")
 end

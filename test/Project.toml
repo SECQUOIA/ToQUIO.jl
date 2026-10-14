@@ -2,6 +2,10 @@
 # maintaining separate compat bounds. Add [compat] and a /test Dependabot Julia
 # entry only when this environment owns third-party dependencies beyond ToQUIO.
 [deps]
+LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+Pkg = "44cfe95a-1eb2-52ea-b672-e2afdf69b78f"
+Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
+SHA = "ea8e919c-243c-51af-8825-aaa63cd721ce"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 TOML = "fa267f1f-6049-4f14-aa54-33bafae1ed76"
 ToQUIO = "c8c7c8a1-01ab-43fa-b80d-8804f80d4aae"
