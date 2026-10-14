@@ -1,5 +1,7 @@
+adverse_excluded_instances = ["cvrp-evaluation-3032", "facility-evaluation-3012", "inventory-evaluation-3022"]
+adverse_selected_instances = []
 campaign_source_revision = "2a4f1809ebcc148748f57a8fb2772eca3899e1bb"
-composition_warning = "All adverse feasibility/time instances fall outside this subset; biased for comparisons."
+composition_warning = "Adverse feasibility/time-score instances: selected=0, excluded=3; post-hoc packet is not representative."
 predeclared = false
 purpose = "four-family-demo-packet-subject-to-maintainer-review-in-issue52"
 representative = false
