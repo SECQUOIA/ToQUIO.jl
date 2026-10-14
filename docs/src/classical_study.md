@@ -71,6 +71,8 @@ not a randomized or confirmatory test. Equal tails use a scale-aware summation
 roundoff bound, `2n * eps(Float64) * sum(abs, differences)`, recorded for each
 endpoint as `tie_absolute_tolerance`. This corrects the compiler-defaults shim
 minus binary feasibility sensitivity from 0.5 to 0.625 without changing raw data.
+Reported means use a fixed left-to-right reduction so processor-dependent SIMD
+summation cannot change the last bits of reproduced artifacts.
 There is no multiplicity control. The
 bounded-native paired signed-gap interval is negative here, while its sensitivity p is
 0.0625 with six observed instances. This is the attainable floor here with five
@@ -156,14 +158,14 @@ checks. No hardware job, package release or deployment was performed here.
 ## Reproduce
 
 Use reporting-code checkpoint
-`1bec7de667a5c2c81aed9d92f1b5e6ceb77dc9f2` (or its descendant with the same
+`209fcbaf1671ad49feeb1dae66e0997cc64dda36` (or its descendant with the same
 script hashes), Julia 1.10.11 and archived MOI 1.54.0. Sampling imports still
 match frozen campaign source
 `2a4f1809ebcc148748f57a8fb2772eca3899e1bb`; source-hash verification covers
 `runner.jl`/`run.jl` and all campaign imports. The checkpoint's checked script hashes are:
 
 - `report.jl`: `07d7bd17402ec1fd8bed5edca5ee442a96fbd9534f469082992057bbb25e1cf9`
-- `study_analysis.jl`: `70b3625e98cd43b2318497cef092ccaf33674b2061609f7a62531a19de45f1c9`
+- `study_analysis.jl`: `f993ad9bd4915ebecb53effecc6b45652ef613ef7e211e4084dd22f562da21c4`
 - `report_tables.jl`: `bdf3e16ae06b912a5778bc8f23dfdacdb619ad03a8443cfe8f3d778600155b01`
 
 They equal the recorded statistics hashes. A squash/rebase merge must retain a
