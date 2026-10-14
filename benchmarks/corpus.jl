@@ -255,3 +255,19 @@ function exact_reference(instance::Instance; max_states = 1_000_000)
         "enumerated_states" => count, "feasible_states" => feasible,
         "certificate" => "exhaustive-original-integer-box", "source_hash" => instance_hash(instance))
 end
+
+function integral_reference_point(instance::Instance, raw_point)
+    source_feasible(instance, raw_point; atol = PROTOCOL["source_feasibility_atol"]) ||
+        throw(ArgumentError("Reference point violates source tolerance."))
+    point = round.(Int, raw_point)
+    source_feasible(instance, point; atol = 0) ||
+        throw(VerificationError("Rounded reference is not exactly source feasible."))
+    return point
+end
+
+function verify_corpus_hashes(instances)
+    expected = TOML.parsefile(joinpath(@__DIR__, "corpus_hashes_v1.toml"))["hashes"]
+    Dict(i.id => instance_hash(i) for i in instances) == expected ||
+        error("Concrete corpus drifted from the published protocol-v1 hashes.")
+    return true
+end

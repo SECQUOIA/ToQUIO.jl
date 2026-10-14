@@ -114,7 +114,7 @@ function metropolis(p::Polynomial, initialize, observe; seed, reserved_proposals
     elapsed() = Float64(clock() - started) / 1.0e9
     state = Int.(initialize(initial_rng))
     length(state) == length(p.g) && all(p.lower .<= state .<= p.upper) ||
-        throw(ArgumentError("Initializer returned an invalid target state."))
+        throw(VerificationError("Initializer returned an invalid target state."))
     initial = copy(state)
     function visit(index)
         outcome = observe(state)
@@ -122,7 +122,7 @@ function metropolis(p::Polynomial, initialize, observe; seed, reserved_proposals
         spent = elapsed() # A target is timely only when its observation has finished.
         if outcome.feasible
             value = outcome.objective
-            isfinite(value) || error("Nonfinite decoded source objective.")
+            isfinite(value) || throw(VerificationError("Nonfinite decoded source objective."))
             if isnothing(best) || (outcome.sense == "min" ? value < best : value > best)
                 best, best_point = value, copy(outcome.source)
             end
@@ -173,7 +173,7 @@ function metropolis(p::Polynomial, initialize, observe; seed, reserved_proposals
                 proposed = copy(state)
                 proposed[site] = candidate
                 isapprox(delta, energy(p, proposed) - energy(p, state); atol = 1e-9, rtol = 1e-12) ||
-                    error("Incremental/full energy disagreement.")
+                    throw(VerificationError("Incremental/full energy disagreement."))
             end
             normalized = sigma * delta / energy_scale
             T = temperature(index, reserved_proposals, temperature_start, temperature_end)
@@ -191,8 +191,10 @@ function metropolis(p::Polynomial, initialize, observe; seed, reserved_proposals
     completed > 0 && completed % max(1, length(active)) != 0 && sample(completed, outcome)
     spent = elapsed()
     spent > max_seconds && termination in ("proposal-cap", "fixed-target") && (termination = "clock-censored")
-    @assert counts["boundary"] + counts["accepted"] + counts["energy_rejected"] == completed
-    @assert counts["in_domain"] == counts["accepted"] + counts["energy_rejected"]
+    counts["boundary"] + counts["accepted"] + counts["energy_rejected"] == completed ||
+        throw(VerificationError("Move-count total disagrees with completed work."))
+    counts["in_domain"] == counts["accepted"] + counts["energy_rejected"] ||
+        throw(VerificationError("In-domain move counts disagree."))
     missing_value(x) = isnothing(x) ? "missing" : x
     return Dict{String,Any}("seed" => seed, "initialization_seed" => seed,
         "proposal_seed" => seed + 1_000_000_000, "reserved_proposals" => reserved_proposals,

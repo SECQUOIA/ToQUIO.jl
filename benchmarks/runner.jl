@@ -49,7 +49,9 @@ function checkpoint!(root, ledger)
     elapsed <= PROTOCOL["resources"]["campaign_wall_seconds"] ||
         error("Campaign wall allowance exhausted; retain incomplete evidence.")
     ledger["elapsed_seconds"] = elapsed
-    ledger["process_peak_rss_bytes"] = process_peak_rss_bytes()
+    peak = process_peak_rss_bytes()
+    ledger["process_peak_rss_bytes"] = max(get(ledger, "process_peak_rss_bytes", 0), peak)
+    ledger["invocations"][end]["peak_rss_bytes"] = peak
     return write_archive(root, "ledger.toml", ledger; replace = true)
 end
 
@@ -67,6 +69,13 @@ function open_campaign(root, mode)
         verify_archive_execution(manifest)
         manifest["campaign_hashes"] == campaign_hashes() || error("Campaign executable hashes differ.")
         ledger = read_archive(root, "ledger.toml")
+        haskey(ledger, "correctness_failure") && error("Prior correctness failure; campaign cannot resume.")
+        manifest["dependencies"] == dependency_record() || error("Resolved dependencies changed on resume.")
+        for name in ("Project.toml", "Manifest.toml")
+            read(joinpath(root, name)) == read(joinpath(@__DIR__, name)) ||
+                error("Experiment environment bytes changed on resume.")
+        end
+        push!(ledger["invocations"], Dict("enforcement" => enforcement, "peak_rss_bytes" => 0))
         ledger["manifest_hash"] == bytes2hex(SHA.sha256(read(manifest_path))) || error("Manifest binding mismatch.")
         ledger["boot_fingerprint"] == boot_fingerprint() || error("Cannot resume accounting across clock origins.")
         checkpoint!(root, ledger)
@@ -74,6 +83,7 @@ function open_campaign(root, mode)
     end
     isempty(readdir(root)) || error("Refusing to overwrite a nonempty foreign artifact directory.")
     instances = corpus(PROTOCOL)
+    verify_corpus_hashes(instances)
     manifest = Dict{String,Any}("schema_version" => 1, "owner" => "cqt-y4-runner-v1", "mode" => mode,
         "julia_version" => string(VERSION), "machine" => Sys.MACHINE,
         "replay_moi_version" => string(Pkg.dependencies()[Base.PkgId(M).uuid].version),
@@ -98,7 +108,8 @@ function open_campaign(root, mode)
         "status" => "prepared", "sampler_starts_reserved" => 0, "proposals_reserved" => 0,
         "enumeration_states_reserved" => 0, "jobs" => Dict{String,Any}[],
         "references" => Dict{String,Any}[], "cells" => Dict{String,Any}[],
-        "elapsed_seconds" => 0.0, "errors" => String[])
+        "elapsed_seconds" => 0.0, "errors" => String[],
+        "invocations" => [Dict("enforcement" => enforcement, "peak_rss_bytes" => 0)])
     checkpoint!(root, ledger)
     return manifest, ledger, instances
 end
@@ -166,22 +177,33 @@ function prepare_cells!(root, ledger, instances, references, mode)
                 found = findfirst(e -> e["key"] == key, ledger["cells"])
                 if !isnothing(found)
                     entry = ledger["cells"][found]
+                    entry["status"] == "passed" || error("Prior failed/interrupted preflight cannot be retried.")
                     cell = cell_from_record(read_archive(root, entry["file"]; expected_hash = entry["hash"]))
                 else
-                    cell = startswith(arm, "toqubo") ? compile_toqubo(instance, arm, regime; cap, oracle) :
-                           compile_quio(instance, arm, regime; cap, oracle)
-                    budget = EnumerationBudget(1_000_000, 4_000_000, ledger["enumeration_states_reserved"])
-                    function reserve_hook()
-                        ledger["enumeration_states_reserved"] = budget.reserved
-                        checkpoint!(root, ledger)
-                    end
-                    gate = preflight(cell, references[instance.id]; budget,
-                                     exhaustive = instance.stage == "pilot", reservation_hook = reserve_hook)
-                    file = "cells/" * key * ".toml"
-                    hash = write_archive(root, file, cell_record(cell, gate))
-                    push!(ledger["cells"], Dict("key" => key, "file" => file, "hash" => hash,
-                        "source_hash" => instance_hash(instance), "arm" => arm, "regime" => regime, "cap" => cap))
+                    entry = Dict{String,Any}("key" => key, "status" => "reserved",
+                        "source_hash" => instance_hash(instance), "arm" => arm, "regime" => regime, "cap" => cap)
+                    push!(ledger["cells"], entry)
                     checkpoint!(root, ledger)
+                    try
+                        cell = startswith(arm, "toqubo") ? compile_toqubo(instance, arm, regime; cap, oracle) :
+                               compile_quio(instance, arm, regime; cap, oracle)
+                        budget = EnumerationBudget(1_000_000, 4_000_000, ledger["enumeration_states_reserved"])
+                        function reserve_hook()
+                            ledger["enumeration_states_reserved"] = budget.reserved
+                            checkpoint!(root, ledger)
+                        end
+                        gate = preflight(cell, references[instance.id]; budget,
+                            exhaustive = instance.stage == "pilot", reservation_hook = reserve_hook)
+                        file = "cells/" * key * ".toml"
+                        entry["hash"] = write_archive(root, file, cell_record(cell, gate))
+                        entry["file"], entry["status"] = file, "passed"
+                        checkpoint!(root, ledger)
+                    catch exception
+                        entry["status"] = "failed"
+                        entry["error"] = sprint(showerror, exception)
+                        checkpoint!(root, ledger)
+                        rethrow()
+                    end
                 end
                 cells[key] = cell
                 println("preflight passed: ", instance.id, " / ", arm, " / ", regime, " / cap=", cap)
@@ -304,6 +326,11 @@ function execute_job!(root, ledger, job, cells, references)
             temperature_end = PROTOCOL["metropolis"]["temperature_end"], energy_scale = Float64(scale))
     catch exception
         exception isa InterruptException && rethrow()
+        if exception isa VerificationError || exception isa AssertionError || exception isa ArgumentError
+            ledger["correctness_failure"] = sprint(showerror, exception)
+            checkpoint!(root, ledger)
+            rethrow()
+        end
         return store_invalid!(root, ledger, entry, job, sprint(showerror, exception))
     end
     # Archive and quota failures propagate as incomplete campaigns. They must
@@ -330,6 +357,8 @@ function execute_job!(root, ledger, job, cells, references)
         "job" => job, "trajectory" => trajectory, "cell_file" => cell_entry["file"],
         "cell_hash" => cell_entry["hash"], "reference_objective" => reference,
         "reference_freeze_hash" => ledger["reference_freeze_hash"],
+        "calibration_repeat" => !startswith(cell.arm, "toqubo") && cell.regime == "compiler_defaults",
+        "calibration_repeat_of_regime" => !startswith(cell.arm, "toqubo") ? "controlled" : "not-applicable",
         "timing_phase" => timing_phase, "shared_native_setup_seconds" => shared_seconds,
         "own_build_seconds" => timing["build_seconds"],
         "end_to_end_seconds" => shared_seconds + timing["build_seconds"] + trajectory["elapsed_seconds"],

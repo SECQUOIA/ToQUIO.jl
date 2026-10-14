@@ -5,6 +5,13 @@ const B = CQTBenchmarks
 
 @testset "CQT optional compiler/reference integrations" begin
     @test B.verify_dependency_pins()
+    generated = first(filter(i -> i.stage == "tuning", B.corpus(B.PROTOCOL)))
+    reference = B.highs_reference(generated)
+    @test reference["source_feasible"]
+    @test B.source_feasible(generated, reference["point"]; atol = 0)
+    @test reference["point"] == round.(Int, reference["raw_point"])
+    @test reference["objective"] == B.source_value(generated, reference["point"])
+    @test reference["time_limit_seconds"] == 10.0
     instances = B.corpus(B.PROTOCOL)
     for instance in filter(i -> i.stage == "pilot", instances)
         oracle = B.native_optimizer(instance)
@@ -63,12 +70,41 @@ const B = CQTBenchmarks
         @test_throws ArgumentError B.select_caps(root, Dict("jobs" => ledger["jobs"][2:end]), instances)
     end
 
+    @testset "correctness failures stop rather than score performance" begin
+        pilot = first(instances)
+        job = first(B.stage_jobs(instances, "warmup", Dict{String,Int}()))
+        cell = B.compile_quio(pilot, "native", "controlled")
+        cell.polynomial.upper[1] = cell.polynomial.lower[1] - 1
+        mktempdir() do root
+            ledger = Dict{String,Any}("jobs" => Dict{String,Any}[],
+                "started_monotonic_ns" => Int(time_ns()), "sampler_starts_reserved" => 0,
+                "proposals_reserved" => 0, "invocations" => [Dict("peak_rss_bytes" => 0)],
+                "cells" => [Dict("key" => job["cell_key"])])
+            @test_throws ArgumentError B.execute_job!(root, ledger, job,
+                Dict(job["cell_key"] => cell), Dict(pilot.id => Dict("objective" => 5)))
+            @test haskey(ledger, "correctness_failure")
+            @test ledger["jobs"][1]["status"] == "reserved"
+            @test !isdir(joinpath(root, "jobs"))
+        end
+    end
+    @testset "failed and interrupted preflight cannot retry" begin
+        pilot = first(instances)
+        key = B.cell_key(pilot, "native", "controlled", 0)
+        for status in ("reserved", "failed")
+            ledger = Dict{String,Any}("cells" => [Dict("key" => key, "status" => status)])
+            mktempdir() do root
+                @test_throws ErrorException B.prepare_cells!(root, ledger, [pilot], Dict(), "smoke")
+                @test length(ledger["cells"]) == 1
+            end
+        end
+    end
     @testset "interrupted and corrupted jobs are retained without dispatch" begin
         job = first(B.stage_jobs(instances, "warmup", Dict{String,Int}()))
         mktempdir() do root
             entry = Dict{String,Any}("key" => job["key"], "status" => "reserved")
             ledger = Dict{String,Any}("jobs" => [entry], "started_monotonic_ns" => Int(time_ns()),
-                "sampler_starts_reserved" => 1, "proposals_reserved" => 128)
+                "sampler_starts_reserved" => 1, "proposals_reserved" => 128,
+                "invocations" => [Dict("peak_rss_bytes" => 0)])
             result = B.execute_job!(root, ledger, job, Dict(), Dict())
             @test result["status"] == "invalid"
             @test !result["trajectory"]["any_feasible"]
@@ -86,7 +122,8 @@ const B = CQTBenchmarks
             end
             entry = Dict{String,Any}("key" => job["key"], "status" => "complete", "file" => file, "hash" => hash)
             ledger = Dict{String,Any}("jobs" => [entry], "started_monotonic_ns" => Int(time_ns()),
-                "sampler_starts_reserved" => 1, "proposals_reserved" => 128)
+                "sampler_starts_reserved" => 1, "proposals_reserved" => 128,
+                "invocations" => [Dict("peak_rss_bytes" => 0)])
             result = B.execute_job!(root, ledger, job, Dict(), Dict())
             @test result["status"] == "invalid"
             @test result["retained_prior_hash"] == hash

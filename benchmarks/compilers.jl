@@ -105,10 +105,10 @@ function native_optimizer(instance::Instance)
         "scope" => "shared-once-per-instance-not-additive-across-arms")
     variables = oracle.data[:source_variables]
     variables == [M.VariableIndex(i) for i in eachindex(instance.lower)] ||
-        error("Unexpected source variable order.")
+        throw(VerificationError("Unexpected source variable order."))
     for (i, v) in enumerate(variables)
         oracle.data[:source_to_target_variables][v] == oracle.data[:quio_variables][i] ||
-            error("Unexpected native original-variable projection.")
+            throw(VerificationError("Unexpected native original-variable projection."))
     end
     return oracle
 end
@@ -139,8 +139,9 @@ function compile_quio(instance::Instance, arm, regime; cap = 2, oracle = nothing
     native_timing = oracle.data[:benchmark_native_timing]
     # Source-pinned experiment hook separates the same post-native transform
     # used by public MOI.optimize!. Integration tests compare both routes.
+    harness_copy = @timed deepcopy(native_optimizer_result.data)
     encoded = @timed ToQUIO._encode_native_quio(Float64, native_optimizer_result.target_model,
-        deepcopy(native_optimizer_result.data), strategy, 256)
+        harness_copy.value, strategy, PROTOCOL["resources"]["max_target_variables"])
     target, data = encoded.value
     copied = @timed polynomial_from_moi(target)
     polynomial, _ = copied.value
@@ -179,13 +180,14 @@ function compile_quio(instance::Instance, arm, regime; cap = 2, oracle = nothing
         "build_seconds" => encoded.time + copied.time + captured.time,
         "build_allocated_bytes" => encoded.bytes + copied.bytes + captured.bytes,
         "shared_native_timing" => native_timing,
-        "compiler_revision" => readchomp(Cmd(["git", "-C", ROOT, "rev-parse", "HEAD"])),
+        "compiler_revision" => "see-manifest-source_revision",
+        "harness_copy_seconds" => harness_copy.time, "harness_copy_allocated_bytes" => harness_copy.bytes,
         "encoding_and_copy_seconds" => encoded.time, "target_polynomial_copy_seconds" => copied.time,
         "metadata_capture_seconds" => captured.time,
         "penalty_offset" => 1.0, "penalty_scale" => 1.0, "numeric_type" => "Float64",
         "regime" => regime, "arm" => arm, "applied_penalties" => penalties,
         "slack_rule" => "native-integer-residual-preserved", "source_hash" => instance_hash(instance))
-    data[:rho] == oracle.data[:rho] || error("QUIO arm changed native penalties.")
+    data[:rho] == oracle.data[:rho] || throw(VerificationError("QUIO arm changed native penalties."))
     return CompiledCell(instance, arm, regime, arm == "bounded" ? cap : 0,
                         polynomial, maps, penalties, oracle, record)
 end
@@ -214,7 +216,7 @@ function cell_observer(cell::CompiledCell, reference)
         oracle_state = native_source_point(cell.oracle, x)
         feasible = ToQUIO.is_feasible(cell.oracle, oracle_state; atol = PROTOCOL["source_feasibility_atol"])
         feasible == source_feasible(cell.instance, x; atol = PROTOCOL["source_feasibility_atol"]) ||
-            error("Independent/source API feasibility disagreement.")
+            throw(VerificationError("Independent/source API feasibility disagreement."))
         value = source_value(cell.instance, x)
         target = false
         if feasible
@@ -230,21 +232,23 @@ function cell_observer(cell::CompiledCell, reference)
 end
 
 function lift_map(map::CoordinateMap, value)
-    map.lower <= value <= map.upper && isinteger(value) || error("Native point outside declared map.")
+    map.lower <= value <= map.upper && isinteger(value) ||
+        throw(VerificationError("Native point outside declared map."))
     if !isempty(map.digit_lower) && any(!iszero, map.digit_lower)
-        length(map.weights) == 1 && map.weights == [1] && map.offset == 0 || error("Invalid identity map.")
+        length(map.weights) == 1 && map.weights == [1] && map.offset == 0 ||
+            throw(VerificationError("Invalid identity map."))
         return [Int(value)]
     end
     return Int.(protocol_canonical_lift(Int(value) - map.offset, map.weights, map.digit_upper))
 end
 
 function lift_cell(cell::CompiledCell, native)
-    length(native) == length(cell.maps) || error("Wrong native initialization dimension.")
+    length(native) == length(cell.maps) || throw(VerificationError("Wrong native initialization dimension."))
     state = zeros(Int, length(cell.polynomial.g))
     for (map, value) in zip(cell.maps, native)
         state[map.positions] = lift_map(map, value)
     end
-    decoded_native(cell, state) == native || error("Canonical lift roundtrip failed.")
+    decoded_native(cell, state) == native || throw(VerificationError("Canonical lift roundtrip failed."))
     return state
 end
 

@@ -12,7 +12,7 @@ jobs:
   smoke:
     name: Credential-free benchmark smoke
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 40
     env:
       JULIA_NUM_THREADS: '1'
       OPENBLAS_NUM_THREADS: '1'
@@ -52,6 +52,22 @@ jobs:
             runuser -u "$(id -un)" -- env JULIA_DEPOT_PATH="$runner_depot" \
             JULIA_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 JULIA_NUM_PRECOMPILE_TASKS=1 \
             timeout 300 "$runner_julia" --project=benchmarks benchmarks/test_smoke.jl
+      - name: Replay without optional compiler or solver packages
+        shell: bash
+        run: |
+          runner_julia=$(command -v julia)
+          runner_depot="${JULIA_DEPOT_PATH:-$HOME/.julia}"
+          sudo systemd-run --scope --quiet -p MemoryMax=4G -p MemorySwapMax=0 -p CPUQuota=100% \
+            runuser -u "$(id -un)" -- env JULIA_DEPOT_PATH="$runner_depot" \
+            JULIA_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 JULIA_NUM_PRECOMPILE_TASKS=1 \
+            timeout 300 "$runner_julia" --project=. -e 'using Pkg, TOML;
+              manifest = TOML.parsefile("benchmarks/ci-smoke/manifest.toml");
+              Pkg.add(PackageSpec(name="MathOptInterface", version=manifest["replay_moi_version"]));
+              Pkg.instantiate()'
+          sudo systemd-run --scope --quiet -p MemoryMax=4G -p MemorySwapMax=0 -p CPUQuota=100% \
+            runuser -u "$(id -un)" -- env JULIA_DEPOT_PATH="$runner_depot" \
+            JULIA_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 JULIA_NUM_PRECOMPILE_TASKS=1 \
+            timeout 120 "$runner_julia" --project=. benchmarks/replay_smoke.jl benchmarks/ci-smoke
       - uses: actions/upload-artifact@v4
         if: always()
         with:

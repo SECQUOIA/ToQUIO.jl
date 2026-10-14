@@ -39,7 +39,7 @@ multiplicity, censoring/status/error records, and timing boundaries. Big integer
 outside TOML's machine range and absent metadata use explicit tagged values.
 
 Rerun the same command to resume within the original one-hour allowance on the
-same monotonic clock origin. Reservations remain spent. An interrupted reserved
+same monotonic clock origin and byte-identical resolved environment. Reservations remain spent. An interrupted reserved
 job becomes an invalid planned run with failure scores; it is not sampled again.
 Completed jobs are read by deterministic keys. Crashed references and failed
 preflight stop an incomplete campaign. Invalid/missing trajectories remain in
@@ -51,7 +51,15 @@ Replay an archived valid trajectory without importing ToQUBO or HiGHS:
 julia --project=. benchmarks/replay.jl /tmp/cqt-smoke JOB_SHA256_KEY
 ```
 
-Replay requires matching archived Julia, protocol and executable source hashes.
+Instantiate the ordinary root environment first. It must use the archived MOI
+version too; if root and benchmark resolutions differ, align the root environment:
+
+```sh
+julia --project=. -e 'using Pkg, TOML; m=TOML.parsefile("/tmp/cqt-smoke/manifest.toml");
+  Pkg.add(PackageSpec(name="MathOptInterface", version=m["replay_moi_version"])); Pkg.instantiate()'
+```
+
+Replay requires matching archived Julia, MOI, protocol and executable source hashes.
 It uses the original reserved temperature budget and archived completed work,
 checks full versus incremental energies and #34 source feasibility, and compares
 initial/final states, ordered samples, multiplicities and move counts. It cannot
@@ -82,7 +90,8 @@ and reference lifts, and enumerate full pilot targets under the shared budget.
 The QUIO timing adapter calls the source-pinned post-native transform also used
 by public `MOI.optimize!`; integration checks compare both routes. Source build,
 native reformulation, encoding/copy, target extraction and metadata capture are
-timed separately. Reports distinguish dense storage, logical couplers and process
+timed separately. Defensive harness deepcopy time/bytes are separate and excluded
+from compiler build comparisons. Reports distinguish dense storage, logical couplers and process
 high-water RSS from unmeasured physical resources. Backend/reference solve and
 instrumented sampling/observation times have separate fields.
 
@@ -90,6 +99,13 @@ Preflight build costs include first-call JIT. After all pilot sampler warmups,
 the runner measures warm builds again and verifies identical maps/polynomials.
 Native setup is shared once per instance and is not summed across arms. Measured
 run records sum shared native setup, the arm's own build and solve/observation.
+
+QUIO compiler-default records are explicitly marked calibration repeats of the
+controlled policy. Their shared seeds/layouts are not independent statistical evidence.
+Correctness-oracle failures stop the campaign; they are not performance penalties.
+Failed or interrupted preflights are terminal, while per-invocation memory records
+retain the campaign high-water maximum across resume. Published corpus-v1 hashes
+are checked before compilation; RNG drift requires new evidence rather than new seeds.
 
 No compatible archived campaign framework was recovered in the protocol's bounded
 provenance search. These small scripts reuse the existing compiler, metadata and

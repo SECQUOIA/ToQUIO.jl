@@ -80,7 +80,8 @@ end
 
 function execution_hashes()
     files = ["benchmarks/CQTBenchmarks.jl", "benchmarks/protocol_helpers.jl", "benchmarks/corpus.jl",
-        "benchmarks/metropolis.jl", "benchmarks/compilers.jl", "benchmarks/preflight.jl", "benchmarks/artifacts.jl"]
+        "benchmarks/metropolis.jl", "benchmarks/corpus_hashes_v1.toml",
+        "benchmarks/compilers.jl", "benchmarks/preflight.jl", "benchmarks/artifacts.jl"]
     for (directory, _, entries) in walkdir(joinpath(ROOT, "src")), file in entries
         endswith(file, ".jl") && push!(files, relpath(joinpath(directory, file), ROOT))
     end
@@ -152,6 +153,7 @@ function replay_job(root, key)
     cell_data = read_archive(root, record["cell_file"]; expected_hash = record["cell_hash"])
     cell = cell_from_record(cell_data)
     trajectory = record["trajectory"]
+    verify_replay_binding(key, record, cell, ledger, root)
     reference = record["reference_objective"]
     replay = metropolis(cell.polynomial, initializer(cell), cell_observer(cell, reference);
         seed = trajectory["seed"], reserved_proposals = trajectory["reserved_proposals"],
@@ -160,10 +162,48 @@ function replay_job(root, key)
         temperature_end = trajectory["temperature_end"], energy_scale = trajectory["energy_scale"],
         check_deltas = true)
     for field in ("initial", "final", "samples", "move_counts", "completed_proposals",
-                  "source_observations", "best_feasible_objective", "best_feasible_source", "any_feasible")
+                  "source_observations", "best_feasible_objective", "best_feasible_source", "any_feasible",
+                  "first_feasible_proposal")
         replay[field] == trajectory[field] || error("Replayed trajectory differs at $field.")
     end
+    target_index = trajectory["first_target_proposal"] == "missing" ?
+                   trajectory["overshoot_target_proposal"] : trajectory["first_target_proposal"]
+    replay["first_target_proposal"] == target_index || error("First target work endpoint differs.")
     # Clock durations/censoring are archived observations, never regenerated from seeds.
     return Dict("key" => key, "status" => "verified", "completed_proposals" => replay["completed_proposals"],
         "source_feasibility_checked" => true, "clock_reproduced" => false)
+end
+
+function verify_replay_binding(key, record, cell, ledger, root)
+    job, trajectory = record["job"], record["trajectory"]
+    unhashed = copy(job)
+    pop!(unhashed, "key") == key && record_hash(unhashed) == key || error("Job key binding differs.")
+    stage = job["stage"]
+    configuration = PROTOCOL[stage]
+    job["effective_seed"] == job["replicate_seed"] + 10_000cell.instance.ordinal ||
+        error("Effective seed binding differs.")
+    job["replicate_seed"] in configuration["replicate_seeds"] || error("Unplanned replicate seed.")
+    for field in ("reserved_proposals", "max_sweeps")
+        expected = configuration[field == "reserved_proposals" ? "max_proposals" : field]
+        trajectory[field] == job[field] == expected || error("Work plan binding differs.")
+    end
+    trajectory["seed"] == job["effective_seed"] || error("Trajectory seed differs from plan.")
+    for field in ("temperature_start", "temperature_end")
+        trajectory[field] == PROTOCOL["metropolis"][field] || error("Temperature differs from protocol.")
+    end
+    scale = max(1, sum(abs(c) * (big(u) - l) for (c, l, u) in
+        zip(cell.instance.costs, cell.instance.lower, cell.instance.upper)))
+    trajectory["energy_scale"] == Float64(scale) || error("Source-box energy scale differs.")
+    job["instance_id"] == cell.instance.id && job["ordinal"] == cell.instance.ordinal &&
+        job["arm"] == cell.arm && job["regime"] == cell.regime && job["cap"] == cell.weight_cap ||
+        error("Trajectory cell differs from plan.")
+    expected = record_hash(Dict("source_hash" => instance_hash(cell.instance),
+        "arm" => cell.arm, "regime" => cell.regime, "cap" => cell.weight_cap))
+    job["cell_key"] == expected || error("Cell key differs from source/arm binding.")
+    binding = only(filter(e -> e["key"] == expected, ledger["cells"]))
+    record["cell_file"] == binding["file"] == "cells/" * expected * ".toml" &&
+        record["cell_hash"] == binding["hash"] || error("Cell archive binding differs.")
+    record["reference_freeze_hash"] == ledger["reference_freeze_hash"] || error("Reference freeze differs.")
+    read_archive(root, "reference_freeze.toml"; expected_hash = ledger["reference_freeze_hash"])
+    return true
 end

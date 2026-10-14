@@ -16,21 +16,24 @@ function highs_reference(instance::Instance; max_seconds = PROTOCOL["reference"]
     solved = @timed M.optimize!(solver)
     termination = M.get(solver, M.TerminationStatus())
     primal = M.get(solver, M.PrimalStatus())
-    point = Float64[]
+    point, raw_point = Int[], Float64[]
     objective, bound, valid = "missing", "missing", false
     if M.get(solver, M.ResultCount()) > 0 && primal in (M.FEASIBLE_POINT, M.NEARLY_FEASIBLE_POINT)
-        point = [M.get(solver, M.VariablePrimal(), copied.value[v]) for
+        raw_point = [M.get(solver, M.VariablePrimal(), copied.value[v]) for
                  v in M.get(built.value, M.ListOfVariableIndices())]
         oracle = native_optimizer(instance)
-        valid = ToQUIO.is_feasible(oracle, native_source_point(oracle, point);
+        valid = ToQUIO.is_feasible(oracle, native_source_point(oracle, raw_point);
                                    atol = PROTOCOL["source_feasibility_atol"])
-        valid == source_feasible(instance, point; atol = PROTOCOL["source_feasibility_atol"]) ||
+        valid == source_feasible(instance, raw_point; atol = PROTOCOL["source_feasibility_atol"]) ||
             error("Reference feasibility API disagreement.")
-        valid && (objective = Float64(source_value(instance, point)))
+        if valid
+            point = integral_reference_point(instance, raw_point)
+            objective = Float64(source_value(instance, point))
+        end
     end
     bound = M.get(solver, M.ObjectiveBound())
     return Dict{String,Any}("status" => string(termination), "primal_status" => string(primal),
-        "point" => point, "objective" => objective, "objective_bound" => bound,
+        "point" => point, "raw_point" => raw_point, "objective" => objective, "objective_bound" => bound,
         "source_feasible" => valid, "source_hash" => instance_hash(instance),
         "source_sense" => instance.sense, "solver" => "HiGHS", "solver_jl_version" => string(version),
         "solver_library_version" => M.get(solver, M.SolverVersion()),

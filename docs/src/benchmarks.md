@@ -46,7 +46,9 @@ For a completed job key listed in `ledger.toml`:
 julia --project=. benchmarks/replay.jl /tmp/cqt-smoke JOB_SHA256_KEY
 ```
 
-Replay needs matching source hashes and the archived Julia version. It reconstructs
+Instantiate the ordinary root environment and align its MOI version with
+`manifest.toml`'s `replay_moi_version` as described in `benchmarks/README.md`.
+Replay needs matching source hashes and the archived Julia/MOI versions. It reconstructs
 the original proposal schedule up to completed work and checks ordered samples,
 multiplicities, energies and source feasibility. Clock timings stay archived;
 seeds do not reproduce wall-clock censoring. Use an OS memory cap and timeout for

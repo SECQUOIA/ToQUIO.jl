@@ -5,10 +5,17 @@ const CQT = CQTBenchmarks
 @testset "CQT frozen corpus and bounded kernel" begin
     instances = CQT.corpus(CQT.PROTOCOL)
     @test length(instances) == 16
+    VERSION.major == 1 && VERSION.minor == 10 && @test CQT.verify_corpus_hashes(instances)
+    pilot = first(instances)
+    @test CQT.integral_reference_point(pilot, [1.0000000001, 0.9999999999]) == [1, 1]
+    @test_throws ArgumentError CQT.integral_reference_point(pilot, [1.01, 1.0])
     @test [i.ordinal for i in instances] == collect(1:16)
     @test all(CQT.source_feasible(i, i.witness) for i in instances)
     @test all(CQT.instance_hash(i) == CQT.instance_hash(j)
               for (i, j) in zip(instances, CQT.corpus(CQT.PROTOCOL)))
+    p0 = CQT.Polynomial(zeros(1, 1), [0.0], 0.0, [0], [1], "min")
+    @test_throws CQT.VerificationError CQT.metropolis(p0, _ -> [2], _ -> nothing;
+        seed = 1, reserved_proposals = 1)
     pilots = filter(i -> i.stage == "pilot", instances)
     references = CQT.exact_reference.(pilots)
     @test [r["enumerated_states"] for r in references] == [6, 64, 324, 256]
@@ -81,7 +88,7 @@ const CQT = CQTBenchmarks
     @test r["first_target_proposal"] == 0
     @test r["samples"][1]["multiplicity"] == 1
     @test_throws ArgumentError CQT.validate_polynomial(fixed; max_variables = 0)
-    @test_throws ArgumentError CQT.metropolis(fixed, rng -> [3], observe_fixed; seed = 1,
+    @test_throws CQT.VerificationError CQT.metropolis(fixed, rng -> [3], observe_fixed; seed = 1,
                                             reserved_proposals = 1)
 
     @testset "clock overshoot and allocation refusals" begin
