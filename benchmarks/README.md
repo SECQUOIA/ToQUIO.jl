@@ -4,7 +4,8 @@ These repository scripts implement issue #50. They generate the frozen four-fami
 corpus, validate the five compiler arms, run a bounded integer Metropolis control,
 and archive replayable evidence. They are an experiment, not a production optimizer
 or a physical device model. A smoke run does not establish performance conclusions.
-The bounded comparison and statistical report belong to issue #51.
+The completed bounded comparison is recorded in `results/protocol_v1/REPORT.md`,
+with raw archives, checksums and an ordinary-environment report command.
 
 Use Julia 1.10 or newer from this source checkout. The separate environment pins
 ToQUBO to `69ac52592f4c47ed2168bf480c9947d1fcbbfc2c` and HiGHS.jl to 1.26.0. It

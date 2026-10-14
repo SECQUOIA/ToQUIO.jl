@@ -1,0 +1,57 @@
+name: Archived study replay
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/study-replay.yml'
+      - 'benchmarks/study_analysis.jl'
+      - 'benchmarks/report.jl'
+      - 'benchmarks/check_study_artifacts.py'
+      - 'benchmarks/results/**'
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/study-replay.yml'
+      - 'benchmarks/study_analysis.jl'
+      - 'benchmarks/report.jl'
+      - 'benchmarks/check_study_artifacts.py'
+      - 'benchmarks/results/**'
+
+permissions:
+  contents: read
+
+jobs:
+  replay:
+    name: Reproduce archived study numbers
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      JULIA_NUM_THREADS: '1'
+      OPENBLAS_NUM_THREADS: '1'
+      JULIA_NUM_PRECOMPILE_TASKS: '1'
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: julia-actions/setup-julia@v3
+        with:
+          version: '1.10.11'
+      - uses: julia-actions/cache@v3
+      - name: Verify archive and reproduce with ordinary environment
+        shell: bash
+        run: |
+          study_source=benchmarks/results/protocol_v1
+          study_temp=$(mktemp -d)
+          python3 benchmarks/check_study_artifacts.py extract "$study_source" "$study_temp/campaign"
+          runner_julia=$(command -v julia)
+          runner_depot="${JULIA_DEPOT_PATH:-$HOME/.julia}"
+          sudo systemd-run --scope --quiet -p MemoryMax=4G -p MemorySwapMax=0 -p CPUQuota=100% \
+            runuser -u "$(id -un)" -- env JULIA_DEPOT_PATH="$runner_depot" \
+            JULIA_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 JULIA_NUM_PRECOMPILE_TASKS=1 \
+            timeout 300 "$runner_julia" --project=. -e 'using Pkg;
+              Pkg.add(PackageSpec(name="MathOptInterface", version="1.51.0")); Pkg.instantiate()'
+          sudo systemd-run --scope --quiet -p MemoryMax=4G -p MemorySwapMax=0 -p CPUQuota=100% \
+            runuser -u "$(id -un)" -- env JULIA_DEPOT_PATH="$runner_depot" \
+            JULIA_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 JULIA_NUM_PRECOMPILE_TASKS=1 \
+            timeout 300 "$runner_julia" --project=. benchmarks/report.jl "$study_temp/campaign" "$study_temp/report"
+          python3 benchmarks/check_study_artifacts.py compare "$study_source" "$study_temp/report"

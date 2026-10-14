@@ -69,10 +69,22 @@ function structural_summary(root, campaign)
         timing = S.read_archive(root, warm["file"]; expected_hash = warm["hash"])["compiler"]
         push!(result, Dict("instance_id" => data["instance"]["id"], "arm" => arm,
             "regime" => data["regime"], "weight_cap" => cap, "structure" => data["structure"],
+            "layout_identity" => data["preflight"]["layout_identity"],
             "warm_compiler" => timing))
     end
     length(result) == 80 || error("Missing held-out structural cell.")
     return sort(result; by = r -> (r["regime"], r["arm"], r["instance_id"]))
+end
+
+function write_evaluation_csv(output, rows)
+    fields = ["regime", "arm", "weight_cap", "planned_runs", "feasible_runs", "target_hits",
+        "invalid_runs", "clock_censored_runs", "mean_time_score", "mean_work_score",
+        "conditional_instance_mean_gap", "instances_with_gap", "feasible_snapshot_multiplicity",
+        "snapshot_multiplicity", "snapshot_feasible_fraction", "distinct_archived_source_snapshots",
+        "latency_missing_runs"]
+    lines = [join(fields, ',')]
+    append!(lines, [join([string(row[field]) for field in fields], ',') for row in rows])
+    return S.write_archive_bytes(output, "evaluation.csv", join(lines, '\n') * "\n")
 end
 
 function main(args)
@@ -87,9 +99,13 @@ function main(args)
         ("elapsed_seconds", "process_peak_rss_bytes", "sampler_starts_reserved", "proposals_reserved",
          "enumeration_states_reserved", "invocations"))
     statistics["input_manifest_sha256"] = bytes2hex(S.SHA.sha256(read(joinpath(root, "manifest.toml"))))
+    statistics["report_sha256"] = bytes2hex(S.SHA.sha256(read(@__FILE__)))
     mkpath(output)
     hash = S.write_archive(output, "statistics.toml", statistics)
+    write_evaluation_csv(output, statistics["evaluation_summary"])
     println("Completed descriptive report: ", joinpath(output, "statistics.toml"), " sha256=", hash)
 end
 
-abspath(PROGRAM_FILE) == @__FILE__ && main(ARGS)
+if abspath(PROGRAM_FILE) == @__FILE__
+    main(ARGS)
+end

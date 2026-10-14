@@ -1,0 +1,72 @@
+{
+  "schema_version": 1,
+  "status": "frozen-software-subset-not-a-live-submission-approval",
+  "campaign_source_revision": "2a4f1809ebcc148748f57a8fb2772eca3899e1bb",
+  "selection_rule": "lowest-ordinal-held-out-source-per-family",
+  "instances": [
+    {
+      "family": "knapsack",
+      "instance_id": "knapsack-evaluation-3001",
+      "source_hash": "553850f6614e05f55f0f34c88f93e7dfa201c0b78af6b23a6bb6407f0348252f",
+      "rule": "lowest-ordinal-held-out-source-per-family",
+      "regime": "controlled",
+      "arms": [
+        "native",
+        "radix",
+        "bounded"
+      ],
+      "levels": 4,
+      "bounded_weight_cap": 4,
+      "radix_bounded_target_identity": false,
+      "provider_eligibility": "pending-issue52-offline-contract-and-issue53-account-approval"
+    },
+    {
+      "family": "facility",
+      "instance_id": "facility-evaluation-3011",
+      "source_hash": "5be86c316244714d46b20e652d082899175593de4e7f2e36986c58ba3b615b79",
+      "rule": "lowest-ordinal-held-out-source-per-family",
+      "regime": "controlled",
+      "arms": [
+        "native",
+        "radix",
+        "bounded"
+      ],
+      "levels": 4,
+      "bounded_weight_cap": 4,
+      "radix_bounded_target_identity": true,
+      "provider_eligibility": "pending-issue52-offline-contract-and-issue53-account-approval"
+    },
+    {
+      "family": "inventory",
+      "instance_id": "inventory-evaluation-3021",
+      "source_hash": "61244f914f4fb6a2a140051712677b3e9b2de9af82e2c32cdf2e3a806303febe",
+      "rule": "lowest-ordinal-held-out-source-per-family",
+      "regime": "controlled",
+      "arms": [
+        "native",
+        "radix",
+        "bounded"
+      ],
+      "levels": 4,
+      "bounded_weight_cap": 4,
+      "radix_bounded_target_identity": true,
+      "provider_eligibility": "pending-issue52-offline-contract-and-issue53-account-approval"
+    },
+    {
+      "family": "cvrp",
+      "instance_id": "cvrp-evaluation-3031",
+      "source_hash": "e8d089bc3de2e37188a3f30c24126edf4626a81d47b1b38cf136d2918ee9a719",
+      "rule": "lowest-ordinal-held-out-source-per-family",
+      "regime": "controlled",
+      "arms": [
+        "native",
+        "radix",
+        "bounded"
+      ],
+      "levels": 4,
+      "bounded_weight_cap": 4,
+      "radix_bounded_target_identity": true,
+      "provider_eligibility": "pending-issue52-offline-contract-and-issue53-account-approval"
+    }
+  ]
+}
