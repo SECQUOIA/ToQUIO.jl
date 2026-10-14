@@ -113,7 +113,10 @@ Per-run end-to-end fields sum shared native setup, own build and instrumented
 solve/observation; do not sum shared setup repeatedly across arms. Queue time is
 not applicable to this serial local solver. Snapshot/source checking belongs to
 instrumented solve; report generation and raw artifact persistence are outside
-those per-run timing fields. Raw provider-style timing is not invented.
+those per-run timing fields. Separate fresh-process reporting took 13.552 seconds,
+including startup/JIT, archive/source QA, bootstrap and result writes; its scope
+and limits are recorded in `postprocessing.json`. Per-job archive persistence
+was not separately instrumented. Raw provider-style timing is not invented.
 
 The selected small models fit well below the 4 GiB cap. Warm own builds are
 milliseconds, and the largest observed allocation cost is the default shim.
