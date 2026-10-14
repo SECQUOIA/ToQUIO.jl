@@ -1,72 +1,727 @@
 {
-  "schema_version": 1,
-  "status": "frozen-software-subset-not-a-live-submission-approval",
   "campaign_source_revision": "2a4f1809ebcc148748f57a8fb2772eca3899e1bb",
+  "composition_warning": "All adverse feasibility/time instances fall outside this subset; biased for comparisons.",
+  "predeclared": false,
+  "purpose": "four-family-demo-packet-subject-to-maintainer-review-in-issue52",
+  "representative": false,
+  "schema_version": 1,
   "selection_rule": "lowest-ordinal-held-out-source-per-family",
+  "selection_timing": "post-campaign",
+  "status": "software-subset-no-live-approval",
+  "composition": [
+    {
+      "contrast": "radix-native",
+      "endpoint": "feasibility",
+      "groups": [
+        {
+          "group": "selected",
+          "mean_difference": 0.05,
+          "observed_instances": 4,
+          "instance_differences": [
+            {
+              "difference": 0.0,
+              "family": "knapsack",
+              "instance_id": "knapsack-evaluation-3001",
+              "paired_restarts": 5
+            },
+            {
+              "difference": 0.0,
+              "family": "facility",
+              "instance_id": "facility-evaluation-3011",
+              "paired_restarts": 5
+            },
+            {
+              "difference": 0.0,
+              "family": "inventory",
+              "instance_id": "inventory-evaluation-3021",
+              "paired_restarts": 5
+            },
+            {
+              "difference": 0.2,
+              "family": "cvrp",
+              "instance_id": "cvrp-evaluation-3031",
+              "paired_restarts": 5
+            }
+          ]
+        },
+        {
+          "group": "excluded",
+          "mean_difference": -0.1,
+          "observed_instances": 4,
+          "instance_differences": [
+            {
+              "difference": 0.0,
+              "family": "knapsack",
+              "instance_id": "knapsack-evaluation-3002",
+              "paired_restarts": 5
+            },
+            {
+              "difference": -0.2,
+              "family": "facility",
+              "instance_id": "facility-evaluation-3012",
+              "paired_restarts": 5
+            },
+            {
+              "difference": 0.0,
+              "family": "inventory",
+              "instance_id": "inventory-evaluation-3022",
+              "paired_restarts": 5
+            },
+            {
+              "difference": -0.2,
+              "family": "cvrp",
+              "instance_id": "cvrp-evaluation-3032",
+              "paired_restarts": 5
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "contrast": "radix-native",
+      "endpoint": "signed_gap",
+      "groups": [
+        {
+          "group": "selected",
+          "mean_difference": -0.058174603174603164,
+          "observed_instances": 3,
+          "instance_differences": [
+            {
+              "difference": -0.006666666666666659,
+              "family": "knapsack",
+              "instance_id": "knapsack-evaluation-3001",
+              "paired_restarts": 5
+            },
+            {
+              "difference": -0.14285714285714285,
+              "family": "facility",
+              "instance_id": "facility-evaluation-3011",
+              "paired_restarts": 1
+            },
+            {
+              "difference": -0.025,
+              "family": "inventory",
+              "instance_id": "inventory-evaluation-3021",
+              "paired_restarts": 5
+            },
+            {
+              "difference": "missing",
+              "family": "cvrp",
+              "instance_id": "cvrp-evaluation-3031",
+              "paired_restarts": 0
+            }
+          ]
+        },
+        {
+          "group": "excluded",
+          "mean_difference": -0.03488843813387423,
+          "observed_instances": 3,
+          "instance_differences": [
+            {
+              "difference": -0.05294117647058823,
+              "family": "knapsack",
+              "instance_id": "knapsack-evaluation-3002",
+              "paired_restarts": 5
+            },
+            {
+              "difference": -0.05172413793103446,
+              "family": "facility",
+              "instance_id": "facility-evaluation-3012",
+              "paired_restarts": 4
+            },
+            {
+              "difference": 0.0,
+              "family": "inventory",
+              "instance_id": "inventory-evaluation-3022",
+              "paired_restarts": 2
+            },
+            {
+              "difference": "missing",
+              "family": "cvrp",
+              "instance_id": "cvrp-evaluation-3032",
+              "paired_restarts": 0
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "contrast": "radix-native",
+      "endpoint": "target_time_score",
+      "groups": [
+        {
+          "group": "selected",
+          "mean_difference": -0.27652557805,
+          "observed_instances": 4,
+          "instance_differences": [
+            {
+              "difference": 0.0,
+              "family": "knapsack",
+              "instance_id": "knapsack-evaluation-3001",
+              "paired_restarts": 5
+            },
+            {
+              "difference": -0.3990001574,
+              "family": "facility",
+              "instance_id": "facility-evaluation-3011",
+              "paired_restarts": 5
+            },
+            {
+              "difference": -0.3278441304,
+              "family": "inventory",
+              "instance_id": "inventory-evaluation-3021",
+              "paired_restarts": 5
+            },
+            {
+              "difference": -0.3792580244,
+              "family": "cvrp",
+              "instance_id": "cvrp-evaluation-3031",
+              "paired_restarts": 5
+            }
+          ]
+        },
+        {
+          "group": "excluded",
+          "mean_difference": 0.0874241607,
+          "observed_instances": 4,
+          "instance_differences": [
+            {
+              "difference": 0.0,
+              "family": "knapsack",
+              "instance_id": "knapsack-evaluation-3002",
+              "paired_restarts": 5
+            },
+            {
+              "difference": 0.0,
+              "family": "facility",
+              "instance_id": "facility-evaluation-3012",
+              "paired_restarts": 5
+            },
+            {
+              "difference": 0.3496966428,
+              "family": "inventory",
+              "instance_id": "inventory-evaluation-3022",
+              "paired_restarts": 5
+            },
+            {
+              "difference": 0.0,
+              "family": "cvrp",
+              "instance_id": "cvrp-evaluation-3032",
+              "paired_restarts": 5
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "contrast": "radix-native",
+      "endpoint": "target_work_score",
+      "groups": [
+        {
+          "group": "selected",
+          "mean_difference": -1299.8000000000002,
+          "observed_instances": 4,
+          "instance_differences": [
+            {
+              "difference": 0.0,
+              "family": "knapsack",
+              "instance_id": "knapsack-evaluation-3001",
+              "paired_restarts": 5
+            },
+            {
+              "difference": -1993.4,
+              "family": "facility",
+              "instance_id": "facility-evaluation-3011",
+              "paired_restarts": 5
+            },
+            {
+              "difference": -1324.2,
+              "family": "inventory",
+              "instance_id": "inventory-evaluation-3021",
+              "paired_restarts": 5
+            },
+            {
+              "difference": -1881.6,
+              "family": "cvrp",
+              "instance_id": "cvrp-evaluation-3031",
+              "paired_restarts": 5
+            }
+          ]
+        },
+        {
+          "group": "excluded",
+          "mean_difference": 386.0,
+          "observed_instances": 4,
+          "instance_differences": [
+            {
+              "difference": 0.0,
+              "family": "knapsack",
+              "instance_id": "knapsack-evaluation-3002",
+              "paired_restarts": 5
+            },
+            {
+              "difference": 0.0,
+              "family": "facility",
+              "instance_id": "facility-evaluation-3012",
+              "paired_restarts": 5
+            },
+            {
+              "difference": 1544.0,
+              "family": "inventory",
+              "instance_id": "inventory-evaluation-3022",
+              "paired_restarts": 5
+            },
+            {
+              "difference": 0.0,
+              "family": "cvrp",
+              "instance_id": "cvrp-evaluation-3032",
+              "paired_restarts": 5
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "contrast": "bounded-native",
+      "endpoint": "feasibility",
+      "groups": [
+        {
+          "group": "selected",
+          "mean_difference": 0.05,
+          "observed_instances": 4,
+          "instance_differences": [
+            {
+              "difference": 0.0,
+              "family": "knapsack",
+              "instance_id": "knapsack-evaluation-3001",
+              "paired_restarts": 5
+            },
+            {
+              "difference": 0.0,
+              "family": "facility",
+              "instance_id": "facility-evaluation-3011",
+              "paired_restarts": 5
+            },
+            {
+              "difference": 0.0,
+              "family": "inventory",
+              "instance_id": "inventory-evaluation-3021",
+              "paired_restarts": 5
+            },
+            {
+              "difference": 0.2,
+              "family": "cvrp",
+              "instance_id": "cvrp-evaluation-3031",
+              "paired_restarts": 5
+            }
+          ]
+        },
+        {
+          "group": "excluded",
+          "mean_difference": -0.1,
+          "observed_instances": 4,
+          "instance_differences": [
+            {
+              "difference": 0.0,
+              "family": "knapsack",
+              "instance_id": "knapsack-evaluation-3002",
+              "paired_restarts": 5
+            },
+            {
+              "difference": -0.2,
+              "family": "facility",
+              "instance_id": "facility-evaluation-3012",
+              "paired_restarts": 5
+            },
+            {
+              "difference": 0.0,
+              "family": "inventory",
+              "instance_id": "inventory-evaluation-3022",
+              "paired_restarts": 5
+            },
+            {
+              "difference": -0.2,
+              "family": "cvrp",
+              "instance_id": "cvrp-evaluation-3032",
+              "paired_restarts": 5
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "contrast": "bounded-native",
+      "endpoint": "signed_gap",
+      "groups": [
+        {
+          "group": "selected",
+          "mean_difference": -0.06261904761904762,
+          "observed_instances": 3,
+          "instance_differences": [
+            {
+              "difference": -0.020000000000000025,
+              "family": "knapsack",
+              "instance_id": "knapsack-evaluation-3001",
+              "paired_restarts": 5
+            },
+            {
+              "difference": -0.14285714285714285,
+              "family": "facility",
+              "instance_id": "facility-evaluation-3011",
+              "paired_restarts": 1
+            },
+            {
+              "difference": -0.025,
+              "family": "inventory",
+              "instance_id": "inventory-evaluation-3021",
+              "paired_restarts": 5
+            },
+            {
+              "difference": "missing",
+              "family": "cvrp",
+              "instance_id": "cvrp-evaluation-3031",
+              "paired_restarts": 0
+            }
+          ]
+        },
+        {
+          "group": "excluded",
+          "mean_difference": -0.05841784989858012,
+          "observed_instances": 3,
+          "instance_differences": [
+            {
+              "difference": -0.12352941176470589,
+              "family": "knapsack",
+              "instance_id": "knapsack-evaluation-3002",
+              "paired_restarts": 5
+            },
+            {
+              "difference": -0.05172413793103446,
+              "family": "facility",
+              "instance_id": "facility-evaluation-3012",
+              "paired_restarts": 4
+            },
+            {
+              "difference": 0.0,
+              "family": "inventory",
+              "instance_id": "inventory-evaluation-3022",
+              "paired_restarts": 2
+            },
+            {
+              "difference": "missing",
+              "family": "cvrp",
+              "instance_id": "cvrp-evaluation-3032",
+              "paired_restarts": 0
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "contrast": "bounded-native",
+      "endpoint": "target_time_score",
+      "groups": [
+        {
+          "group": "selected",
+          "mean_difference": -0.27925786610000003,
+          "observed_instances": 4,
+          "instance_differences": [
+            {
+              "difference": 0.0,
+              "family": "knapsack",
+              "instance_id": "knapsack-evaluation-3001",
+              "paired_restarts": 5
+            },
+            {
+              "difference": -0.3991063858,
+              "family": "facility",
+              "instance_id": "facility-evaluation-3011",
+              "paired_restarts": 5
+            },
+            {
+              "difference": -0.3503110628,
+              "family": "inventory",
+              "instance_id": "inventory-evaluation-3021",
+              "paired_restarts": 5
+            },
+            {
+              "difference": -0.36761401579999997,
+              "family": "cvrp",
+              "instance_id": "cvrp-evaluation-3031",
+              "paired_restarts": 5
+            }
+          ]
+        },
+        {
+          "group": "excluded",
+          "mean_difference": 0.08711092805,
+          "observed_instances": 4,
+          "instance_differences": [
+            {
+              "difference": 0.0,
+              "family": "knapsack",
+              "instance_id": "knapsack-evaluation-3002",
+              "paired_restarts": 5
+            },
+            {
+              "difference": 0.0,
+              "family": "facility",
+              "instance_id": "facility-evaluation-3012",
+              "paired_restarts": 5
+            },
+            {
+              "difference": 0.3484437122,
+              "family": "inventory",
+              "instance_id": "inventory-evaluation-3022",
+              "paired_restarts": 5
+            },
+            {
+              "difference": 0.0,
+              "family": "cvrp",
+              "instance_id": "cvrp-evaluation-3032",
+              "paired_restarts": 5
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "contrast": "bounded-native",
+      "endpoint": "target_work_score",
+      "groups": [
+        {
+          "group": "selected",
+          "mean_difference": -1299.8000000000002,
+          "observed_instances": 4,
+          "instance_differences": [
+            {
+              "difference": 0.0,
+              "family": "knapsack",
+              "instance_id": "knapsack-evaluation-3001",
+              "paired_restarts": 5
+            },
+            {
+              "difference": -1993.4,
+              "family": "facility",
+              "instance_id": "facility-evaluation-3011",
+              "paired_restarts": 5
+            },
+            {
+              "difference": -1324.2,
+              "family": "inventory",
+              "instance_id": "inventory-evaluation-3021",
+              "paired_restarts": 5
+            },
+            {
+              "difference": -1881.6,
+              "family": "cvrp",
+              "instance_id": "cvrp-evaluation-3031",
+              "paired_restarts": 5
+            }
+          ]
+        },
+        {
+          "group": "excluded",
+          "mean_difference": 386.0,
+          "observed_instances": 4,
+          "instance_differences": [
+            {
+              "difference": 0.0,
+              "family": "knapsack",
+              "instance_id": "knapsack-evaluation-3002",
+              "paired_restarts": 5
+            },
+            {
+              "difference": 0.0,
+              "family": "facility",
+              "instance_id": "facility-evaluation-3012",
+              "paired_restarts": 5
+            },
+            {
+              "difference": 1544.0,
+              "family": "inventory",
+              "instance_id": "inventory-evaluation-3022",
+              "paired_restarts": 5
+            },
+            {
+              "difference": 0.0,
+              "family": "cvrp",
+              "instance_id": "cvrp-evaluation-3032",
+              "paired_restarts": 5
+            }
+          ]
+        }
+      ]
+    }
+  ],
   "instances": [
     {
-      "family": "knapsack",
-      "instance_id": "knapsack-evaluation-3001",
-      "source_hash": "553850f6614e05f55f0f34c88f93e7dfa201c0b78af6b23a6bb6407f0348252f",
-      "rule": "lowest-ordinal-held-out-source-per-family",
+      "family": "cvrp",
+      "instance_id": "cvrp-evaluation-3031",
+      "radix_bounded_target_identity": true,
       "regime": "controlled",
+      "source_hash": "e8d089bc3de2e37188a3f30c24126edf4626a81d47b1b38cf136d2918ee9a719",
       "arms": [
-        "native",
-        "radix",
-        "bounded"
-      ],
-      "levels": 4,
-      "bounded_weight_cap": 4,
-      "radix_bounded_target_identity": false,
-      "provider_eligibility": "pending-issue52-offline-contract-and-issue53-account-approval"
+        {
+          "arm": "bounded",
+          "cell_hash": "3bc0129026d4936724109b239579b5874a5dbef8d93bc29290ad7e9be66fb7da",
+          "cell_key": "06530bf7a2abc3174b857ce62721bb26bf1422b5f1f907a254bab024dff5cc5c",
+          "encoding_level_parameter": 4,
+          "exceeds_hypothetical_four_level_cap": false,
+          "maximum_domain_levels": 4,
+          "provider_eligibility": "unverified-until-issue52-contract-and-issue53-account-check",
+          "total_domain_levels": 162,
+          "weight_cap": 4
+        },
+        {
+          "arm": "native",
+          "cell_hash": "2632e7b03fb7df88e1c414cb9eed69a72aaa89205c161a1699c1ea66f0be808c",
+          "cell_key": "ea83f7a99021580f1b00ea35aec0ecc5c2d5e0fceed7c2f3ce5f88c3c931cfeb",
+          "encoding_level_parameter": "not-applicable-native-domains",
+          "exceeds_hypothetical_four_level_cap": true,
+          "maximum_domain_levels": 14,
+          "provider_eligibility": "unverified-until-issue52-contract-and-issue53-account-check",
+          "total_domain_levels": 217,
+          "weight_cap": 0
+        },
+        {
+          "arm": "radix",
+          "cell_hash": "862bfd1ad320f2756798d667e74149a5b50ec5d55708c56f98ebfdcfbd85c3ec",
+          "cell_key": "2ae2821308e2510cfcf7eb75082775217cb65bc5d7239b11cc2c0efbaec8d010",
+          "encoding_level_parameter": 4,
+          "exceeds_hypothetical_four_level_cap": false,
+          "maximum_domain_levels": 4,
+          "provider_eligibility": "unverified-until-issue52-contract-and-issue53-account-check",
+          "total_domain_levels": 162,
+          "weight_cap": 0
+        }
+      ]
     },
     {
       "family": "facility",
       "instance_id": "facility-evaluation-3011",
-      "source_hash": "5be86c316244714d46b20e652d082899175593de4e7f2e36986c58ba3b615b79",
-      "rule": "lowest-ordinal-held-out-source-per-family",
-      "regime": "controlled",
-      "arms": [
-        "native",
-        "radix",
-        "bounded"
-      ],
-      "levels": 4,
-      "bounded_weight_cap": 4,
       "radix_bounded_target_identity": true,
-      "provider_eligibility": "pending-issue52-offline-contract-and-issue53-account-approval"
+      "regime": "controlled",
+      "source_hash": "5be86c316244714d46b20e652d082899175593de4e7f2e36986c58ba3b615b79",
+      "arms": [
+        {
+          "arm": "bounded",
+          "cell_hash": "3230663bafc6f1fbcdd2fd33e0e492cdc8d1ae93cf621c499f13bed045b56c1a",
+          "cell_key": "b15d8b6a0d7753dcda41e8a05da83286a2049eb84466d126762232cb7fe5230a",
+          "encoding_level_parameter": 4,
+          "exceeds_hypothetical_four_level_cap": false,
+          "maximum_domain_levels": 4,
+          "provider_eligibility": "unverified-until-issue52-contract-and-issue53-account-check",
+          "total_domain_levels": 69,
+          "weight_cap": 4
+        },
+        {
+          "arm": "native",
+          "cell_hash": "39fce42f66639bf5d2ec1791a08110c17810ce7a2c80e1dd07464f999215fe2d",
+          "cell_key": "e1b18ef5c1f6b736cbaa855518852485eae3f5590d8985454d4cc13c404bb77c",
+          "encoding_level_parameter": "not-applicable-native-domains",
+          "exceeds_hypothetical_four_level_cap": true,
+          "maximum_domain_levels": 6,
+          "provider_eligibility": "unverified-until-issue52-contract-and-issue53-account-check",
+          "total_domain_levels": 68,
+          "weight_cap": 0
+        },
+        {
+          "arm": "radix",
+          "cell_hash": "fb882eebbdc342c9d06d2b5c65cf16a0f2e7c49351e81f6cbf88354429c3b029",
+          "cell_key": "02dfc52469e7440b85fbb048335e854545274f90f14df9a003523c6b03c32b6e",
+          "encoding_level_parameter": 4,
+          "exceeds_hypothetical_four_level_cap": false,
+          "maximum_domain_levels": 4,
+          "provider_eligibility": "unverified-until-issue52-contract-and-issue53-account-check",
+          "total_domain_levels": 69,
+          "weight_cap": 0
+        }
+      ]
     },
     {
       "family": "inventory",
       "instance_id": "inventory-evaluation-3021",
-      "source_hash": "61244f914f4fb6a2a140051712677b3e9b2de9af82e2c32cdf2e3a806303febe",
-      "rule": "lowest-ordinal-held-out-source-per-family",
-      "regime": "controlled",
-      "arms": [
-        "native",
-        "radix",
-        "bounded"
-      ],
-      "levels": 4,
-      "bounded_weight_cap": 4,
       "radix_bounded_target_identity": true,
-      "provider_eligibility": "pending-issue52-offline-contract-and-issue53-account-approval"
+      "regime": "controlled",
+      "source_hash": "61244f914f4fb6a2a140051712677b3e9b2de9af82e2c32cdf2e3a806303febe",
+      "arms": [
+        {
+          "arm": "bounded",
+          "cell_hash": "35fea1c50975ba06b5ff4d48ab4ae677695ba0b68b223be82ef84869322bb53f",
+          "cell_key": "7ee0fd6c4d0155e8e4739562b769d761d062ccfe439361ba01ba59173d239d6e",
+          "encoding_level_parameter": 4,
+          "exceeds_hypothetical_four_level_cap": false,
+          "maximum_domain_levels": 4,
+          "provider_eligibility": "unverified-until-issue52-contract-and-issue53-account-check",
+          "total_domain_levels": 64,
+          "weight_cap": 4
+        },
+        {
+          "arm": "native",
+          "cell_hash": "9cfb05704ccf7bc3158fba4ec3faee9f3e3e6bfd1fd0d3183a7865fb0fdf489a",
+          "cell_key": "0e99a611743ee425a85bf618701fdd0819862dc24ec4b16b7ef2a49978880630",
+          "encoding_level_parameter": "not-applicable-native-domains",
+          "exceeds_hypothetical_four_level_cap": true,
+          "maximum_domain_levels": 7,
+          "provider_eligibility": "unverified-until-issue52-contract-and-issue53-account-check",
+          "total_domain_levels": 68,
+          "weight_cap": 0
+        },
+        {
+          "arm": "radix",
+          "cell_hash": "9a0aa0e0b28c42f7bba6310658dc5e4f3b89bd562d4bf0f6e5c27e1d34b9c1e9",
+          "cell_key": "0894aa40f99fd7204de3207e13474c4c63e7367088fd21ef08a4f0ff946c33b0",
+          "encoding_level_parameter": 4,
+          "exceeds_hypothetical_four_level_cap": false,
+          "maximum_domain_levels": 4,
+          "provider_eligibility": "unverified-until-issue52-contract-and-issue53-account-check",
+          "total_domain_levels": 64,
+          "weight_cap": 0
+        }
+      ]
     },
     {
-      "family": "cvrp",
-      "instance_id": "cvrp-evaluation-3031",
-      "source_hash": "e8d089bc3de2e37188a3f30c24126edf4626a81d47b1b38cf136d2918ee9a719",
-      "rule": "lowest-ordinal-held-out-source-per-family",
+      "family": "knapsack",
+      "instance_id": "knapsack-evaluation-3001",
+      "radix_bounded_target_identity": false,
       "regime": "controlled",
+      "source_hash": "553850f6614e05f55f0f34c88f93e7dfa201c0b78af6b23a6bb6407f0348252f",
       "arms": [
-        "native",
-        "radix",
-        "bounded"
-      ],
-      "levels": 4,
-      "bounded_weight_cap": 4,
-      "radix_bounded_target_identity": true,
-      "provider_eligibility": "pending-issue52-offline-contract-and-issue53-account-approval"
+        {
+          "arm": "bounded",
+          "cell_hash": "6321da70ee81557b76ac37b383628c660b51cc22ca85477051d0c3f75631e9ba",
+          "cell_key": "378246531504499663fadce2be9a16383845d0670ff9eb21ba90542ac71379d4",
+          "encoding_level_parameter": 4,
+          "exceeds_hypothetical_four_level_cap": false,
+          "maximum_domain_levels": 4,
+          "provider_eligibility": "unverified-until-issue52-contract-and-issue53-account-check",
+          "total_domain_levels": 38,
+          "weight_cap": 4
+        },
+        {
+          "arm": "native",
+          "cell_hash": "5c3b6d5bdff462c3a8218e849c74e1f207522917b2db97e2f44fe4134be6e1e3",
+          "cell_key": "9c64ade35c12c2a9dda4118f429ce56d7b358a3dd106a5a0c07d81d2e656fa2e",
+          "encoding_level_parameter": "not-applicable-native-domains",
+          "exceeds_hypothetical_four_level_cap": true,
+          "maximum_domain_levels": 29,
+          "provider_eligibility": "unverified-until-issue52-contract-and-issue53-account-check",
+          "total_domain_levels": 53,
+          "weight_cap": 0
+        },
+        {
+          "arm": "radix",
+          "cell_hash": "1ef766d73ba6c4177e43cddf55940273da287dd04e3f04859b37fe0a212e9dfb",
+          "cell_key": "8d963206981de79ec3859f31289f0f30cf2c4c6e8070c40ac7b437e05bc9a998",
+          "encoding_level_parameter": 4,
+          "exceeds_hypothetical_four_level_cap": false,
+          "maximum_domain_levels": 4,
+          "provider_eligibility": "unverified-until-issue52-contract-and-issue53-account-check",
+          "total_domain_levels": 34,
+          "weight_cap": 0
+        }
+      ]
     }
   ]
 }

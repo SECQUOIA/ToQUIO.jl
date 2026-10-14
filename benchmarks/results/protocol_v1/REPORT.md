@@ -30,7 +30,7 @@ or a 2-second failure penalty; work score is first-hit proposal or the common
 10,000-proposal cap. These are failure scores, not raw latency or actual work.
 Source observations are included in solve timing. Missing hits remain missing.
 
-| Regime | Arm (cap) | F / 40 | Target / 40 | Clock-censored | Mean time score (s) | Mean work score | Conditional instance gap |
+| Regime | Arm (cap) | F / 40 | Target / 40 | Clock-censored | Mean time score (s) | Mean work score | Unpaired conditional instance gap |
 |---|---|---:|---:|---:|---:|---:|---:|
 | controlled | native | 26 | 5 | 1 | 1.769763 | 8935.425 | 0.250957 |
 | controlled | radix | 25 | 7 | 3 | 1.675212 | 8478.525 | 0.161233 |
@@ -42,6 +42,12 @@ Source observations are included in solve timing. Missing hits remain missing.
 | compiler_defaults | bounded (4) | 25 | 7 | 5 | 1.673037 | 8478.525 | 0.149244 |
 | compiler_defaults | toqubo_binary | 23 | 4 | 1 | 1.810231 | 9090.600 | 0.137545 |
 | compiler_defaults | toqubo_bounded_shim (1) | 27 | 6 | 1 | 1.743180 | 8935.650 | 0.200935 |
+
+The conditional-gap column is unpaired: arms use different feasible instance sets;
+it is not a comparative effect estimate. Native has gaps on 7 instances,
+radix/bounded on 7. The paired primary comparisons below use common feasible
+restart pairs. All eight per-instance gap differences and their paired counts
+are shown in [the generated tables](TABLES.md), including missing entries.
 
 The separate `evaluation.csv` includes snapshot feasibility weighted by archived
 multiplicities, missing latency counts and distinct source snapshots. Snapshot
@@ -82,8 +88,18 @@ family make these intervals coarse, descriptive and potentially narrow. Sign-fli
 sensitivity enumerates all 2^n assignments and assumes exchangeable signs; it is
 not a randomized or confirmatory test. There is no multiplicity control. The
 bounded conditional-gap interval is negative here, while its sensitivity p is
-0.0625 with six observed instances. This does not establish general superiority,
-and it does not erase missing pairs or the lower observed feasibility rate.
+0.0625 with six observed instances. This is the attainable floor here with five
+nonzero same-sign differences and one zero difference. Facility-3011 contributes
+a paired-gap estimate from only one jointly feasible restart. The negative interval
+does not establish general superiority or erase missing pairs and the lower
+observed feasibility rate.
+
+All primary contrasts against native have eight layout-distinct and
+exact-target-distinct instances. Radix and bounded differ from each other on
+only two of eight targets in each regime, the knapsack pair. The other six are
+aliases, so the similar primary outputs are not independent wins. Identity
+counts for every contrast/regime and all secondary endpoints are reproduced in
+[the generated tables](TABLES.md).
 
 ## Structural and timing tradeoffs
 
@@ -93,18 +109,10 @@ density denominators, coefficient scales and full raw/canonical polynomials are
 archived. Variable counts are logical, not physical resources. Matrices use dense
 storage; zero coefficients do not allocate sparse storage.
 
-| Regime | Arm | Variables | Unique couplers | Warm own build (ms) | Own build allocations (MiB) |
-|---|---|---:|---:|---:|---:|
-| controlled | native | 22.250 | 62.500 | 0.603243 | 0.302681 |
-| controlled | radix | 30.625 | 126.625 | 2.598113 | 0.885810 |
-| controlled | bounded | 30.875 | 129.000 | 2.683822 | 0.898892 |
-| controlled | toqubo_binary | 41.125 | 246.125 | 3.354202 | 0.958811 |
-| controlled | toqubo_bounded_shim | 82.250 | 1236.250 | 6.258123 | 2.556733 |
-| compiler_defaults | native | 22.250 | 62.500 | 0.591839 | 0.302681 |
-| compiler_defaults | radix | 30.625 | 126.625 | 2.700333 | 0.885810 |
-| compiler_defaults | bounded | 30.875 | 129.000 | 2.689439 | 0.889106 |
-| compiler_defaults | toqubo_binary | 41.125 | 246.125 | 7.788073 | 3.902709 |
-| compiler_defaults | toqubo_bounded_shim | 82.250 | 1236.250 | 20.199738 | 15.687892 |
+[Generated structural tables](TABLES.md) provide variables, unique couplers,
+warm own build time/allocations, canonical minimum-nonzero and maximum
+coefficient magnitudes, and their ratio, for all arms and regimes. These values
+are recomputed and compared in CI rather than copied arithmetic.
 
 Warm source/native construction is shared once per instance and has separate
 fields. Own build includes encoding/backend copies, target extraction and
@@ -113,7 +121,7 @@ Per-run end-to-end fields sum shared native setup, own build and instrumented
 solve/observation; do not sum shared setup repeatedly across arms. Queue time is
 not applicable to this serial local solver. Snapshot/source checking belongs to
 instrumented solve; report generation and raw artifact persistence are outside
-those per-run timing fields. Separate fresh-process reporting took 13.552 seconds,
+those per-run timing fields. Initial fresh-process reporting took 13.552 seconds before the added audits,
 including startup/JIT, archive/source QA, bootstrap and result writes; its scope
 and limits are recorded in `postprocessing.json`. Per-job archive persistence
 was not separately instrumented. Raw provider-style timing is not invented.
@@ -126,14 +134,28 @@ this study did not expand sizes or rewrite the compiler after seeing outcomes.
 
 ## Frozen hardware subset
 
-`hardware_subset.json` freezes the lowest-ordinal held-out source per family,
-with controlled native/radix/bounded settings and the independently tuned cap4.
-This deterministic rule retains all families without selecting only favorable
-solver outcomes. It is a software subset, not a provider eligibility or spending
-approval. The offline task #52 must check the exact provider contract and create
-the concrete job/read/budget manifest; #53 requires explicit account and manifest
-approval before submission. D-Wave/IBM comparisons remain conditional binary
-routes under their appropriate owners.
+`hardware_subset.json` and its generated TOML counterpart retain the
+lowest-ordinal held-out source per family. **This rule was selected post hoc,
+after the campaign; no pre-evaluation commitment exists.** It is a four-family
+demonstration packet, not an unbiased or representative comparative sample.
+The selected versus excluded composition is reproduced in [the generated
+tables](TABLES.md) and stored in the subset record. All three adverse
+feasibility/time-score instances fall outside the selection, while all favorable
+time-score instances and the favorable feasibility instance fall inside it.
+For radix, selected time-score difference is about -0.277 seconds versus +0.087
+for excluded sources; selected feasibility difference is +0.05 versus -0.10.
+The same directional composition holds for bounded. Hardware results on this
+packet cannot establish a representative advantage. Maintainers and #52 must
+review its purpose and composition before any #53 approval; changing the subset
+would be a new explicit frozen decision, not a silent replacement.
+
+Four is the radix/bounded encoding parameter, not the native-domain limit or a
+verified provider cap. Selected native targets have maximum levels 29/6/7/14
+(knapsack/facility/inventory/CVRP), exceeding a hypothetical four-level device.
+The subset now records per-arm actual maximum/total levels, cell keys/hashes
+and unresolved provider eligibility. No unsupported domain is hidden. #52 must
+verify the actual provider contract, and #53 still requires account and
+manifest/budget approval. D-Wave/IBM remain conditional binary routes.
 
 | Family | Source | Radix/bounded identical target |
 |---|---|---|
@@ -149,8 +171,13 @@ checks. No hardware job, package release or deployment was performed here.
 
 ## Reproduce
 
-From the final source containing these scripts, using Julia 1.10.11 and the
-archived MOI version, verify `checksums.json` and unpack the raw records:
+Use reporting-code checkpoint
+`dd83f3347bf67dab04db9935635774adb721f950` (or its descendant with the same
+script hashes), Julia 1.10.11 and archived MOI 1.54.0. Sampling imports still
+match frozen campaign source
+`2a4f1809ebcc148748f57a8fb2772eca3899e1bb`; source-hash verification covers
+`runner.jl`/`run.jl` and all campaign imports. Verify `checksums.json` and unpack
+the raw records:
 
 ```sh
 python3 benchmarks/check_study_artifacts.py extract benchmarks/results/protocol_v1 /tmp/cqt-v1-replay
@@ -158,12 +185,15 @@ julia --project=. benchmarks/report.jl /tmp/cqt-v1-replay /tmp/cqt-v1-report
 julia --project=. benchmarks/replay.jl /tmp/cqt-v1-replay JOB_SHA256_KEY
 ```
 
-The verifier uses Python 3.11+ stdlib; report/replay uses Julia and the ordinary
+The verifier uses Python 3.11.4+ stdlib; report/replay uses Julia and the ordinary
 package environment. Use the root environment/MOI alignment instructions in `benchmarks/README.md`;
 no ToQUBO/HiGHS import is needed for reporting or replay. Apply the same OS memory
-scope and outer timeout. The compressed statistics and CSV are derived outputs;
+scope and outer timeout. The compressed statistics, CSV, tables and subset are derived outputs;
 the archive preserves all 680 raw jobs, references, compilation/warm timings,
 ordered samples/multiplicities, selection, failures/censoring and runtime hashes.
 Do not rerun the campaign to seek a favorable outcome or reproduce clock times.
+CI regenerates and compares every derived table/subset and checks that the docs
+copy equals this report. Structural coefficient extrema/ratios and all secondary
+contrasts are reproduced in `TABLES.md`, rather than left as untracked arithmetic.
 The original command was the scoped `benchmarks/run.jl campaign` command in the
 benchmark README, with output `/tmp/toquio-cqt-51-campaign-v1`.
