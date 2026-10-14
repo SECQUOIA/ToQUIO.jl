@@ -48,8 +48,10 @@ jobs:
           sudo systemd-run --scope --quiet -p MemoryMax=4G -p MemorySwapMax=0 -p CPUQuota=100% \
             runuser -u "$(id -un)" -- env JULIA_DEPOT_PATH="$runner_depot" \
             JULIA_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 JULIA_NUM_PRECOMPILE_TASKS=1 \
-            timeout 300 "$runner_julia" --project=. -e 'using Pkg;
-              Pkg.add(PackageSpec(name="MathOptInterface", version="1.51.0")); Pkg.instantiate()'
+            timeout 300 "$runner_julia" --project=. -e 'using Pkg, TOML;
+              manifest = TOML.parsefile(joinpath(ARGS[1], "manifest.toml"));
+              Pkg.add(PackageSpec(name="MathOptInterface", version=manifest["replay_moi_version"]));
+              Pkg.instantiate()' "$study_temp/campaign"
           sudo systemd-run --scope --quiet -p MemoryMax=4G -p MemorySwapMax=0 -p CPUQuota=100% \
             runuser -u "$(id -un)" -- env JULIA_DEPOT_PATH="$runner_depot" \
             JULIA_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 JULIA_NUM_PRECOMPILE_TASKS=1 \
