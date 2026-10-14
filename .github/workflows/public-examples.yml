@@ -1,0 +1,56 @@
+name: Public examples and replay
+
+on:
+  push:
+    branches: [main]
+    paths: ['docs/examples/**', 'src/**', 'Project.toml', 'benchmarks/**', '.github/workflows/public-examples.yml']
+  pull_request:
+    paths: ['docs/examples/**', 'src/**', 'Project.toml', 'benchmarks/**', '.github/workflows/public-examples.yml']
+
+permissions:
+  contents: read
+
+jobs:
+  examples:
+    name: Public examples - Julia ${{ matrix.julia }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        julia: ['1.10', '1']
+    env:
+      JULIA_NUM_THREADS: '1'
+      OPENBLAS_NUM_THREADS: '1'
+      JULIA_NUM_PRECOMPILE_TASKS: '1'
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: julia-actions/setup-julia@v3
+        with:
+          version: ${{ matrix.julia }}
+      - uses: julia-actions/cache@v3
+      - name: Resolve isolated public example environment
+        run: |
+          runner_julia=$(command -v julia)
+          runner_depot="${JULIA_DEPOT_PATH:-$HOME/.julia}"
+          sudo systemd-run --scope --quiet -p MemoryMax=4G -p MemorySwapMax=0 -p CPUQuota=100% \
+            runuser -u "$(id -un)" -- env JULIA_DEPOT_PATH="$runner_depot" \
+            JULIA_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 JULIA_NUM_PRECOMPILE_TASKS=1 \
+            timeout 900 "$runner_julia" --startup-file=no --project=docs/examples docs/examples/setup.jl
+      - name: Test examples and replay in separate processes
+        run: |
+          runner_julia=$(command -v julia)
+          runner_depot="${JULIA_DEPOT_PATH:-$HOME/.julia}"
+          for phase in tests create replay; do
+            if [ "$phase" = tests ]; then
+              args=(docs/examples/runtests.jl)
+            else
+              args=(docs/examples/tiny_replay.jl "$phase" "$RUNNER_TEMP/cqt-tiny")
+            fi
+            sudo systemd-run --scope --quiet -p MemoryMax=4G -p MemorySwapMax=0 -p CPUQuota=100% \
+              runuser -u "$(id -un)" -- env JULIA_DEPOT_PATH="$runner_depot" \
+              JULIA_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 JULIA_NUM_PRECOMPILE_TASKS=1 \
+              timeout 300 "$runner_julia" --startup-file=no --project=docs/examples "${args[@]}"
+          done
