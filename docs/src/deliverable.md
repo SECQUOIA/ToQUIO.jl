@@ -1,7 +1,7 @@
 # CQT software deliverable
 
 This guide connects the exact integer encodings, public examples and recorded
-experiments. Development source is pinned at `ceb7767468877b82b1e7391be518833e9ccc1375`.
+experiments. Development source is pinned at `06f75e20338c5471ebb739c6cf88b88c38da02ce`.
 The dependency order and current acceptance state are maintained in the
 [roadmap](https://github.com/SECQUOIA/ToQUIO.jl/issues/45).
 
@@ -78,7 +78,7 @@ or a moving default branch:
 
 ```bash
 gh repo clone SECQUOIA/ToQUIO.jl /tmp/toquio-deliverable
-git -C /tmp/toquio-deliverable checkout --detach ceb7767468877b82b1e7391be518833e9ccc1375
+git -C /tmp/toquio-deliverable checkout --detach 06f75e20338c5471ebb739c6cf88b88c38da02ce
 cd /tmp/toquio-deliverable
 ```
 
@@ -130,7 +130,7 @@ intentionally rejected.
 |---|---|---|
 | Four-family corpus and runner | Protocol v1; sampler/compiler revision `2a4f1809ebcc148748f57a8fb2772eca3899e1bb` | [Benchmark guide](benchmarks.md), `benchmarks/README.md` and `protocol_v1.toml` |
 | Frozen classical campaign | Julia 1.10.11, MOI 1.54.0; ToQUBO `69ac52592f4c47ed2168bf480c9947d1fcbbfc2c`; HiGHS.jl 1.26.0 | `benchmarks/results/protocol_v1/campaign.tar.gz`, hashes in `checksums.json` |
-| Paired descriptive report | Reporting revision `1bec7de667a5c2c81aed9d92f1b5e6ceb77dc9f2` and three script hashes | [Classical report](classical_study.md) reproduction commands; [generated tables](TABLES.md) |
+| Paired descriptive report | Reporting revision `209fcbaf1671ad49feeb1dae66e0997cc64dda36` and three script hashes | [Classical report](classical_study.md) reproduction commands; [generated tables](TABLES.md) |
 | Offline QCI packet | QCIOpt `c3c3ed9e1b27150b3b39c9e98807007daf3f7a01`, MOI 1.54.0; source file hashes | [Hardware readiness](hardware.md), `benchmarks/hardware/results/` and its exact reproduction command |
 
 The completed campaign has 680 valid records, including retained clock-censored
