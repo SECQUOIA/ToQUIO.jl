@@ -1,0 +1,26 @@
+{
+  "revision": "c3c3ed9e1b27150b3b39c9e98807007daf3f7a01",
+  "version": "0.2.0",
+  "files": {
+    "Project.toml": "f351c39b2c6ef6b0fbebb15241ce9456f540089ec3142f430199677aa60edac2",
+    "CondaPkg.toml": "e9119bc3b61fbb0e50e6794a00b9e0a079990707750f98708761d99719247608",
+    "python/qciopt_client.py": "255b85ff6132082b21e06dbec8fa80a0cb2c9007b7a782b65fa5949ef2e5937b",
+    "src/MOI/attributes.jl": "4579513070a0503f560557f50a0755a516b32abd863e9791d787e083a94f60e8",
+    "src/MOI/constraints.jl": "4c30a230e47fcf28dfe6199c2879e81af9a64699e6a4e0050be7d649ae48d827",
+    "src/MOI/optimizer.jl": "e98b44b855036f5d13bfad168c3fca68e8645bfa8a865a79c73c0cbd00a88c86",
+    "src/MOI/solutions.jl": "2e4b193f00e814de76e0da57ddfd9f4602b8d0d0d18ef0c87b9d9f44f53bdeaa",
+    "src/MOI/wrapper.jl": "971ce42fcc7766a7b8cd08bdb7750d3aa56abc84856ebf6f4b9ef39445a8180f",
+    "src/QCI/client.jl": "a9951a374d2f7e42faead62b7b86326a4cff600504818c8932d93c7b03717b60",
+    "src/QCI/data.jl": "64443652c5487948c88d759572e6e3df24e580c4857b18fc8c71c7506dea22c4",
+    "src/QCI/device.jl": "545dc4ec8f7e63d19b89ce52e2f49d07417c890bcc8f3a89fc8cce74edc597b4",
+    "src/QCI/error.jl": "824529680475998ac2c4fdaa45a9cf9acd18b56454a7e384daa3a334b86503dd",
+    "src/QCI/jobs.jl": "1dc5125967ef0b6507a58ae269762d664334f2803f4d840a2d8ee22ea955d613",
+    "src/QCI/metadata.jl": "7060df55f5b33ee998cb5c2ca88856c5702da943e5af05f6e3b18cdf51c81fe9",
+    "src/QCI/wrapper.jl": "ef0fc97dfdd2f9b76f762e895b099e0e8d424115252b6ffb0750b6636f525cb9",
+    "src/QCIOpt.jl": "e4b3106f5453e3703de899c28ca9f61af23a35f008f1a51724a3185c4138ddc5",
+    "src/devices/dirac1.jl": "7c8f630bdbb0b1be2912a3ed3e11ee531f4d2ea0333e975836225e91bf234d71",
+    "src/devices/dirac2.jl": "8fd37ea1de6b75305c77fdaa8afa883e10a7d81932c4a7815c200cecc428423a",
+    "src/devices/dirac3.jl": "d467206eb99523207be20950a7697023e8113f0ffeeab3d940ab0004abe41ef5",
+    "src/samplers/dirac.jl": "9fbe1672c042822ba0c45c9408080426158b99e9b1cfd6372db7856f8315805b"
+  }
+}

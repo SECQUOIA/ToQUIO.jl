@@ -1,0 +1,42 @@
+cell_hash = "1ef766d73ba6c4177e43cddf55940273da287dd04e3f04859b37fe0a212e9dfb"
+cell_key = "8d963206981de79ec3859f31289f0f30cf2c4c6e8070c40ac7b437e05bc9a998"
+evidence_kind = "mock"
+failure_class = "none"
+job_id = "mock-knapsack-evaluation-3001-radix"
+optimality_certificate = false
+problem_file_id = "unavailable"
+provider_status = "COMPLETED"
+qci_revision = "c3c3ed9e1b27150b3b39c9e98807007daf3f7a01"
+reported_provider_energies = [-66640.0]
+request_hash = "58646457216cfc61077b4785f4a9a118144bce78e103047bcb3e5b82e1a0a697"
+result_file_id = "unavailable"
+schema_version = 2
+source_hash = "553850f6614e05f55f0f34c88f93e7dfa201c0b78af6b23a6bb6407f0348252f"
+target_hash = "5b9ae6b6e4fead55e15e54ee1169e042256b317559d447948e5a7716fcc257ff"
+
+[device_config]
+device = "dirac-3"
+job_type = "sample-hamiltonian-integer"
+num_levels = [4, 4, 4, 4, 4, 4, 4, 4, 2]
+num_samples_cap = 10
+relaxation_schedule = 1
+
+[[provider_samples]]
+multiplicity = 1
+reported_energy = -66640.0
+response_index = 1
+shifted_point = [0, 0, 0, 0, 0, 0, 3, 3, 1]
+
+[[samples]]
+multiplicity = 1
+source_feasible = true
+source_objective = 0.0
+source_point = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+target_objective = -0.0
+target_point = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 3.0, 3.0, 1.0]
+
+[timing]
+device_usage_sec = "unavailable"
+queue_time_sec = "unavailable"
+run_time_sec = "unavailable"
+total_time_sec = "unavailable"

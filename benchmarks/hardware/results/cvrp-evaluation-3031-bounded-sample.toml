@@ -1,0 +1,42 @@
+cell_hash = "3bc0129026d4936724109b239579b5874a5dbef8d93bc29290ad7e9be66fb7da"
+cell_key = "06530bf7a2abc3174b857ce62721bb26bf1422b5f1f907a254bab024dff5cc5c"
+evidence_kind = "mock"
+failure_class = "none"
+job_id = "mock-cvrp-evaluation-3031-bounded"
+optimality_certificate = false
+problem_file_id = "unavailable"
+provider_status = "COMPLETED"
+qci_revision = "c3c3ed9e1b27150b3b39c9e98807007daf3f7a01"
+reported_provider_energies = [-29029.0]
+request_hash = "d82578aea0eb8d6be2af2f7c9b1d51e3ad95e7d6b5f1899961efcad209fd6e58"
+result_file_id = "unavailable"
+schema_version = 2
+source_hash = "e8d089bc3de2e37188a3f30c24126edf4626a81d47b1b38cf136d2918ee9a719"
+target_hash = "c3233cddcc21ca3202a12038923b63af22c906e3c11231d8db889fd8780cc63c"
+
+[device_config]
+device = "dirac-3"
+job_type = "sample-hamiltonian-integer"
+num_levels = [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 3, 2, 4, 3, 4, 2, 2, 4, 3, 2, 4, 3, 2, 4, 3, 2, 4, 3, 4, 3, 2, 4, 3, 4, 2, 2, 4, 3, 2, 4, 3]
+num_samples_cap = 10
+relaxation_schedule = 1
+
+[[provider_samples]]
+multiplicity = 1
+reported_energy = -29029.0
+response_index = 1
+shifted_point = [1, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 1, 1, 0, 0, 0, 2, 1, 0, 3, 1, 0, 0, 2, 1, 0, 0, 0, 3, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 1, 0, 3, 1]
+
+[[samples]]
+multiplicity = 1
+source_feasible = true
+source_objective = 20.0
+source_point = [1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 3.0, 1.0, 5.0, 4.0]
+target_objective = 20.0
+target_point = [1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0, 0.0, 0.0, 2.0, 1.0, 0.0, 3.0, 1.0, 0.0, 0.0, 2.0, 1.0, 0.0, 0.0, 0.0, 3.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 3.0, 1.0]
+
+[timing]
+device_usage_sec = "unavailable"
+queue_time_sec = "unavailable"
+run_time_sec = "unavailable"
+total_time_sec = "unavailable"
