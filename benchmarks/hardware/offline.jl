@@ -116,6 +116,7 @@ function response_record(exported, response, cell; evidence_kind = "mock")
     status = get(response, "status", nothing)
     status in ("COMPLETED", "ERRORED", "CANCELLED", "QUEUED", "RUNNING", "SUBMITTED") ||
         throw(ArgumentError("Unknown provider status."))
+    provider_samples = Dict{String,Any}[]
     if status == "COMPLETED"
         results = QCIOpt.qci_provider_results(response)
         levels = exported.request.num_levels
@@ -132,6 +133,14 @@ function response_record(exported, response, cell; evidence_kind = "mock")
         end
         sum(big.(results["counts"]); init = big(0)) <= read_cap ||
             throw(ArgumentError("Multiplicity cap exceeded."))
+        # Preserve response order and the complete point/energy/count association.
+        # The driver's reconstructed samples below are separately sorted best-first.
+        for (index, (point, energy, count)) in enumerate(zip(
+                results["solutions"], results["energies"], results["counts"]))
+            push!(provider_samples, Dict("response_index" => index,
+                "shifted_point" => copy(point), "reported_energy" => energy,
+                "multiplicity" => count))
+        end
     end
     # The driver's error logger prints a provider diagnostic verbatim. Do not
     # send unknown diagnostic text to it or publish raw response metadata.
@@ -152,13 +161,14 @@ function response_record(exported, response, cell; evidence_kind = "mock")
             "multiplicity" => sample.reads, "source_point" => source,
             "source_objective" => S.source_value(cell.instance, source), "source_feasible" => feasible))
     end
-    return Dict("schema_version" => 1, "evidence_kind" => evidence_kind, "provider_status" => status,
+    return Dict("schema_version" => 2, "evidence_kind" => evidence_kind, "provider_status" => status,
         "job_id" => safe_identifier(metadata["job_id"]),
         "result_file_id" => safe_identifier(metadata["result_file_id"]),
         "problem_file_id" => safe_identifier(metadata["problem_file_id"]),
         "timing" => Dict(key => timing_value(metadata[key]) for key in
             ("queue_time_sec", "run_time_sec", "total_time_sec", "device_usage_sec")),
         "reported_provider_energies" => status == "COMPLETED" ? response["results"]["energies"] : Float64[],
+        "provider_samples" => provider_samples,
         "device_config" => Dict("device" => "dirac-3", "job_type" => exported.request.job_type,
             "num_levels" => exported.request.num_levels,
             "num_samples_cap" => M.get(exported.solver, M.RawOptimizerAttribute("num_samples")),

@@ -16,6 +16,12 @@ energies are retained separately from locally reconstructed target and source
 objectives. Neither a mock sample nor a provider COMPLETED status certifies
 optimality or original constrained feasibility.
 
+Sample record schema 2 preserves `provider_samples` in response order, each with
+a one-based `response_index`, zero-based `shifted_point`, `reported_energy` and
+`multiplicity`. Locally audited `samples` follow the driver's best-first order;
+their positions must not be paired with the response-order energy array. Duplicate
+provider points remain separate rows, including when their counts are identical.
+
 Only allowlisted identifiers, numerical timing, local configuration and audited
 samples are persisted. Unknown response fields and raw diagnostic text are
 omitted. Missing timing remains `unavailable`; it never becomes a zero duration.

@@ -59,6 +59,8 @@ end
         @test record["timing"]["device_usage_sec"] == 0.5
         @test !occursin("DO-NOT-PERSIST", H.JSON.json(record))
         @test record["reported_provider_energies"] == [-123.0]
+        @test only(record["provider_samples"]) == Dict("response_index" => 1,
+            "shifted_point" => shifted, "reported_energy" => -123.0, "multiplicity" => 3)
         @test !record["optimality_certificate"]
         infeasible = deepcopy(response)
         infeasible["results"]["solutions"] = [cell.polynomial.upper - cell.polynomial.lower]
@@ -68,6 +70,7 @@ end
         for status in ("CANCELLED", "QUEUED", "RUNNING", "SUBMITTED")
             failed = H.response_record(exported, Dict("status" => status), cell)
             @test isempty(failed["samples"])
+            @test isempty(failed["provider_samples"])
             @test failed["provider_status"] == status
             @test failed["failure_class"] == "provider-not-completed"
         end
@@ -90,6 +93,32 @@ end
         @test_throws ErrorException H.response_record(exported, bad, cell)
         @test_throws ArgumentError H.response_record(exported, response, cell; evidence_kind = "live")
     end
+end
+
+@testset "Provider provenance survives best-first sorting and duplicate points" begin
+    instance = first(S.corpus(S.PROTOCOL))
+    cell = S.compile_quio(instance, "native", "controlled"; cap = 4)
+    exported = H.export_request(H.target_model(cell.polynomial))
+    worse = cell.polynomial.upper - cell.polynomial.lower
+    better = S.reference_lift(cell, instance.witness) - cell.polynomial.lower
+    @test S.energy(cell.polynomial, worse + cell.polynomial.lower) <
+        S.energy(cell.polynomial, better + cell.polynomial.lower) # maximization
+    points, energies, counts = [worse, better, better], [111.0, 222.0, 333.0], [1, 2, 2]
+    response = Dict("status" => "COMPLETED", "results" =>
+        Dict("solutions" => points, "energies" => energies, "counts" => counts))
+    record = H.response_record(exported, response, cell)
+    @test record["schema_version"] == 2
+    @test first(record["samples"])["target_point"] == better + cell.polynomial.lower
+    @test last(record["samples"])["target_point"] == worse + cell.polynomial.lower
+    @test length(record["provider_samples"]) == 3
+    for index in eachindex(points)
+        @test record["provider_samples"][index] == Dict("response_index" => index,
+            "shifted_point" => points[index], "reported_energy" => energies[index],
+            "multiplicity" => counts[index])
+    end
+    @test record["provider_samples"][2]["reported_energy"] !=
+        record["provider_samples"][3]["reported_energy"]
+    @test !haskey(first(record["samples"]), "reported_energy")
 end
 
 @testset "Explicit admission refusals" begin

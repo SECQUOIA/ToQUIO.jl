@@ -10,7 +10,7 @@ qci_revision = "c3c3ed9e1b27150b3b39c9e98807007daf3f7a01"
 reported_provider_energies = [-66640.0]
 request_hash = "53d885d30dfef6717c9bbdf26abd626b6c71d44a01c303f7207ade4f8cfbf4a5"
 result_file_id = "unavailable"
-schema_version = 1
+schema_version = 2
 source_hash = "553850f6614e05f55f0f34c88f93e7dfa201c0b78af6b23a6bb6407f0348252f"
 target_hash = "c90a6f3ae174738feb5fdbdcb9cd7b4fe8fbdca7b1a66a433b777d9f5f548e1a"
 
@@ -20,6 +20,12 @@ job_type = "sample-hamiltonian-integer"
 num_levels = [4, 4, 4, 4, 4, 4, 29]
 num_samples_cap = 10
 relaxation_schedule = 1
+
+[[provider_samples]]
+multiplicity = 1
+reported_energy = -66640.0
+response_index = 1
+shifted_point = [0, 0, 0, 0, 0, 0, 28]
 
 [[samples]]
 multiplicity = 1
