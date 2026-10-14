@@ -20,6 +20,8 @@ makedocs(;
         "Home" => "index.md",
         "Quick Start" => "QUICKSTART.md",
         "Examples" => "examples.md",
+        "CQT Software Deliverable" => "deliverable.md",
+        "Release Readiness" => "release_readiness.md",
         "Penalty Tuning" => "penalties.md",
         "Integer Encoding" => "encoding.md",
         "Radix Encoding" => "radix.md",

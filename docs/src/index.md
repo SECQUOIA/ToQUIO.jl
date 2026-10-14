@@ -10,6 +10,8 @@ Welcome to the ToQUIO.jl documentation! This directory contains detailed documen
 - **[API Reference](api.md)** - Complete API documentation for all public functions
 
 ### For Researchers
+- **[CQT software deliverable](deliverable.md)** - Encoding choices, pinned examples and research reproduction
+- **[Release readiness](release_readiness.md)** - Development API availability and milestone acceptance gates
 - **[Encoding study protocol](study.md)** - Versioned CQT comparison, budgets and acceptance gates
 
 ### For Developers
