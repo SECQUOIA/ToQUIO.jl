@@ -43,11 +43,12 @@ def pack_campaign(root, output):
     # Exclude all process stdout, private licensing/configuration and mutable progress.
     groups={'identity':[Path(p) for p in ('run.toml','environment.toml','plan.json',
         'source-files.json','completion.json','analysis-files.json')]}
+    families={e['instance_id']:e['family'] for e in read_toml(root/'inputs/inventory.toml')['instances']}
     for folder in ('source','analysis-source','inputs','processes','attempts','cells','chains','polynomials','replay-audits'):
         paths=[p.relative_to(root) for p in (root/folder).rglob('*') if p.is_file()]
         if folder in ('chains','polynomials','replay-audits','cells'):
             for family in ('facility','inventory','route_allocation','knapsack'):
-                groups[folder+'-'+family]=[p for p in paths if p.name.startswith(family+'-')]
+                groups[folder+'-'+family]=[p for p in paths if families.get(p.name.split('--',1)[0])==family]
         else:groups[folder]=paths
     expected={p for paths in groups.values() for p in paths}
     # No .tmp or arbitrary unclassified numerical files can disappear silently.

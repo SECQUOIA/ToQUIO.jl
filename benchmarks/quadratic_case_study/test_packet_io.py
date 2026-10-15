@@ -76,5 +76,30 @@ class LosslessMultipartPacket(unittest.TestCase):
                 with self.assertRaises(ValueError):extract_v2(packet,root/'out',index)
                 self.assertFalse((root/'escape').exists())
 
+    def test_campaign_pack_uses_inventory_family_for_manufactured_ids(self):
+        import json
+        from freeze_analysis import TOOLS
+        from campaign import STUDY
+        from pack import pack_campaign,extract_packet
+        with tempfile.TemporaryDirectory() as temp:
+            root=Path(temp);campaign=root/'campaign';campaign.mkdir()
+            for name in ('source','inputs','cells'): (campaign/name).mkdir()
+            (campaign/'inputs/inventory.toml').write_text(
+                '[[instances]]\ninstance_id="fixture-facility"\nfamily="facility"\n')
+            (campaign/'cells/fixture-facility--native.toml').write_text('status="measured"\n')
+            (campaign/'run.toml').write_text('source_commit="'+'a'*40+'"\n')
+            for name in ('environment.toml','plan.json','source-files.json','completion.json'):
+                (campaign/name).write_text('{}')
+            files={}
+            for name in TOOLS:
+                relative=str(STUDY/name);path=campaign/'analysis-source'/relative
+                path.parent.mkdir(parents=True,exist_ok=True);path.write_bytes(b'# frozen fixture\n')
+                files[relative]=dict(size=path.stat().st_size,sha256=digest(path))
+            (campaign/'analysis-files.json').write_text(json.dumps(dict(schema_version=1,
+                producing_commit='a'*40,postprocessing_commit='b'*40,files=files)))
+            pack_campaign(campaign,root/'packet');extract_packet(root/'packet',root/'out')
+            self.assertEqual((root/'out/cells/fixture-facility--native.toml').read_bytes(),
+                             (campaign/'cells/fixture-facility--native.toml').read_bytes())
+
 
 if __name__=='__main__':unittest.main()
