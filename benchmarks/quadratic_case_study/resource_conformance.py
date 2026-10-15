@@ -63,9 +63,76 @@ def write_csv(path, rows, fields):
     temporary.replace(path)
 
 
+SWAP_SEMANTICS = 'https://www.kernel.org/doc/html/v6.6/admin-guide/cgroup-v2.html#memory-interface-files'
+
+
+def cumulative_swap_usage(root, run, incident, window_start, window_end):
+    """Verify a later zero-usage witness without clearing enforcement uncertainty."""
+    manifest = root/'processes/cumulative-swap-evidence.json'
+    observed = {str(p.relative_to(root)) for pattern in
+                ('cumulative-swap-observation-*.json', 'swap-counter-semantics-observation-*.json',
+                 'cumulative-swap-container-identity-*.json')
+                for p in (root/'processes').glob(pattern)}
+    if not manifest.exists():
+        if observed:
+            raise ValueError('Cumulative swap observations lack a bound manifest')
+        return None
+
+    def read(name):
+        path = root/name
+        if (Path(name).parent != Path('processes') or path.is_symlink() or
+                not path.is_file() or path.stat().st_size > 65536):
+            raise ValueError('Invalid cumulative swap evidence file')
+        return json.loads(path.read_text())
+
+    record = read('processes/cumulative-swap-evidence.json')
+    names = (record['observation_file'], record['semantics_file'], record['identity_file'])
+    if (record['schema_version'] != 1 or len(set(names)) != 3 or observed != set(names) or
+            record['source_commit'] != run['source_commit'] or
+            record['container'] != incident.get('container') or
+            record['container_id'] != incident.get('container_id') or
+            record['counter_semantics_url'] != SWAP_SEMANTICS):
+        raise ValueError('Cumulative swap evidence identity mismatch')
+    observation, semantics, identity_readback = (read(name) for name in names)
+    if (digest(root/names[0]) != record['observation_sha256'] or
+            digest(root/names[1]) != record['semantics_sha256'] or
+            digest(root/names[2]) != record['identity_sha256']):
+        raise ValueError('Changed cumulative swap observations')
+    identity = f"{record['container_id']} true {record['container_started_utc']}"
+    ledgers = [json.loads(p.read_text()) for p in (root/'processes').glob('[0-9][0-9][0-9][0-9].json')]
+    if (not re.fullmatch(r'[0-9a-f]{64}', record['container_id']) or
+            observation['identity_and_state'] != identity or
+            identity_readback['stdout'] != identity+'\n' or
+            any(data['schema_version'] != 1 or data['exit_code'] != 0 or data['stderr'] != '' or
+                data['container'] != record['container'] for data in (observation, semantics, identity_readback)) or
+            not any(p['container'] == record['container'] for p in ledgers)):
+        raise ValueError('Unbound cumulative swap container or unsuccessful observation')
+    times = [utc(data[key]) for data in (observation, semantics, identity_readback) for key in
+             ('observation_started_utc', 'observation_finished_utc')]
+    if (times != sorted(times) or utc(record['container_started_utc']) > utc(window_start) or
+            times[0] < utc(window_end)):
+        raise ValueError('Cumulative swap observation does not cover the uncertainty window')
+    expected = 'memory.swap.peak\n0\nmemory.swap.events\nhigh 0\nmax 0\nfail 0\n'
+    fields = semantics['stdout'].splitlines()
+    if (observation['stdout'] != expected or len(fields) != 6 or
+            fields[::2] != ['kernel_release', 'swap_peak_mode', 'fresh_read_only_swap_peak'] or
+            not re.fullmatch(r'6\.6\.[0-9A-Za-z.+_-]+', fields[1]) or fields[3::2] != ['444', '0']):
+        raise ValueError('Unsupported cumulative swap counter semantics or nonzero peak')
+    return dict(recorded_peak_bytes=0, through_utc=observation['observation_started_utc'],
+                kernel_release=fields[1], read_only_mode='444',
+                scope='Original container cgroup and descendants since cgroup creation; not host-wide or later unfinished campaign',
+                container=record['container'], container_id=record['container_id'],
+                container_started_utc=record['container_started_utc'],
+                evidence_manifest_sha256=digest(manifest), observation_sha256=digest(root/names[0]),
+                semantics_sha256=digest(root/names[1]), counter_semantics_url=SWAP_SEMANTICS,
+                identity_sha256=digest(root/names[2]),
+                continuous_limit_enforcement_certified=False)
+
+
 def build(root, incident, output, start, end, *, window_basis, window_sha256, active_cell,
           windows=None, prefix='resource-conformance', field='resource_qualification',
           label='effective-swap-limit-uncertain', evidence_key='incident_sha256',
+          swap_usage_evidence=None,
           conformance='Effective no-swap enforcement cannot be certified throughout the uncertainty window'):
     if utc(start) >= utc(end):
         raise ValueError('Empty uncertainty window')
@@ -133,6 +200,8 @@ def build(root, incident, output, start, end, *, window_basis, window_sha256, ac
                    measurement_values_changed=False,
                    qualification_scope='This incident only; outside-window does not certify other resource properties',
                    conformance=conformance)
+    if swap_usage_evidence is not None:
+        summary['cumulative_swap_usage'] = swap_usage_evidence
     if len(windows) > 1:
         summary['uncertainty_windows'] = windows
         summary['association_basis'] = 'Union of individual closed intervals; intervening gaps are not automatically qualified'
@@ -158,7 +227,10 @@ def attach(root, output):
     incidents = {str(p.relative_to(root)) for p in
                  (root/'processes').glob('resource-control-observation-*.json')}
     if not window.exists():
-        if incidents:
+        if (incidents or (root/'processes/cumulative-swap-evidence.json').exists() or
+                any((root/'processes').glob('cumulative-swap-observation-*.json')) or
+                any((root/'processes').glob('cumulative-swap-container-identity-*.json')) or
+                any((root/'processes').glob('swap-counter-semantics-observation-*.json'))):
             raise ValueError('Resource deviation is missing its uncertainty window')
         if (output/'resource-conformance').exists():
             raise ValueError('Existing report has resource provenance absent from this campaign')
@@ -187,7 +259,9 @@ def attach(root, output):
     return build(root, root/name, output/'resource-conformance',
                  record['window_start_utc'], record['window_end_utc'],
                  window_basis=record['window_basis'], window_sha256=digest(window),
-                 active_cell=incident['active_cell'])
+                 active_cell=incident['active_cell'],
+                 swap_usage_evidence=cumulative_swap_usage(root, run, incident,
+                     record['window_start_utc'], record['window_end_utc']))
 
 
 if __name__ == '__main__':

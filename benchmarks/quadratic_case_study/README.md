@@ -165,6 +165,14 @@ timestamps; every chain of a potentially overlapping cell is included because
 chains have no separate UTC interval. The report, timing figures and regenerated
 provenance tables carry this qualification. No original measurements are changed
 or rerun. A retained incident without its hash-bound window is rejected.
+Later cumulative usage evidence is retained separately from the original incident:
+on this Linux 6.6 kernel, the read-only `memory.swap.peak` counter reports maximum
+cgroup swap usage since creation ([kernel documentation](https://www.kernel.org/doc/html/v6.6/admin-guide/cgroup-v2.html#memory-interface-files)).
+A hash-bound zero-peak observation can support no recorded cgroup swap use through
+its conservative observation-start timestamp. It does not establish continuous
+limit enforcement, host-wide swap inactivity, or coverage of the unfinished later
+campaign. The report validates identity, timestamps, counter labels, hashes and
+read-only kernel semantics before adding this later evidence.
 
 Host-watchdog interruption and recovery are qualified separately from swap-limit
 uncertainty. `supervision_conformance.py` verifies a hash-bound manifest of the

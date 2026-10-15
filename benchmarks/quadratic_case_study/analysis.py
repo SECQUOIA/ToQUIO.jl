@@ -23,12 +23,19 @@ def render(directory):
     qualification=summary.get('resource_conformance')
     resource_note=[]
     if qualification:
+        cumulative=qualification.get('cumulative_swap_usage')
+        usage_note=('Observed swap usage was zero before and after correction; usage between '
+                    'those observations remains unknown. ' if not cumulative else
+                    f"A later read-only lifetime counter supports no recorded cgroup swap usage through "
+                    f"`{cumulative['through_utc']}` (conservative observation start), since creation of "
+                    'the original worker cgroup. This concerns that cgroup and its descendants, '
+                    'not host-wide swap activity or the later unfinished campaign. ')
         resource_note=[
             '**Resource conformance is qualified.** Measurement completion does not certify '
             'continuous enforcement of the intended no-swap limit. A live kernel allowance '
             'discrepancy was observed and corrected without restarting the worker. '
-            'Observed swap usage was zero before and after correction; usage and enforcement '
-            'between observations remain unknown.', '',
+            +usage_note+'Continuous enforcement of the configured no-swap limit between the '
+            'earlier observations remains unverified.', '',
             f"The conservative UTC interval is `{qualification['uncertainty_window_start_utc']}` "
             f"through `{qualification['uncertainty_window_end_utc']}`. "
             f"It potentially overlaps {qualification['overlapping_cells']} cells and "
