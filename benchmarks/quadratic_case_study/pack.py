@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """Deterministic bounded archives; only explicitly listed numerical inputs/outputs."""
 import argparse, gzip, hashlib, io, json, tarfile
+from packet_io import write_archive, extract_v2, MAX_UNCOMPRESSED
+from freeze_analysis import verify_analysis
 from pathlib import Path
 from campaign import digest, read_toml
 
@@ -35,11 +37,13 @@ def pack_inputs(root, output):
 
 def pack_campaign(root, output):
     if not (root/'completion.json').is_file():raise ValueError('Campaign has no terminal coverage record')
+    verify_analysis(root)
     if output.exists() and any(output.iterdir()):raise ValueError('Refuse existing published packet')
     output.mkdir(parents=True,exist_ok=True)
     # Exclude all process stdout, private licensing/configuration and mutable progress.
-    groups={'identity':[Path(p) for p in ('run.toml','environment.toml','plan.json','source-files.json','completion.json')]}
-    for folder in ('source','inputs','processes','attempts','cells','chains','polynomials','replay-audits'):
+    groups={'identity':[Path(p) for p in ('run.toml','environment.toml','plan.json',
+        'source-files.json','completion.json','analysis-files.json')]}
+    for folder in ('source','analysis-source','inputs','processes','attempts','cells','chains','polynomials','replay-audits'):
         paths=[p.relative_to(root) for p in (root/folder).rglob('*') if p.is_file()]
         if folder in ('chains','polynomials','replay-audits','cells'):
             for family in ('facility','inventory','route_allocation','knapsack'):
@@ -50,17 +54,30 @@ def pack_campaign(root, output):
     for folder in ('processes','attempts','cells','chains','polynomials','replay-audits'):
         actual={p.relative_to(root) for p in (root/folder).rglob('*') if p.is_file()}
         if not actual<=expected:raise ValueError('Unclassified retained file; reconcile interruption before export')
-    archives={}
+    files={str(p):dict(size=(root/p).stat().st_size,sha256=digest(root/p)) for p in sorted(expected)}
+    uncompressed=sum(record['size'] for record in files.values())
+    if uncompressed>MAX_UNCOMPRESSED:raise ValueError('Uncompressed packet exceeds disk allowance')
+    archives={};compressed=0
     for name,paths in groups.items():
-        if paths:archives[name+'.tar.gz']=archive_files(root,paths,output/(name+'.tar.gz'))
-    if sum(p.stat().st_size for p in output.glob('*.tar.gz'))>MAX_PACKET:raise ValueError('Packet exceeds byte budget')
-    index=dict(schema_version=1,source_commit=read_toml(root/'run.toml')['source_commit'],
-        archives=archives,files={str(p):digest(root/p) for p in sorted(expected)})
+        if paths:
+            archive=write_archive(root,paths,output,name+'.tar.xz',MAX_PACKET-compressed)
+            archives[name+'.tar.xz']=archive;compressed+=archive['size']
+    index=dict(schema_version=2,source_commit=read_toml(root/'run.toml')['source_commit'],
+        postprocessing_commit=verify_analysis(root)['postprocessing_commit'],
+        compressed_bytes=compressed,uncompressed_bytes=uncompressed,archives=archives,files=files)
     (output/'index.json').write_text(json.dumps(index,sort_keys=True,indent=2)+'\n')
 
 def extract_packet(packet,output):
     from campaign import extract_checked
     index=json.loads((packet/'index.json').read_text())
+    if index['schema_version']==2:
+        extract_v2(packet,output,index)
+        analysis=verify_analysis(output)
+        if (analysis['postprocessing_commit']!=index['postprocessing_commit'] or
+                read_toml(output/'run.toml')['source_commit']!=index['source_commit']):
+            raise ValueError('Packet source revision identity mismatch')
+        return
+    if index['schema_version']!=1:raise ValueError('Unknown packet schema')
     if output.exists():raise ValueError('Refuse existing extracted packet')
     output.mkdir(parents=True)
     for name,expected in index['archives'].items():

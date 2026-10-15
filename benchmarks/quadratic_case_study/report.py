@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Verify a retained campaign and regenerate tables without solving or sampling."""
 from __future__ import annotations
-import argparse, csv, hashlib, json, math, statistics, tomllib
+import argparse, csv, hashlib, json, math, re, statistics, tomllib
 from collections import Counter, defaultdict
 from pathlib import Path
 from campaign import digest, read_toml, planned_ids, verify_inputs
@@ -23,8 +23,34 @@ def feasible(source, point):
         if not (value == bound if relation == 'eq' else value <= bound): return False
     return True
 
+def read_cell_record(path):
+    """Parse report fields while streaming over unused expanded compiler metadata.
+
+    This view changes no retained file. Packet hashes still cover every raw byte.
+    The producing writer uses ordinary unquoted compiler.metadata table paths.
+    """
+    retained = []; size = 0; skipped = False
+    with open(path, encoding='utf-8') as stream:
+        while line := stream.readline(8 * 1024 * 1024 + 1):
+            if len(line) > 8 * 1024 * 1024:
+                raise ValueError('Cell record line exceeds bounded reader allowance')
+            stripped = line.lstrip()
+            header = re.fullmatch(r'\[\[?([A-Za-z_][A-Za-z_0-9]*(?:\.[A-Za-z_][A-Za-z_0-9]*)*)\]\]?\s*', stripped)
+            if header:
+                name = header.group(1)
+                skipped = name == 'compiler.metadata' or name.startswith('compiler.metadata.')
+            if not skipped:
+                size += len(line)
+                if size > 16 * 1024 * 1024:
+                    raise ValueError('Report cell fields exceed bounded reader allowance')
+                retained.append(line)
+    return tomllib.loads(''.join(retained))
+
 def verify(root, *, allow_incomplete=False):
     run = read_toml(root / 'run.toml'); snapshot = root / 'source'
+    if (root / 'analysis-files.json').exists():
+        from freeze_analysis import verify_analysis
+        verify_analysis(root)
     files = json.loads((root / 'source-files.json').read_text())
     for relative, expected in files.items():
         if digest(snapshot / relative) != expected: raise ValueError(f'Changed execution source: {relative}')
@@ -42,7 +68,7 @@ def verify(root, *, allow_incomplete=False):
         sources[entry['instance_id']] = read_toml(path)
     records = {}
     for path in sorted((root / 'cells').glob('*.toml')):
-        record = read_toml(path); identifier = path.stem
+        record = read_cell_record(path); identifier = path.stem
         if identifier not in planned or record['cell_id'] != identifier: raise ValueError('Unexpected cell')
         expected = planned[identifier]
         if any(record[key] != value for key, value in expected.items()): raise ValueError('Cell identity mismatch')
@@ -57,6 +83,10 @@ def verify(root, *, allow_incomplete=False):
                 if not math.isclose(objective, result['source_objective'], rel_tol=1e-12, abs_tol=1e-9):
                     raise ValueError('Direct source objective mismatch')
             if result['backend'] != run['backend']: raise ValueError('Mixed baseline backend')
+        # The raw packet retains these diagnostics; tables do not consume them.
+        for key in ('maps', 'penalties', 'verification'):
+            record.pop(key, None)
+        if 'metrics' in record: record['metrics'].pop('eigenvalues', None)
         records[identifier] = record
     if not allow_incomplete and set(records) != set(planned): raise ValueError('Missing cells')
     chains = []; unaudited = []; slots = set()

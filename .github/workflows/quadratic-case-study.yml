@@ -24,11 +24,12 @@ jobs:
   validate:
     name: Fresh models, exact encodings and replay
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 90
     env:
       JULIA_NUM_THREADS: '1'
       OPENBLAS_NUM_THREADS: '1'
       JULIA_NUM_PRECOMPILE_TASKS: '1'
+      PYTHONDONTWRITEBYTECODE: '1'
     steps:
       - uses: actions/checkout@v7
         with:
@@ -40,7 +41,7 @@ jobs:
       - name: Independent model, compiler and trace validation (SCIP)
         shell: bash
         run: |
-          python3 -m unittest discover -s benchmarks/quadratic_case_study -p test_campaign.py
+          python3 -m unittest discover -s benchmarks/quadratic_case_study -p 'test_*.py'
           runner_julia=$(command -v julia)
           runner_depot="${JULIA_DEPOT_PATH:-$HOME/.julia}"
           sudo systemd-run --scope --quiet -p MemoryMax=4G -p MemorySwapMax=0 -p CPUQuota=100% \
@@ -64,12 +65,13 @@ jobs:
             study_raw="$RUNNER_TEMP/fresh-study-packet"
             study_report="$RUNNER_TEMP/fresh-study-report"
             sudo systemd-run --scope --quiet -p MemoryMax=4G -p MemorySwapMax=0 -p CPUQuota=100% \
-              runuser -u "$(id -un)" -- timeout 300 python3 benchmarks/quadratic_case_study/pack.py extract "$packet" "$study_raw"
+              runuser -u "$(id -un)" -- env PYTHONDONTWRITEBYTECODE=1 timeout 1800 python3 benchmarks/quadratic_case_study/pack.py extract "$packet" "$study_raw"
             frozen_profile="$study_raw/source/benchmarks/quadratic_case_study"
+            analysis_profile="$study_raw/analysis-source/benchmarks/quadratic_case_study"
             sudo systemd-run --scope --quiet -p MemoryMax=4G -p MemorySwapMax=0 -p CPUQuota=100% \
-              runuser -u "$(id -un)" -- timeout 600 python3 "$frozen_profile/report.py" "$study_raw" "$study_report"
-            python3 "$frozen_profile/analysis.py" "$study_report"
-            python3 benchmarks/quadratic_case_study/compare.py "$packet/report" "$study_report"
+              runuser -u "$(id -un)" -- env PYTHONDONTWRITEBYTECODE=1 timeout 1800 python3 "$analysis_profile/report.py" "$study_raw" "$study_report"
+            python3 "$analysis_profile/analysis.py" "$study_report"
+            python3 "$analysis_profile/compare.py" "$packet/report" "$study_report"
             runner_julia=$(command -v julia)
             runner_depot="${JULIA_DEPOT_PATH:-$HOME/.julia}"
             sudo systemd-run --scope --quiet -p MemoryMax=4G -p MemorySwapMax=0 -p CPUQuota=100% \

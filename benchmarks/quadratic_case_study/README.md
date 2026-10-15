@@ -136,12 +136,29 @@ protect resume. Julia replay audits bind exact chain, polynomial and input bytes
 Python independently checks source points and all aggregate inputs.
 Process logs and license configuration never enter the numerical export.
 
-`report.py CAMPAIGN OUTPUT` independently checks original source equations and
-recomputes tables without solving or sampling. `replay.jl CAMPAIGN [MAX_CHAINS]`
+The measurement snapshot remains immutable. Reporting tools have a separate
+clean commit, archived by `freeze_analysis.py REPOSITORY CAMPAIGN` under
+`analysis-source/benchmarks/quadratic_case_study`; `analysis-files.json` binds
+every tool byte and distinguishes the producing and postprocessing commits.
+Run the retained reporting tools with `PYTHONDONTWRITEBYTECODE=1` so this source
+inventory stays exact. `report.py CAMPAIGN OUTPUT` independently checks original
+source equations and recomputes tables without solving or sampling. Its bounded
+reader streams over unused expanded compiler metadata and releases diagnostics
+that tables do not use. Every original raw cell byte remains in the packet.
+`replay.jl CAMPAIGN [MAX_CHAINS]`
 replays retained actual proposal counts with a nonbinding clock; elapsed
 wall timestamps are not reproducible. `plots.py OUTPUT` plots verified tables.
 The plot environment pins Python 3.13.5, matplotlib 3.10.9 and NumPy 2.5.0;
 `plot-lock.txt` retains all exact distribution versions.
+
+Campaign packet schema 2 uses lossless XZ logical archives (preset 6) in ordered,
+hashed parts of at most 48 MiB. The frozen 512 MiB limit applies to their aggregate
+compressed bytes. A separate 32 GiB total uncompressed allowance and a free-disk
+check with 1 GiB headroom bound extraction. The streaming decoder has a 128 MiB
+memory allowance; member names, sizes, full SHA256 inventory, every part and the
+logical archive digest are checked. Input archives retain schema 1 and their
+original deterministic gzip bytes. Rebuilding reports uses the separately frozen
+analysis source; Julia replay uses the original measurement profile.
 
 No physical-provider jobs, uploads or paid sampling are part of this campaign.
 Physical knapsack replication remains gated on the separate hardware contract,
