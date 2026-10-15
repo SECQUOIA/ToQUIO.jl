@@ -186,8 +186,18 @@ certified; completed measurements do not establish full deadline conformance.
 Missing, changed or unbound recovery evidence is rejected. No measurement is rerun.
 
 Campaign packet schema 2 uses lossless XZ logical archives (preset 6) in ordered,
-hashed parts of at most 48 MiB. The frozen 512 MiB limit applies to their aggregate
-compressed bytes. A separate 64 GiB total uncompressed allowance and a free-disk
+hashed parts of at most 48 MiB. The producing protocol's frozen 512 MiB aggregate
+compressed allowance was reached during the first actual packing attempt; that
+attempt failed and its parts remain separately retained. A paired lossless test
+on a 666,301,303-byte actual route record found preset 9 about 2.95% larger than
+preset 6, so the codec remains unchanged. A separately frozen postmeasurement
+amendment raises only the compressed allowance to 1 GiB, with hash-bound original
+failure/log/inventory and negative-probe evidence under `processes`. The writer
+and reader check this amendment against the unchanged producing protocol; packets
+without it retain their original allowance. Original packaging-budget conformance
+remains failed. A complete packet must independently pass the amended size and
+integrity checks; declaring the allowance is not proof of fit. A separate 64 GiB
+total uncompressed allowance and a free-disk
 check with 1 GiB headroom bound extraction. The streaming decoder has a 128 MiB
 memory allowance; member names, sizes, full SHA256 inventory, every part and the
 logical archive digest are checked. Input archives retain schema 1 and their
@@ -197,7 +207,8 @@ analysis source; Julia replay uses the original measurement profile.
 The resource-only postprocessing amendment increases the original 32 GiB raw
 allowance to 64 GiB after a bound-based forecast identified approximately 49 GB
 of expanded diagnostics. It leaves the producing protocol and compressed budget
-unchanged. Previous reporting snapshots and their manifests remain byte-identical
+unchanged at that amendment. The later compressed-allowance amendment above
+records the actual 512 MiB failure separately. Previous reporting snapshots and their manifests remain byte-identical
 under `analysis-history`; `postprocessing-amendment.toml` records this amendment.
 Packing has a six-hour ceiling; extraction has a two-hour ceiling. The original
 636 MiB-cell diagnostic did not finish compression within 600 seconds at one

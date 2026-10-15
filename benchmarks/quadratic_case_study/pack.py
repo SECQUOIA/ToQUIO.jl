@@ -3,11 +3,11 @@
 import argparse, gzip, hashlib, io, json, tarfile
 from packet_io import write_archive, extract_v2, MAX_UNCOMPRESSED, VIEW_RESERVED
 from freeze_analysis import verify_analysis
+from packaging_conformance import compressed_allowance, ORIGINAL_COMPRESSED
 from pathlib import Path
 from campaign import digest, read_toml
 
 MAX_FILE=48*1024*1024
-MAX_PACKET=512*1024*1024
 IDENTITY_FILES=('run.toml','environment.toml','plan.json','source-files.json',
                 'completion.json','analysis-files.json','postprocessing-amendment.toml')
 
@@ -63,14 +63,16 @@ def pack_campaign(root, output):
     files={str(p):dict(size=(root/p).stat().st_size,sha256=digest(root/p)) for p in sorted(expected)}
     uncompressed=sum(record['size'] for record in files.values())
     if uncompressed>MAX_UNCOMPRESSED:raise ValueError('Uncompressed packet exceeds disk allowance')
+    allowance=compressed_allowance(root)
     archives={};compressed=0
     for name,paths in groups.items():
         if paths:
-            archive=write_archive(root,paths,output,name+'.tar.xz',MAX_PACKET-compressed)
+            archive=write_archive(root,paths,output,name+'.tar.xz',allowance-compressed)
             archives[name+'.tar.xz']=archive;compressed+=archive['size']
     index=dict(schema_version=2,source_commit=read_toml(root/'run.toml')['source_commit'],
         postprocessing_commit=verify_analysis(root)['postprocessing_commit'],
-        compressed_bytes=compressed,uncompressed_bytes=uncompressed,archives=archives,files=files)
+        compressed_bytes=compressed,compressed_byte_allowance=allowance,
+        uncompressed_bytes=uncompressed,archives=archives,files=files)
     (output/'index.json').write_text(json.dumps(index,sort_keys=True,indent=2)+'\n')
 
 def extract_packet(packet,output,*,report_view=False):
@@ -78,6 +80,8 @@ def extract_packet(packet,output,*,report_view=False):
     index=json.loads((packet/'index.json').read_text())
     if index['schema_version']==2:
         extract_v2(packet,output,index,report_view=report_view)
+        if index.get('compressed_byte_allowance', ORIGINAL_COMPRESSED) != compressed_allowance(output):
+            raise ValueError('Packet allowance differs from retained protocol or bound amendment')
         analysis=verify_analysis(output)
         if (analysis['postprocessing_commit']!=index['postprocessing_commit'] or
                 read_toml(output/'run.toml')['source_commit']!=index['source_commit']):

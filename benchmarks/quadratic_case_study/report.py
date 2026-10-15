@@ -196,6 +196,8 @@ def aggregate(root, output, *, allow_incomplete=False, require_report_view=False
     qualification = attach(root, output)
     from supervision_conformance import attach as attach_supervision
     supervision = attach_supervision(root, output)
+    from packaging_conformance import qualification as packaging_qualification
+    packaging = packaging_qualification(root)
     entries = {row['instance_id']: row for row in inventory}
     structural = []; direct = []
     plan=json.loads((root/'plan.json').read_text())
@@ -279,6 +281,8 @@ def aggregate(root, output, *, allow_incomplete=False, require_report_view=False
         summary['resource_conformance'] = qualification
     if supervision is not None:
         summary['supervision_conformance'] = supervision
+    if packaging is not None:
+        summary['packaging_conformance'] = packaging
     (output / 'summary.json').write_text(json.dumps(summary,sort_keys=True,indent=2)+'\n')
     return summary, structural, direct, batches
 

@@ -67,6 +67,22 @@ def render(directory):
             '[hashed provenance and gap intervals](supervision-conformance/supervision-conformance-summary.json) '
             'identify the affected records and bind the recovery observations and exact executed '
             'controller sources. This is a qualified protocol deviation, not full deadline conformance.', '']
+    packaging_note=[]
+    packaging=summary.get('packaging_conformance')
+    if packaging:
+        packaging_note=[
+            '**The original archive-size budget failed.** The first lossless packing attempt '
+            f"reached the frozen {packaging['original_compressed_bytes']//1024**2} MiB compressed cap "
+            'and stopped before completing the archive. A paired real-record probe found XZ '
+            'preset 9 larger than preset 6; the archive retains preset 6. A separately frozen '
+            f"postmeasurement amendment allows {packaging['amended_compressed_bytes']//1024**2} MiB "
+            'of compressed parts to retain all original observations. The producing protocol '
+            'and measurements remain unchanged. Original packaging-budget conformance remains '
+            'failed; this amendment is not a measurement rerun.', '',
+            'The packet index and independent archive verification must establish final size, '
+            'complete member integrity, report/plot parity and replay under the amended allowance. '
+            '`full_execution` describes measurement coverage only. Hash-bound failure and probe '
+            'provenance is retained at `processes/packaging-conformance.json` after extraction.', '']
     lines=['# Fresh quadratic case study','',
         'This report uses fresh synthetic instances and current exact integer encodings. '
         'It reports local software experiments; physical-provider replication remains pending.','',
@@ -81,6 +97,7 @@ def render(directory):
          'the available measurements do not establish full execution.'),'',
         *resource_note,
         *supervision_note,
+        *packaging_note,
         'Source feasibility screens/witnesses: `'+str(summary.get('source_witness_statuses',{}))+'`. '
         'Capacity-infeasible facility draws are retained without replacement; they have no source optimum.', '',
         '## Structural comparisons','',

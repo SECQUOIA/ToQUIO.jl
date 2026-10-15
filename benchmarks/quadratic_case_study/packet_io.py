@@ -3,9 +3,9 @@ from __future__ import annotations
 import hashlib, io, json, lzma, shutil, tarfile
 from pathlib import Path, PurePosixPath
 from campaign import digest, read_toml
+from packaging_conformance import MAX_COMPRESSED, ORIGINAL_COMPRESSED
 
 MAX_PART = 48 * 1024**2
-MAX_COMPRESSED = 512 * 1024**2
 MAX_UNCOMPRESSED = 64 * 1024**3
 MAX_REPORT_VIEW = 8 * 1024**3
 VIEW_RESERVED = {'.report-view', 'extraction-index.json', 'extraction-view.json'}
@@ -140,7 +140,9 @@ def extract_v2(packet, output, index, *, report_view=False):
                 raise ValueError('Packet part size mismatch')
         if subtotal != archive['size']: raise ValueError('Archive byte count mismatch')
         compressed += subtotal
-    if compressed != index['compressed_bytes'] or compressed > MAX_COMPRESSED:
+    allowance = index.get('compressed_byte_allowance', ORIGINAL_COMPRESSED)
+    if (type(allowance) is not int or not 0 < allowance <= MAX_COMPRESSED or
+            compressed != index['compressed_bytes'] or compressed > allowance):
         raise ValueError('Compressed campaign byte budget exceeded')
     index_bytes = None; projection = None
     if report_view:
