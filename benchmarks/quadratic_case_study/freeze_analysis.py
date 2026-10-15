@@ -7,19 +7,37 @@ TOOLS = ('report.py', 'analysis.py', 'plots.py', 'campaign.py', 'compare.py', 'p
          'packet_io.py', 'freeze_analysis.py', 'plot-requirements.txt', 'plot-lock.txt')
 
 
-def verify_analysis(root):
+def verify_snapshot(root):
     record = json.loads((root/'analysis-files.json').read_text())
     if record['producing_commit'] != read_toml(root/'run.toml')['source_commit']:
         raise ValueError('Postprocessing producer identity mismatch')
-    expected = {str(STUDY/name) for name in TOOLS}
-    if set(record['files']) != expected:
+    expected = set(record['files'])
+    # Historical declared closures need not grow when a later freeze adds a helper.
+    required = {str(STUDY/name) for name in ('report.py','analysis.py','plots.py','pack.py','freeze_analysis.py')}
+    if (record.get('schema_version')!=1 or not required.issubset(expected) or
+            any(Path(name).parent!=STUDY for name in expected)):
         raise ValueError('Unexpected postprocessing source inventory')
-    actual = {str(p.relative_to(root/'analysis-source')) for p in (root/'analysis-source').rglob('*') if p.is_file()}
+    tree = root/'analysis-source'; paths = list(tree.rglob('*'))
+    if tree.is_symlink() or any(p.is_symlink() for p in paths):
+        raise ValueError('Unexpected postprocessing source link')
+    actual = {str(p.relative_to(tree)) for p in paths if p.is_file()}
     if actual != expected: raise ValueError('Changed postprocessing file inventory')
     for name, entry in record['files'].items():
         path = root/'analysis-source'/name
         if path.is_symlink() or path.stat().st_size != entry['size'] or digest(path) != entry['sha256']:
             raise ValueError('Changed postprocessing source bytes')
+    return record
+
+
+def verify_analysis(root):
+    record = verify_snapshot(root)
+    for history in (root/'analysis-history').glob('*'):
+        if not history.is_dir() or history.is_symlink():
+            raise ValueError('Unexpected postprocessing history entry')
+        previous = verify_snapshot(history)
+        if (history.name!=previous['postprocessing_commit'] or
+                previous['producing_commit']!=record['producing_commit']):
+            raise ValueError('Changed postprocessing history identity')
     return record
 
 

@@ -23,30 +23,43 @@ def feasible(source, point):
         if not (value == bound if relation == 'eq' else value <= bound): return False
     return True
 
-def read_cell_record(path):
-    """Parse report fields while streaming over unused expanded compiler metadata.
+CELL_LINE_LIMIT = 8 * 1024**2
+CELL_VIEW_LIMIT = 16 * 1024**2
+CELL_HEADER = re.compile(rb'\[\[?([A-Za-z_][A-Za-z_0-9]*(?:\.[A-Za-z_][A-Za-z_0-9]*)*)\]\]?\s*')
 
-    This view changes no retained file. Packet hashes still cover every raw byte.
-    The producing writer uses ordinary unquoted compiler.metadata table paths.
-    """
-    retained = []; size = 0; skipped = False
-    with open(path, encoding='utf-8') as stream:
-        while line := stream.readline(8 * 1024 * 1024 + 1):
-            if len(line) > 8 * 1024 * 1024:
-                raise ValueError('Cell record line exceeds bounded reader allowance')
-            stripped = line.lstrip()
-            header = re.fullmatch(r'\[\[?([A-Za-z_][A-Za-z_0-9]*(?:\.[A-Za-z_][A-Za-z_0-9]*)*)\]\]?\s*', stripped)
+
+def bounded_cell_lines(stream):
+    while line := stream.readline(CELL_LINE_LIMIT + 1):
+        if len(line) > CELL_LINE_LIMIT:
+            raise ValueError('Cell record line exceeds bounded reader allowance')
+        yield line
+
+
+def projected_cell_bytes(lines):
+    """Omit only unused compiler.metadata tables from producer-format TOML bytes."""
+    skipped = False; size = 0
+    for line in lines:
+        stripped = line.lstrip()
+        if stripped.startswith(b'['):
+            header = CELL_HEADER.fullmatch(stripped)
             if header:
                 name = header.group(1)
-                skipped = name == 'compiler.metadata' or name.startswith('compiler.metadata.')
-            if not skipped:
-                size += len(line)
-                if size > 16 * 1024 * 1024:
-                    raise ValueError('Report cell fields exceed bounded reader allowance')
-                retained.append(line)
-    return tomllib.loads(''.join(retained))
+                skipped = name == b'compiler.metadata' or name.startswith(b'compiler.metadata.')
+        if not skipped:
+            size += len(line)
+            if size > CELL_VIEW_LIMIT:
+                raise ValueError('Report cell fields exceed bounded reader allowance')
+            yield line
 
-def verify(root, *, allow_incomplete=False):
+
+def read_cell_record(path):
+    # The packet retains every original byte; this projection only bounds memory.
+    with open(path, 'rb') as stream:
+        return tomllib.loads(b''.join(projected_cell_bytes(bounded_cell_lines(stream))).decode('utf-8'))
+
+def verify(root, *, allow_incomplete=False, require_report_view=False):
+    from packet_io import verify_report_view
+    verify_report_view(root, required=require_report_view)
     run = read_toml(root / 'run.toml'); snapshot = root / 'source'
     if (root / 'analysis-files.json').exists():
         from freeze_analysis import verify_analysis
@@ -177,8 +190,8 @@ def write_csv(path, rows):
     with open(path, 'w', newline='') as target:
         writer = csv.DictWriter(target, fieldnames=keys); writer.writeheader(); writer.writerows(rows)
 
-def aggregate(root, output, *, allow_incomplete=False):
-    run, protocol, inventory, records, chains, unaudited = verify(root, allow_incomplete=allow_incomplete)
+def aggregate(root, output, *, allow_incomplete=False, require_report_view=False):
+    run, protocol, inventory, records, chains, unaudited = verify(root, allow_incomplete=allow_incomplete, require_report_view=require_report_view)
     entries = {row['instance_id']: row for row in inventory}
     structural = []; direct = []
     plan=json.loads((root/'plan.json').read_text())
@@ -265,6 +278,8 @@ if __name__ == '__main__':
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('campaign',type=Path);parser.add_argument('output',type=Path)
     parser.add_argument('--allow-incomplete',action='store_true')
+    parser.add_argument('--require-report-view',action='store_true')
     args=parser.parse_args()
-    summary,*_=aggregate(args.campaign,args.output,allow_incomplete=args.allow_incomplete)
+    summary,*_=aggregate(args.campaign,args.output,allow_incomplete=args.allow_incomplete,
+        require_report_view=args.require_report_view)
     print(json.dumps(summary,sort_keys=True))

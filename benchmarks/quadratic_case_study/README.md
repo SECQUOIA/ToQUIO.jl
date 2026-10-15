@@ -108,6 +108,9 @@ coefficient matrix; eigenvalue spacing is neither an optimization gap nor a
 quantum gap. Undefined and numerically singular cases remain in the raw records.
 Compilation timings include all applicable compiler stages and extraction, with
 source construction separately reported and all arms warmed before measurement.
+Timings are wall-clock observations on a shared host under one-CPU cgroups,
+not exclusive-core measurements; separate low-memory diagnostic jobs can run
+concurrently. Treat performance contrasts as descriptive.
 
 ## Execution and replay
 
@@ -153,12 +156,37 @@ The plot environment pins Python 3.13.5, matplotlib 3.10.9 and NumPy 2.5.0;
 
 Campaign packet schema 2 uses lossless XZ logical archives (preset 6) in ordered,
 hashed parts of at most 48 MiB. The frozen 512 MiB limit applies to their aggregate
-compressed bytes. A separate 32 GiB total uncompressed allowance and a free-disk
+compressed bytes. A separate 64 GiB total uncompressed allowance and a free-disk
 check with 1 GiB headroom bound extraction. The streaming decoder has a 128 MiB
 memory allowance; member names, sizes, full SHA256 inventory, every part and the
 logical archive digest are checked. Input archives retain schema 1 and their
 original deterministic gzip bytes. Rebuilding reports uses the separately frozen
 analysis source; Julia replay uses the original measurement profile.
+
+The resource-only postprocessing amendment increases the original 32 GiB raw
+allowance to 64 GiB after a bound-based forecast identified approximately 49 GB
+of expanded diagnostics. It leaves the producing protocol and compressed budget
+unchanged. Previous reporting snapshots and their manifests remain byte-identical
+under `analysis-history`; `postprocessing-amendment.toml` records this amendment.
+Packing has a six-hour ceiling; extraction has a two-hour ceiling. The original
+636 MiB-cell diagnostic did not finish compression within 600 seconds at one
+quarter CPU; that attempt is not reported as a successful roundtrip.
+
+Use `pack.py extract-analysis PACKET BOOTSTRAP` to verify and extract the small
+archived reporting closure. Then run its `pack.py extract PACKET VIEW --report-view`
+with `PYTHONDONTWRITEBYTECODE=1`. This verifies every original archived byte while
+omitting only unused cell metadata from a derived working view. It preserves the
+original index and records original versus view hashes, revisions and projection
+identity. Subsequent report verification checks this view and its extraction
+provenance; original-byte verification happens during extraction. Inputs, source,
+chains, polynomials, replay audits and history stay byte-identical. The view is
+capped at 8 GiB, including its manifests, with 1 GiB additional free-disk headroom.
+Use `report.py VIEW OUTPUT --require-report-view` to require its provenance even
+if all view indicators were removed. Any remaining incomplete provenance or
+changed view is rejected. A directory with all provenance removed cannot be
+distinguished from raw data unless view mode is explicitly required. Write
+reports outside the view directory.
+Full raw extraction remains available without `--report-view` when disk permits.
 
 No physical-provider jobs, uploads or paid sampling are part of this campaign.
 Physical knapsack replication remains gated on the separate hardware contract,
