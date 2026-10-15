@@ -16,8 +16,8 @@ A Julia package that reformulates constrained integer optimization problems into
 
 The source-pinned [CQT software deliverable](docs/src/deliverable.md) connects
 native/radix/bounded encoding choices, tested JuMP examples, benchmark replay,
-classical results and offline hardware readiness. Its new APIs are development
-features absent from the tagged v0.1.0 release. See
+classical results and offline hardware readiness. Encoding, projection and
+feasibility APIs are introduced in **0.2.0**; they are absent from v0.1.0. See
 [release readiness](docs/src/release_readiness.md) for the separate integration,
 package publication, documentation and live-hardware gates.
 
@@ -52,6 +52,10 @@ repository instead of the registered release:
 using Pkg
 Pkg.add(url="https://github.com/SECQUOIA/ToQUIO.jl")
 ```
+
+For a reproducible feature release, install `Pkg.add(name="ToQUIO", version="0.2.0")`.
+Check `pkgversion(ToQUIO)` after importing it; installing v0.1.0 does not supply
+the new encoding interfaces.
 
 ## Quick Start
 
@@ -132,7 +136,7 @@ The reformulation uses quadratic penalty functions to incorporate constraints in
 - Penalty coefficients (ρ) are automatically computed or can be user-specified
 
 For penalty controls, applied-penalty inspection and source-feasibility checks
-in the development source, see the [Penalty tuning guide](docs/src/penalties.md).
+in ToQUIO 0.2.0 and later, see the [Penalty tuning guide](docs/src/penalties.md).
 These examples follow the checked-out source; tagged releases determine registry
 availability.
 
@@ -298,8 +302,8 @@ We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guid
 ### Release State
 
 ToQUIO.jl is registered in the Julia General registry. The initial registered
-release is `version = "0.1.0"` from `Project.toml`; later releases bump that
-version for features or breaking changes.
+release was 0.1.0. The encoding feature release uses `version = "0.2.0"`;
+subsequent releases follow the procedure in CONTRIBUTING.md.
 
 ## References
 

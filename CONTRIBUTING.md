@@ -227,9 +227,9 @@ the development version by URL.
 
 Registered releases use JuliaRegistrator and TagBot:
 
-1. Confirm `Project.toml` has the intended version value. The first
-   registration should remain `version = "0.1.0"` unless a feature or breaking
-   change lands first.
+1. Confirm `Project.toml` has the intended version value. The encoding feature
+   release uses `version = "0.2.0"`; choose subsequent versions from the actual
+   changes and update maintained environment compatibility where needed.
 2. Run the package tests from the root environment:
    ```julia
    using Pkg
@@ -248,7 +248,16 @@ Registered releases use JuliaRegistrator and TagBot:
 TagBot is configured with `ssh: ${{ secrets.SSH_KEY }}` so TagBot-created tags
 can trigger downstream workflows such as documentation deployment. If that
 secret is not configured before a release, confirm the tag and release were
-created, then run the documentation workflow manually with `workflow_dispatch`.
+created, then run the documentation workflow manually with `workflow_dispatch`
+on the actual version tag, for example:
+
+```sh
+gh workflow run documentation.yml --repo SECQUOIA/ToQUIO.jl --ref v0.2.0
+```
+
+Verify the tag points to the registered source and that the served versioned
+manual and stable alias contain its APIs; a workflow success alone does not
+prove a configured hosting site.
 
 Release checklist:
 

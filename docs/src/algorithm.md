@@ -4,12 +4,12 @@ This document describes the mathematical formulation and algorithmic details of 
 
 ## Table of Contents
 
-- [Problem Formulation](#problem-formulation)
-- [Penalty Method](#penalty-method)
-- [Slack Variables](#slack-variables)
-- [Penalty Coefficient Computation](#penalty-coefficient-computation)
-- [Reformulation Steps](#reformulation-steps)
-- [Mathematical Derivation](#mathematical-derivation)
+- [Problem Formulation](@ref "Problem Formulation")
+- [Penalty Method](@ref "Penalty Method")
+- [Slack Variables](@ref "Slack Variables")
+- [Penalty Coefficient Computation](@ref "Penalty Coefficient Computation")
+- [Reformulation Steps](@ref "Reformulation Steps")
+- [Mathematical Derivation](@ref "Mathematical Derivation")
 
 ## Problem Formulation
 

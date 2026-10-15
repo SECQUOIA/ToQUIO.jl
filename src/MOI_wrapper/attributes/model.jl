@@ -10,7 +10,7 @@ end
 
 # [x] SolverVersion	        Yes	No	No
 function MOI.get(::Optimizer{T}, ::MOI.SolverVersion) where {T}
-    return v"0.1.0" # Package Version
+    return string(pkgversion(@__MODULE__))
 end 
 
 # [x] RawSolver	            Yes	No	No

@@ -1,5 +1,8 @@
 module ToQUIO
 
+# A version-only release must invalidate compiled package/version metadata.
+Base.include_dependency(joinpath(@__DIR__, "..", "Project.toml"))
+
 import MathOptInterface as MOI
 
 using LinearAlgebra
