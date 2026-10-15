@@ -1,0 +1,21 @@
+[deps]
+Dates = "ade2ca70-3891-5945-98fb-dc099432e06a"
+Gurobi = "2e9cd046-0924-5485-92f1-d5272153d98b"
+LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+MathOptInterface = "b8f27783-ece8-5eb3-8dc8-9495eed66fee"
+Pkg = "44cfe95a-1eb2-52ea-b672-e2afdf69b78f"
+Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
+SHA = "ea8e919c-243c-51af-8825-aaa63cd721ce"
+SCIP = "82193955-e24f-5292-bf16-6f2c5261a85f"
+TOML = "fa267f1f-6049-4f14-aa54-33bafae1ed76"
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+ToQUIO = "c8c7c8a1-01ab-43fa-b80d-8804f80d4aae"
+ToQUBO = "9a412ddf-83fa-43b6-9748-7843c851aa65"
+
+[compat]
+Gurobi = "=1.9.2"
+MathOptInterface = "=1.54.0"
+SCIP = "=0.12.8"
+ToQUIO = "0.2"
+ToQUBO = "=0.7.1"
+julia = "1.10"
