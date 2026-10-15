@@ -184,7 +184,7 @@ def render(source, supplement, output):
                 stored_samples += sum(len(r['samples']) for r in runs)
             examples.append(summary)
         del result
-    
+
     assert len(examples) == 16 and len(rows) == 64 and total_runs == 640
     assert len({e['title'] for e in examples}) == 16
     summary = {'source_commit':'7a15110a8f90005203c8d2d90b534cb77ebcdfcf',
@@ -194,9 +194,9 @@ def render(source, supplement, output):
         'random_equivalence_checks':random_checks, 'examples':examples}
     (ROOT/'summary.json').write_text(json.dumps(summary,indent=2)+'\n')
     with (ROOT/'comparison.csv').open('w',newline='') as stream:
-        writer=csv.DictWriter(stream,fieldnames=list(rows[0]))
+        writer=csv.DictWriter(stream,fieldnames=list(rows[0]),lineterminator="\n")
         writer.writeheader();writer.writerows(rows)
-    
+
     lines=['# Legacy example encoding comparison', '',
         'All 16 mathematical models in `docs/src/examples.md`, at source commit '
         '`7a15110a8f90005203c8d2d90b534cb77ebcdfcf`, were evaluated locally. '
