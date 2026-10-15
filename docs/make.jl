@@ -20,6 +20,7 @@ makedocs(;
         "Home" => "index.md",
         "Quick Start" => "QUICKSTART.md",
         "Examples" => "examples.md",
+        "Legacy Example Comparison" => "legacy_examples.md",
         "CQT Software Deliverable" => "deliverable.md",
         "Release Readiness" => "release_readiness.md",
         "Penalty Tuning" => "penalties.md",

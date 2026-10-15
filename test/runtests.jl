@@ -10,6 +10,7 @@ using ToQUIO
     include("unit/encoding_interface.jl")
     include("unit/radix_encoding.jl")
     include("unit/bounded_encoding.jl")
+    include("unit/exact_ilp.jl")
     include("unit/penalty_documentation.jl")
     include("unit/study_protocol.jl")
     include("../benchmarks/test_core.jl")

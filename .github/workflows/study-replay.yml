@@ -73,6 +73,12 @@ jobs:
       - uses: actions/checkout@v7
         with:
           persist-credentials: false
+      - uses: actions/checkout@v7
+        with:
+          # Replay archived measurements with their actual reporting/compiler source.
+          ref: 209fcbaf1671ad49feeb1dae66e0997cc64dda36
+          path: .frozen-study
+          persist-credentials: false
       - uses: julia-actions/setup-julia@v3
         with:
           version: '1.10.11'
@@ -90,14 +96,14 @@ jobs:
           sudo systemd-run --scope --quiet -p MemoryMax=4G -p MemorySwapMax=0 -p CPUQuota=100% \
             runuser -u "$(id -un)" -- env JULIA_DEPOT_PATH="$runner_depot" \
             JULIA_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 JULIA_NUM_PRECOMPILE_TASKS=1 \
-            timeout 300 "$runner_julia" --project=. -e 'using Pkg, TOML;
+            timeout 300 "$runner_julia" --project=.frozen-study -e 'using Pkg, TOML;
               manifest = TOML.parsefile(joinpath(ARGS[1], "manifest.toml"));
               Pkg.add(PackageSpec(name="MathOptInterface", version=manifest["replay_moi_version"]));
               Pkg.instantiate()' "$study_temp/campaign"
           sudo systemd-run --scope --quiet -p MemoryMax=4G -p MemorySwapMax=0 -p CPUQuota=100% \
             runuser -u "$(id -un)" -- env JULIA_DEPOT_PATH="$runner_depot" \
             JULIA_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 JULIA_NUM_PRECOMPILE_TASKS=1 \
-            timeout 300 "$runner_julia" --project=. benchmarks/report.jl "$study_temp/campaign" "$study_temp/report"
+            timeout 300 "$runner_julia" --project=.frozen-study .frozen-study/benchmarks/report.jl "$study_temp/campaign" "$study_temp/report"
           python3 benchmarks/check_study_artifacts.py compare "$study_source" "$study_temp/report"
       - uses: actions/upload-artifact@v4
         if: failure()

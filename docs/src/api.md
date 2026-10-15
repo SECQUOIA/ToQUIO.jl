@@ -327,6 +327,12 @@ For an unhinted constraint, ToQUIO applies
 reproducing the existing objective exactly. A `ConstraintPenaltyHint` remains an
 exact per-constraint magnitude and bypasses both controls. ToQUIO uses the same
 control names as ToQUBO but keeps its own squared-residual penalty formula.
+The upstream design references are [ToQUBO penalty PR #143](https://github.com/JuliaQUBO/ToQUBO.jl/pull/143),
+[feasibility PR #146](https://github.com/JuliaQUBO/ToQUBO.jl/pull/146), and
+[metadata PR #133](https://github.com/JuliaQUBO/ToQUBO.jl/pull/133).
+ToQUIO's native integer/slack domains, composed encoding maps, applied-penalty
+inspection and explicit source-feasibility checks are implemented independently;
+these references do not introduce a ToQUBO runtime dependency.
 
 ```julia
 optimizer = ToQUIO.Optimizer(; penalty_offset = 1.0, penalty_scale = 1.0)

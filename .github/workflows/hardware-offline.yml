@@ -23,6 +23,12 @@ jobs:
       - uses: actions/checkout@v7
         with:
           persist-credentials: false
+      - uses: actions/checkout@v7
+        with:
+          # Keep the schema-2 packet's source identity independent of future releases.
+          ref: 4ea46adcbaf619c0b5aa6a644d3d9de68e685e4a
+          path: .frozen-hardware
+          persist-credentials: false
       - uses: julia-actions/setup-julia@v3
         with:
           version: '1.10.11'
@@ -46,26 +52,30 @@ jobs:
         run: |
           runner_julia=$(command -v julia)
           runner_depot="${JULIA_DEPOT_PATH:-$HOME/.julia}"
-          sudo systemd-run --scope --quiet -p MemoryMax=4G -p MemorySwapMax=0 -p CPUQuota=100% \
-            runuser -u "$(id -un)" -- env -u QCI_TOKEN -u QCI_RUN_LIVE_TESTS \
-            JULIA_DEPOT_PATH="$runner_depot" JULIA_CONDAPKG_ENV="$JULIA_CONDAPKG_ENV" \
-            JULIA_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 JULIA_NUM_PRECOMPILE_TASKS=1 \
-            timeout 900 "$runner_julia" --startup-file=no --project=benchmarks/hardware \
-            benchmarks/hardware/setup.jl "$RUNNER_TEMP"/qci-source/SECQUOIA-QCIOpt.jl-*
+          for source in . .frozen-hardware; do
+            sudo systemd-run --scope --quiet -p MemoryMax=4G -p MemorySwapMax=0 -p CPUQuota=100% \
+              runuser -u "$(id -un)" -- env -u QCI_TOKEN -u QCI_RUN_LIVE_TESTS \
+              JULIA_DEPOT_PATH="$runner_depot" JULIA_CONDAPKG_ENV="$JULIA_CONDAPKG_ENV" \
+              JULIA_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 JULIA_NUM_PRECOMPILE_TASKS=1 \
+              timeout 900 "$runner_julia" --startup-file=no --project="$source/benchmarks/hardware" \
+              "$source/benchmarks/hardware/setup.jl" "$RUNNER_TEMP"/qci-source/SECQUOIA-QCIOpt.jl-*
+          done
       - name: Test and reproduce with networking disabled
         run: |
           runner_julia=$(command -v julia)
           runner_depot="${JULIA_DEPOT_PATH:-$HOME/.julia}"
           for script in test_offline.jl prepare.jl; do
             args=()
+            source=.
             if [ "$script" = prepare.jl ]; then
+              source=.frozen-hardware
               args=("$RUNNER_TEMP/cqt-campaign" "$RUNNER_TEMP/cqt-hardware")
             fi
             sudo systemd-run --scope --quiet -p MemoryMax=4G -p MemorySwapMax=0 -p CPUQuota=100% \
               unshare --net runuser -u "$(id -un)" -- env -u QCI_TOKEN -u QCI_RUN_LIVE_TESTS \
               JULIA_DEPOT_PATH="$runner_depot" JULIA_CONDAPKG_ENV="$JULIA_CONDAPKG_ENV" \
               JULIA_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 JULIA_NUM_PRECOMPILE_TASKS=1 \
-              timeout 300 "$runner_julia" --startup-file=no --project=benchmarks/hardware \
-              "benchmarks/hardware/$script" "${args[@]}"
+              timeout 300 "$runner_julia" --startup-file=no --project="$source/benchmarks/hardware" \
+              "$source/benchmarks/hardware/$script" "${args[@]}"
           done
           python3 benchmarks/hardware/check_packet.py benchmarks/hardware/results "$RUNNER_TEMP/cqt-hardware"

@@ -1,0 +1,26 @@
+name: Legacy example evidence
+
+on:
+  pull_request:
+    paths: ['benchmarks/legacy_examples/**', 'docs/src/legacy_examples.md', '.github/workflows/legacy-examples.yml']
+  push:
+    branches: [main]
+    paths: ['benchmarks/legacy_examples/**', 'docs/src/legacy_examples.md', '.github/workflows/legacy-examples.yml']
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: Reproduce legacy example tables
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Verify immutable evidence without sampling
+        run: |
+          python3 -m unittest discover -s benchmarks/legacy_examples -p 'test_*.py'
+          sudo systemd-run --scope --quiet -p MemoryMax=4G -p MemorySwapMax=0 -p CPUQuota=100% \
+            runuser -u "$(id -un)" -- timeout 180 python3 benchmarks/legacy_examples/report.py --check
