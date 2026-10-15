@@ -154,6 +154,18 @@ wall timestamps are not reproducible. `plots.py OUTPUT` plots verified tables.
 The plot environment pins Python 3.13.5, matplotlib 3.10.9 and NumPy 2.5.0;
 `plot-lock.txt` retains all exact distribution versions.
 
+Measurement coverage and resource-protocol conformance are reported separately.
+A live effective swap-limit discrepancy was observed and corrected during this
+campaign, although Docker's configured limits stayed unchanged and swap use was
+zero at the observations. Continuous no-swap enforcement cannot be certified
+between those observations. The final packet retains the exact incident and a
+conservative uncertainty window under `processes`. `resource_conformance.py`
+reconstructs additive cell and chain associations from attempt/finish UTC
+timestamps; every chain of a potentially overlapping cell is included because
+chains have no separate UTC interval. The report, timing figures and regenerated
+provenance tables carry this qualification. No original measurements are changed
+or rerun. A retained incident without its hash-bound window is rejected.
+
 Campaign packet schema 2 uses lossless XZ logical archives (preset 6) in ordered,
 hashed parts of at most 48 MiB. The frozen 512 MiB limit applies to their aggregate
 compressed bytes. A separate 64 GiB total uncompressed allowance and a free-disk

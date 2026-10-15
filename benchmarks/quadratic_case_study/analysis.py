@@ -20,6 +20,27 @@ def render(directory):
     summary=json.loads((directory/'summary.json').read_text())
     structure=rows(directory/'structural.csv');direct=rows(directory/'direct.csv')
     batches=rows(directory/'knapsack-batches.csv');pairs=rows(directory/'paired-to-native.csv')
+    qualification=summary.get('resource_conformance')
+    resource_note=[]
+    if qualification:
+        resource_note=[
+            '**Resource conformance is qualified.** Measurement completion does not certify '
+            'continuous enforcement of the intended no-swap limit. A live kernel allowance '
+            'discrepancy was observed and corrected without restarting the worker. '
+            'Observed swap usage was zero before and after correction; usage and enforcement '
+            'between observations remain unknown.', '',
+            f"The conservative UTC interval is `{qualification['uncertainty_window_start_utc']}` "
+            f"through `{qualification['uncertainty_window_end_utc']}`. "
+            f"It potentially overlaps {qualification['overlapping_cells']} cells and "
+            f"{qualification['overlapping_chains']} chains. Timings involving these records, "
+            'including pooled tables and first-feasibility figures below, carry this qualification. '
+            'Every chain of an overlapping parent cell is conservatively included; separate chain '
+            'UTC boundaries are unavailable. Original statuses, values and proposal counts remain unchanged.', '',
+            '[Cell associations](resource-conformance/resource-conformance-cells.csv), '
+            '[chain associations](resource-conformance/resource-conformance-chains.csv), and '
+            '[hashed provenance](resource-conformance/resource-conformance-summary.json) '
+            'identify the affected records. The deviation does not establish a mathematical '
+            'or sampler defect and is not presented as full resource-protocol conformance.', '']
     lines=['# Fresh quadratic case study','',
         'This report uses fresh synthetic instances and current exact integer encodings. '
         'It reports local software experiments; physical-provider replication remains pending.','',
@@ -32,6 +53,7 @@ def render(directory):
          if summary['full_execution'] else
          '**Execution is incomplete.** Missing, refused, errored and censored cells remain part of the study; '
          'the available measurements do not establish full execution.'),'',
+        *resource_note,
         'Source feasibility screens/witnesses: `'+str(summary.get('source_witness_statuses',{}))+'`. '
         'Capacity-infeasible facility draws are retained without replacement; they have no source optimum.', '',
         '## Structural comparisons','',
