@@ -24,13 +24,13 @@ target assignments across four encodings: every global minimizer decodes to
 
 ## Table of Contents
 
-- [Basic Usage](#basic-usage)
-- [Linear Programming](#linear-programming)
-- [Quadratic Programming](#quadratic-programming)
-- [Constrained Problems](#constrained-problems)
-- [Custom Penalties](#custom-penalties)
-- [Working with Different Solvers](#working-with-different-solvers)
-- [Inspecting Reformulation](#inspecting-reformulation)
+- [Basic Usage](@ref "Basic Usage")
+- [Linear Programming](@ref "Linear Programming")
+- [Quadratic Programming](@ref "Quadratic Programming")
+- [Constrained Problems](@ref "Constrained Problems")
+- [Custom Penalties](@ref "Custom Penalties")
+- [Working with Different Solvers](@ref "Working with Different Solvers")
+- [Inspecting Reformulation](@ref "Inspecting Reformulation")
 
 ## Basic Usage
 

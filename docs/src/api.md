@@ -4,10 +4,10 @@ Complete API reference for ToQUIO.jl.
 
 ## Table of Contents
 
-- [Optimizer](#optimizer)
-- [Reformulation Functions](#reformulation-functions)
-- [MOI Attributes](#moi-attributes)
-- [Internal Functions](#internal-functions)
+- [Optimizer](@ref "Optimizer")
+- [Reformulation Functions](@ref "Reformulation Functions")
+- [MOI Attributes](@ref "MOI Attributes")
+- [Internal Functions](@ref "Internal Functions")
 
 ## Optimizer
 
