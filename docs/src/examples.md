@@ -6,6 +6,22 @@ Unless a backend solver is explicitly shown, these examples use reformulation-on
 mode. In this mode, `optimize!` builds `optimizer.target_model` and
 `optimizer.data`; it does not produce primal values or objective values.
 
+## Exactness versus search performance
+
+An exact encoding preserves the global optimum of the penalized QUIO model.
+With sufficient penalties, its global minimizers decode to global optima of the
+original constrained problem. A backend still has to find such a minimizer:
+finite-budget random search has no global-optimality guarantee. Weak manual
+penalty hints need separate feasibility checks.
+
+The [legacy-example comparison](legacy_examples.md) evaluates all 16 models below
+with a bounded local sampler. A count such as “4 of 10 runs found the optimum”
+measures that heuristic's success, not four correct reformulations out of ten.
+For the simple ILP below, exhaustive exact-integer regression checks all 75,664
+target assignments across four encodings: every global minimizer decodes to
+`x = 5, y = 0`, with objective 5. The original lower bound is immediate:
+`x + 2y >= x + y >= 5`.
+
 ## Table of Contents
 
 - [Basic Usage](#basic-usage)
