@@ -16,8 +16,8 @@ const DOCS_PROJECT_DEPS = Dict(
 )
 
 const SUPPORTED_JULIA_VERSIONS = ("1.10", "1")
-# Keep this in sync with Project.toml until the first registered tag is cut.
-const INITIAL_REGISTRATION_VERSION = "0.1.0"
+# Keep package metadata and maintained release instructions in agreement.
+const EXPECTED_PACKAGE_VERSION = "0.2.0"
 
 function normalized_yaml_scalar(value::AbstractString)
     value = strip(value)
@@ -179,7 +179,9 @@ end
     project = TOML.parsefile(joinpath(pkgdir(ToQUIO), "Project.toml"))
     compat = project["compat"]
 
-    @test project["version"] == INITIAL_REGISTRATION_VERSION
+    @test project["version"] == EXPECTED_PACKAGE_VERSION
+    @test pkgversion(ToQUIO) == VersionNumber(project["version"])
+    @test ToQUIO.MOI.get(ToQUIO.Optimizer(), ToQUIO.MOI.SolverVersion()) == string(pkgversion(ToQUIO))
     @test compat["julia"] == first(SUPPORTED_JULIA_VERSIONS)
     @test compat["LinearAlgebra"] == "1"
     @test compat["MathOptInterface"] == "1.11"
@@ -207,7 +209,7 @@ end
     @test occursin("registered in the Julia General registry", readme)
     @test occursin("""Pkg.add("ToQUIO")""", readme)
     @test occursin("""Pkg.add(url="https://github.com/SECQUOIA/ToQUIO.jl")""", readme)
-    @test occursin("version = \"$(INITIAL_REGISTRATION_VERSION)\"", readme)
+    @test occursin("version = \"$(EXPECTED_PACKAGE_VERSION)\"", readme)
 
     @test occursin("## Release Process", contributing)
     @test occursin("JuliaRegistrator", contributing)
@@ -218,7 +220,7 @@ end
     @test occursin("Release checklist", contributing)
     @test occursin("Pkg.test()", contributing)
     @test occursin("docs/make.jl --skip-deploy", contributing)
-    @test occursin("version = \"$(INITIAL_REGISTRATION_VERSION)\"", contributing)
+    @test occursin("version = \"$(EXPECTED_PACKAGE_VERSION)\"", contributing)
 end
 
 @testset "CI workflow policy" begin

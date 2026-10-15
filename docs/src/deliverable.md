@@ -146,6 +146,6 @@ screen, and native knapsack also exceeds its conservative level screen. Provider
 confirmation, explicit subset acceptance, account access and a concrete approved
 manifest/budget are required by [#53](https://github.com/SECQUOIA/ToQUIO.jl/issues/53).
 
-See [release readiness](release_readiness.md) for proposed release notes,
+See [release readiness](release_readiness.md) for release notes,
 compatibility and the milestone checklist. No package release or live campaign
 is implied by source-pinned installation or successful CI.
