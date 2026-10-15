@@ -166,6 +166,17 @@ chains have no separate UTC interval. The report, timing figures and regenerated
 provenance tables carry this qualification. No original measurements are changed
 or rerun. A retained incident without its hash-bound window is rejected.
 
+Host-watchdog interruption and recovery are qualified separately from swap-limit
+uncertainty. `supervision_conformance.py` verifies a hash-bound manifest of the
+exact recovery records and executed controller sources under `processes`, then
+associates cells and all their chains with the union of the conservative recorded
+gaps. Intervening supervised time is not automatically included. Original worker
+identity, unchanged measurement/protocol flags, retained phase timestamps and
+controller handoff links are checked. The report and timing figures disclose that
+continuous phase/campaign deadline enforcement during these gaps cannot be
+certified; completed measurements do not establish full deadline conformance.
+Missing, changed or unbound recovery evidence is rejected. No measurement is rerun.
+
 Campaign packet schema 2 uses lossless XZ logical archives (preset 6) in ordered,
 hashed parts of at most 48 MiB. The frozen 512 MiB limit applies to their aggregate
 compressed bytes. A separate 64 GiB total uncompressed allowance and a free-disk

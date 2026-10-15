@@ -4,7 +4,7 @@ from pathlib import Path
 from campaign import STUDY, digest, read_toml
 
 TOOLS = ('report.py', 'analysis.py', 'plots.py', 'campaign.py', 'compare.py', 'pack.py',
-         'packet_io.py', 'freeze_analysis.py', 'resource_conformance.py',
+         'packet_io.py', 'freeze_analysis.py', 'resource_conformance.py', 'supervision_conformance.py',
          'plot-requirements.txt', 'plot-lock.txt')
 
 

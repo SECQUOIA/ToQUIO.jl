@@ -40,7 +40,8 @@ def scalar_header(path):
     return tomllib.loads(raw.decode()), hashlib.sha256(raw).hexdigest()
 
 
-def qualification(start, finish, window_start, window_end, *, terminal):
+def qualification(start, finish, window_start, window_end, *, terminal,
+                  label='effective-swap-limit-uncertain'):
     if start and finish and utc(finish) < utc(start):
         raise ValueError('Reversed cell interval')
     if start and utc(start) > window_end:
@@ -49,7 +50,7 @@ def qualification(start, finish, window_start, window_end, *, terminal):
         return False, 'outside-recorded-uncertainty-window'
     if not start and not terminal:
         return None, 'not-yet-measured'
-    return True, ('effective-swap-limit-uncertain' if start and finish
+    return True, (label if start and finish
                   else 'potential-overlap-missing-boundary')
 
 
@@ -62,8 +63,14 @@ def write_csv(path, rows, fields):
     temporary.replace(path)
 
 
-def build(root, incident, output, start, end, *, window_basis, window_sha256, active_cell):
+def build(root, incident, output, start, end, *, window_basis, window_sha256, active_cell,
+          windows=None, prefix='resource-conformance', field='resource_qualification',
+          label='effective-swap-limit-uncertain', evidence_key='incident_sha256',
+          conformance='Effective no-swap enforcement cannot be certified throughout the uncertainty window'):
     if utc(start) >= utc(end):
+        raise ValueError('Empty uncertainty window')
+    windows = windows or [dict(start=start, end=end, active_cell=active_cell)]
+    if any(utc(w['start']) >= utc(w['end']) for w in windows):
         raise ValueError('Empty uncertainty window')
     plan = json.loads((root/'plan.json').read_text())
     terminal = {p.stem: p for p in (root/'cells').glob('*.toml')}
@@ -83,19 +90,25 @@ def build(root, incident, output, start, end, *, window_basis, window_sha256, ac
             raise ValueError('Terminal identity mismatch')
         beginning = attempt.get('started_utc', '')
         finish = header.get('finished_utc', '')
-        overlap, status = qualification(beginning, finish, utc(start), utc(end),
-                                        terminal=identifier in terminal)
+        associations = [qualification(beginning, finish, utc(w['start']), utc(w['end']),
+                                      terminal=identifier in terminal, label=label) for w in windows]
+        overlap, status = next((item for item in associations if item[0] is True), associations[0])
         row = dict(cell_id=identifier, kind=planned['kind'],
                    raw_status=header.get('status', 'not-terminal'),
                    started_utc=beginning, finished_utc=finish,
                    potential_overlap='' if overlap is None else str(overlap).lower(),
-                   resource_qualification=status,
+                   **{field: status},
                    attempt_sha256=digest(marker) if marker.exists() else '',
                    terminal_scalar_header_sha256=header_hash)
         cells.append(row)
         by_id[identifier] = row
-    if active_cell not in by_id or by_id[active_cell]['potential_overlap'] != 'true':
-        raise ValueError('Resource window excludes the incident active cell')
+    for window in windows:
+        identifier = window['active_cell']
+        if identifier not in by_id or qualification(
+                by_id[identifier]['started_utc'], by_id[identifier]['finished_utc'],
+                utc(window['start']), utc(window['end']), terminal=identifier in terminal,
+                label=label)[0] is not True:
+            raise ValueError('Resource window excludes the incident active cell')
     chains = []
     for path in sorted((root/'chains').glob('*.toml')):
         match = re.fullmatch(r'(.+)--b([1-3])-r(10|[1-9])', path.stem)
@@ -106,9 +119,9 @@ def build(root, incident, output, start, end, *, window_basis, window_sha256, ac
                            interval_basis='conservative-parent-cell-UTC-interval',
                            started_utc=parent['started_utc'], finished_utc=parent['finished_utc'],
                            potential_overlap=parent['potential_overlap'],
-                           resource_qualification=parent['resource_qualification'],
+                           **{field: parent[field]},
                            raw_chain_sha256=digest(path)))
-    summary = dict(schema_version=1, incident_sha256=digest(incident),
+    summary = dict(schema_version=1, **{evidence_key: digest(incident)},
                    generator_sha256=digest(Path(__file__)),
                    uncertainty_window_start_utc=start, uncertainty_window_end_utc=end,
                    interval_boundary='closed; UTC; parent intervals conservatively bound chains',
@@ -119,20 +132,23 @@ def build(root, incident, output, start, end, *, window_basis, window_sha256, ac
                    campaign_terminal=(root/'completion.json').exists(),
                    measurement_values_changed=False,
                    qualification_scope='This incident only; outside-window does not certify other resource properties',
-                   conformance='Effective no-swap enforcement cannot be certified throughout the uncertainty window')
+                   conformance=conformance)
+    if len(windows) > 1:
+        summary['uncertainty_windows'] = windows
+        summary['association_basis'] = 'Union of individual closed intervals; intervening gaps are not automatically qualified'
     if output.is_symlink():
         raise ValueError('Unexpected resource report link')
     output.mkdir(parents=True, exist_ok=True)
-    names = ['resource-conformance-'+name for name in ('cells.csv','chains.csv','summary.json')]
+    names = [prefix+'-'+name for name in ('cells.csv','chains.csv','summary.json')]
     if any((output/name).is_symlink() or (output/(name+'.tmp')).is_symlink() for name in names):
         raise ValueError('Unexpected resource report file link')
-    write_csv(output/'resource-conformance-cells.csv', cells, list(cells[0]))
-    write_csv(output/'resource-conformance-chains.csv', chains, list(chains[0]) if chains else
+    write_csv(output/(prefix+'-cells.csv'), cells, list(cells[0]))
+    write_csv(output/(prefix+'-chains.csv'), chains, list(chains[0]) if chains else
               ['chain_id','parent_cell_id','interval_basis','started_utc','finished_utc',
-               'potential_overlap','resource_qualification','raw_chain_sha256'])
-    temporary = output/'resource-conformance-summary.json.tmp'
+               'potential_overlap',field,'raw_chain_sha256'])
+    temporary = output/(prefix+'-summary.json.tmp')
     temporary.write_text(json.dumps(summary, sort_keys=True, indent=2)+'\n')
-    temporary.replace(output/'resource-conformance-summary.json')
+    temporary.replace(output/(prefix+'-summary.json'))
     return summary
 
 

@@ -17,7 +17,8 @@ def rows(path):
 
 def produce(directory):
     structural=rows(directory/'structural.csv'); batches=rows(directory/'knapsack-batches.csv')
-    qualified=bool(json.loads((directory/'summary.json').read_text()).get('resource_conformance'))
+    summary=json.loads((directory/'summary.json').read_text())
+    qualified=bool(summary.get('resource_conformance') or summary.get('supervision_conformance'))
     for family in ('facility','inventory','route_allocation','knapsack'):
         profiles=sorted({r['profile'] for r in structural if r['family']==family})
         for profile in profiles:
@@ -73,7 +74,7 @@ def produce(directory):
         for ax in axes:ax.grid(alpha=.2)
         handles,labels=axes[0].get_legend_handles_labels();fig.legend(handles,labels,loc='outside lower center',ncol=3,fontsize=8)
         title=f'Observed first source feasibility: replicate {replicate}\nLocal software; no IID time-to-success estimate'
-        if qualified:title+='\nResource-limit uncertainty: see REPORT.md and resource-conformance tables'
+        if qualified:title+='\nLimit-enforcement uncertainty: see REPORT.md and conformance tables'
         fig.suptitle(title,**({'fontsize':10} if qualified else {}))
         fig.savefig(directory/f'knapsack-feasibility-time-replicate-{replicate}.png',dpi=160);plt.close(fig)
     (directory/'plot-environment.json').write_text(json.dumps(dict(python=platform.python_version(),matplotlib=matplotlib.__version__,

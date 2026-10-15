@@ -41,6 +41,25 @@ def render(directory):
             '[hashed provenance](resource-conformance/resource-conformance-summary.json) '
             'identify the affected records. The deviation does not establish a mathematical '
             'or sampler defect and is not presented as full resource-protocol conformance.', '']
+    supervision_note=[]
+    supervision=summary.get('supervision_conformance')
+    if supervision:
+        supervision_note=[
+            '**Deadline conformance is qualified.** Continuous host enforcement of phase and '
+            'campaign deadlines during the recorded supervision gaps cannot be certified. '
+            'The original worker was adopted without restarting it or resetting deadlines; '
+            'measurement completion does not retrospectively establish watchdog coverage.', '',
+            f"The union of the recorded closed UTC intervals potentially overlaps "
+            f"{supervision['overlapping_cells']} cells and {supervision['overlapping_chains']} chains. "
+            'Every chain of an overlapping parent is conservatively included. Timings involving '
+            'these records, including pooled tables and first-feasibility figures, carry this '
+            'qualification separately from any memory/swap qualification. Original measurement '
+            'statuses, values and proposal counts remain unchanged.', '',
+            '[Cell associations](supervision-conformance/supervision-conformance-cells.csv), '
+            '[chain associations](supervision-conformance/supervision-conformance-chains.csv), and '
+            '[hashed provenance and gap intervals](supervision-conformance/supervision-conformance-summary.json) '
+            'identify the affected records and bind the recovery observations and exact executed '
+            'controller sources. This is a qualified protocol deviation, not full deadline conformance.', '']
     lines=['# Fresh quadratic case study','',
         'This report uses fresh synthetic instances and current exact integer encodings. '
         'It reports local software experiments; physical-provider replication remains pending.','',
@@ -54,6 +73,7 @@ def render(directory):
          '**Execution is incomplete.** Missing, refused, errored and censored cells remain part of the study; '
          'the available measurements do not establish full execution.'),'',
         *resource_note,
+        *supervision_note,
         'Source feasibility screens/witnesses: `'+str(summary.get('source_witness_statuses',{}))+'`. '
         'Capacity-infeasible facility draws are retained without replacement; they have no source optimum.', '',
         '## Structural comparisons','',
