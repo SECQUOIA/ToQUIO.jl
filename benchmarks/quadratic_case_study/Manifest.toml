@@ -710,7 +710,7 @@ version = "0.7.1"
 
 [[deps.ToQUIO]]
 deps = ["LinearAlgebra", "MathOptInterface"]
-path = "/workspace/"
+path = "../.."
 uuid = "c8c7c8a1-01ab-43fa-b80d-8804f80d4aae"
 version = "0.2.0"
 

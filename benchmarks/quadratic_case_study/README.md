@@ -111,8 +111,9 @@ source construction separately reported and all arms warmed before measurement.
 
 ## Execution and replay
 
-Use Julia 1.10.11 with this profile's frozen Manifest. `setup.jl` establishes the
-local package path and exact ToQUBO source pin. Run `runtests.jl` for bounded
+Use Julia 1.10.11 with this profile's frozen Manifest. `setup.jl` installs its
+pinned dependencies without re-resolution. The relative local package path also
+loads the archived source during standalone replay. Run `runtests.jl` for bounded
 validation; `TOQUIO_CHECK_GUROBI=true` additionally checks the existing license.
 CI uses SCIP without credentials. Every heavy local command requires an OS memory
 cap with no swap and finite timeout, including setup and validation.

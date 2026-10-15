@@ -75,7 +75,7 @@ jobs:
             sudo systemd-run --scope --quiet -p MemoryMax=4G -p MemorySwapMax=0 -p CPUQuota=100% \
               runuser -u "$(id -un)" -- env JULIA_DEPOT_PATH="$runner_depot" \
               JULIA_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 JULIA_NUM_PRECOMPILE_TASKS=1 \
-              timeout 300 "$runner_julia" --project=benchmarks/quadratic_case_study "$frozen_profile/replay.jl" "$study_raw" 6
+              timeout 300 "$runner_julia" --project="$frozen_profile" "$frozen_profile/replay.jl" "$study_raw" 6
           else
             echo "No measurement packet yet; validating the source implementation."
           fi
