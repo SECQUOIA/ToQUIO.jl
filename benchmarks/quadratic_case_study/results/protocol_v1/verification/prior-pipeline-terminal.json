@@ -1,0 +1,17 @@
+{
+  "completed": {
+    "bootstrap": "ec6aaf4023d2ce959fb0fcc7a3c5f679c9be089046b2c17e2837595fabaa1606",
+    "extract": "2c017d1e59fe83a2ee086cc3135531336670af306a7de952b81bce2e79b2cd07",
+    "pack": "afb65e329751e952c152eb96c0161649936775e11a75b42d7c65e8fdfb083c65",
+    "raw-plots": "98a2119354bee460aa79ec11736b4e5709f5fb850b077ec25a8b46c719bb502f",
+    "raw-report": "0a8018c648dc07f88f371de78e1f8eec81c4fc685623757bb58d37b074027959",
+    "view-plots": "9695a2d7756c8e7b0848ebc9d8c2f510b54b978f59e9d6953e3d8ea7574a0eaa",
+    "view-report": "52a1a3acc078937e5bfc66b5a2609ce187395e870ee42ecdc57fa1556efdec53"
+  },
+  "kind": "amended-postprocessing-pipeline",
+  "measurement_reruns": false,
+  "observed_utc": "2026-10-16T00:35:51.105536+00:00",
+  "phase": "stopped-for-inspection",
+  "reason": "Command '['/home/bernalde/.local/bin/python3', '-B', '/tmp/toquio-run-fresh-final-stage-v2.py', 'replay']' returned non-zero exit status 1.",
+  "runner_sha256": "22a7c542988805a12133b6320e1714b6842ef8909cb91ff8e2cb3012f611fb9f"
+}

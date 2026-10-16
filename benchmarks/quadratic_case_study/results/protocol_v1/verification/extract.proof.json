@@ -1,0 +1,29 @@
+{
+  "detail": {
+    "derived_view_manifest_sha256": "b7a9b282dcb340de033fa79d4624881b8147187eee5b147a25a54f18256838a1"
+  },
+  "effective_controls_after": {
+    "cpu.max": "100000 100000",
+    "memory.current": "1076224000",
+    "memory.events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+    "memory.max": "4294967296",
+    "memory.peak": "1186590720",
+    "memory.swap.current": "0",
+    "memory.swap.max": "0"
+  },
+  "effective_controls_before": {
+    "cpu.max": "100000 100000",
+    "memory.current": "15486976",
+    "memory.events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+    "memory.max": "4294967296",
+    "memory.peak": "15486976",
+    "memory.swap.current": "0",
+    "memory.swap.max": "0"
+  },
+  "finished_utc": "2026-10-16T00:32:58.804046+00:00",
+  "postprocessing_commit": "3db4e8a349adeebb62bf1f99351768072c27a3a1",
+  "producing_commit": "ca326edbdcfed78c8fc4335069c079887d54f6c4",
+  "stage": "extract",
+  "started_utc": "2026-10-16T00:23:49.093488+00:00",
+  "status": "PASS"
+}

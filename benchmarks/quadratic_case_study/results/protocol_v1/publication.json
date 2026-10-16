@@ -1,0 +1,95 @@
+{
+  "archive_parts": 25,
+  "assembled_utc": "2026-10-16T00:39:05.530881+00:00",
+  "completed_proposals": 34560000,
+  "compressed_allowance_amendment_bytes": 1073741824,
+  "compressed_bytes": 651122368,
+  "index_sha256": "334753ba1491b0eede1e9097104e99f488c558e4b3e47098bc6c8cea669a3292",
+  "kind": "completed-fresh-quadratic-study-publication",
+  "measured_cells": 3132,
+  "original_members_retained": 24584,
+  "original_packaging_budget_conformance": "failed",
+  "packet_members": 24614,
+  "physical_provider_jobs": 0,
+  "plot_environment_bytes_identical": true,
+  "png_files_compared": 34,
+  "postprocessing_commit": "3db4e8a349adeebb62bf1f99351768072c27a3a1",
+  "qualifications": "Resource/supervision and Float64 diagnostics remain as reported; amended archive fit does not establish original512MiB packaging conformance",
+  "raw_view_report_files_compared": 12,
+  "replay_environment_recovery": "The first replay stopped before running with a missing MathOptInterface cache entry; retry restored the original campaign depot layers, with no source/manifest/archive changes",
+  "schema_version": 1,
+  "source_commit": "ca326edbdcfed78c8fc4335069c079887d54f6c4",
+  "standalone_replayed_chains": 6,
+  "uncompressed_bytes": 41871069914,
+  "verification_files": {
+    "bootstrap.proof.json": {
+      "sha256": "ec6aaf4023d2ce959fb0fcc7a3c5f679c9be089046b2c17e2837595fabaa1606",
+      "size": 922
+    },
+    "check-original-retention.py": {
+      "sha256": "3f6cb7bf00ad7cf31a6fb39fd21aedadc6e0a9900abdf3b4b78d20a44d1144c4",
+      "size": 2312
+    },
+    "extract.proof.json": {
+      "sha256": "2c017d1e59fe83a2ee086cc3135531336670af306a7de952b81bce2e79b2cd07",
+      "size": 1030
+    },
+    "original-retention.proof.json": {
+      "sha256": "d3ee99e9abc22653862f7fb340544b7f0649b3553407387489db8e05e853c9b5",
+      "size": 3468
+    },
+    "pack.proof.json": {
+      "sha256": "afb65e329751e952c152eb96c0161649936775e11a75b42d7c65e8fdfb083c65",
+      "size": 1165
+    },
+    "prior-pipeline-terminal.json": {
+      "sha256": "04493aad26675c1250c90d5aed71f31e3247181dd711840d4b12d52846a52cc8",
+      "size": 1025
+    },
+    "prior-replay-environment-failure.log": {
+      "sha256": "62f35d63541a8de3978418fbd772c71270eb021ef13476312048a3a5dca7bafa",
+      "size": 2295
+    },
+    "raw-plots.proof.json": {
+      "sha256": "98a2119354bee460aa79ec11736b4e5709f5fb850b077ec25a8b46c719bb502f",
+      "size": 5159
+    },
+    "raw-report.proof.json": {
+      "sha256": "0a8018c648dc07f88f371de78e1f8eec81c4fc685623757bb58d37b074027959",
+      "size": 7500
+    },
+    "replay-environment-recovery.py": {
+      "sha256": "470a7bcd0e08031e8a8e2d696432b95f23b0b4c86abd92d5d83ab222244a83a5",
+      "size": 4700
+    },
+    "replay.log": {
+      "sha256": "22d0ea027db9894624443a37c00ec42eb3ddcb74a90e1ef2594e24d3c31c26d0",
+      "size": 145
+    },
+    "replay.proof.json": {
+      "sha256": "f049be92cd11a00a1254b6c91d97e0ec906545644554b2ccdc11f2de3fd1ed6c",
+      "size": 1031
+    },
+    "stage-controller.py": {
+      "sha256": "c58c5fc264876adfc3cb24d67346130a5ff54694c19d9bb80d139a76713a9dfa",
+      "size": 2457
+    },
+    "stage-runner.py": {
+      "sha256": "22a7c542988805a12133b6320e1714b6842ef8909cb91ff8e2cb3012f611fb9f",
+      "size": 12440
+    },
+    "terminal-recovery.json": {
+      "sha256": "8a71cde8318e16b995dd12bd5c9da155f02882113fc4df0286c7e64910978897",
+      "size": 1574
+    },
+    "view-plots.proof.json": {
+      "sha256": "9695a2d7756c8e7b0848ebc9d8c2f510b54b978f59e9d6953e3d8ea7574a0eaa",
+      "size": 5159
+    },
+    "view-report.proof.json": {
+      "sha256": "52a1a3acc078937e5bfc66b5a2609ce187395e870ee42ecdc57fa1556efdec53",
+      "size": 7494
+    }
+  },
+  "verified_chains": 8640
+}

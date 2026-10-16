@@ -1,0 +1,138 @@
+{
+  "detail": {
+    "report_files": {
+      "REPORT.md": "4665a13d72f02a3371f1f105729302b5145abe104d59ec549d910712b0119768",
+      "direct.csv": "e34bd8d051608f661388cd96a95154052b2ae9f965f225ca490cd6e448316d6b",
+      "knapsack-batches.csv": "5e02c233885e0807bf6f1b73357eed6488ede45997d7f0de842aa70529c05a2e",
+      "paired-to-native.csv": "c50fce63e4db259dc98bc13b656b4e21b4b2dc53fb53be57379c0fd6d2e0a785",
+      "structural.csv": "f5d0f01e9eda431875f6b1c449fa2c3240b207d2d699aea39fd519dacc9b58aa",
+      "summary.json": "be50c21b617f5a3b6453cc42ff6cc1358e5f72f847ac0ee70fb17c737d7cfc52"
+    },
+    "summary": {
+      "cell_statuses": {
+        "measured": 3132
+      },
+      "completed_proposals": 34560000,
+      "full_execution": true,
+      "packaging_conformance": {
+        "amended_compressed_bytes": 1073741824,
+        "amended_packet_fit": "requires-separate-complete-packet-verification",
+        "failed_attempt_sha256": "c17fb739453c2866526f22d295b5113fce8c7329832ce784bf74dc2b0eb4518b",
+        "manifest_sha256": "f9a946217e63a3150efa3eb2475210dd808f6eaf9cdbbcceeced70992651fece",
+        "negative_probe_sha256": "52dece1719b5c39a37e1459a5ff0d9453c9a913322b623f9731445baaf5f10bc",
+        "original_budget_conformance": "failed",
+        "original_compressed_bytes": 536870912,
+        "previous_postprocessing_commit": "efcc66430756a66f0ffddd58f144cfac74ac30ce"
+      },
+      "physical_provider": "pending-no-jobs",
+      "planned_chains": 8640,
+      "planned_direct": 396,
+      "planned_structural": 2736,
+      "protocol_sha256": "c99ae179dd7de1d426ea99400dc25857c8bb8c54d9c283253bdd5c52264af180",
+      "reserved_proposals": 34560000,
+      "resource_conformance": {
+        "campaign_terminal": true,
+        "conformance": "Effective no-swap enforcement cannot be certified throughout the uncertainty window",
+        "cumulative_swap_usage": {
+          "container": "toquio-fresh-campaign-1792045388-1",
+          "container_id": "a1cd450041d898ff7c8beabccc6cd8a854260a1d57386250e3545ae60bbf1605",
+          "container_started_utc": "2026-10-15T06:23:09.231551643Z",
+          "continuous_limit_enforcement_certified": false,
+          "counter_semantics_url": "https://www.kernel.org/doc/html/v6.6/admin-guide/cgroup-v2.html#memory-interface-files",
+          "evidence_manifest_sha256": "8ccdde0fe9b78ce57eeb706000a60a22b5017f183719d12ed62fedb9b8cd1569",
+          "identity_sha256": "44c12f6f741475c0ea22921eec2163be8039f32b8d2bcaae3b542e4c3015dd2c",
+          "kernel_release": "6.6.114.1-microsoft-standard-WSL2",
+          "observation_sha256": "ae448c838f88c69a83484cdea561a31b4227ade303fcbf6db98203502f8ef333",
+          "read_only_mode": "444",
+          "recorded_peak_bytes": 0,
+          "scope": "Original container cgroup and descendants since cgroup creation; not host-wide or later unfinished campaign",
+          "semantics_sha256": "fb996695fa3fb9472a0f0b9442543cf55f12a5d374b6ec8d128cc0e87fc4e03e",
+          "through_utc": "2026-10-15T15:21:16.610524+00:00"
+        },
+        "generator_sha256": "20d4973374e0b0fa16adbc62c59ff766dc752d25aacf80b067283dac35c7b47e",
+        "incident_sha256": "1c35406225bfeb100f086e80f99541ec1fa2d918e7f87a8e35608c71adc6c64f",
+        "interval_boundary": "closed; UTC; parent intervals conservatively bound chains",
+        "measurement_values_changed": false,
+        "overlapping_cells": 309,
+        "overlapping_chains": 540,
+        "planned_cells": 3132,
+        "qualification_scope": "This incident only; outside-window does not certify other resource properties",
+        "retained_chains": 8640,
+        "schema_version": 1,
+        "terminal_cells": 3132,
+        "uncertainty_window_end_utc": "2026-10-15T11:46:47.385764+00:00",
+        "uncertainty_window_start_utc": "2026-10-15T10:29:00+00:00",
+        "window_basis": "Last effective-zero observation was approximately 10:30 UTC; start padded to 10:29. End is the incident-record timestamp after verified restoration.",
+        "window_record_sha256": "c81e1448f0c22456e61ed24cc105b5b4b870a4d275b0227e4da8c138d48e1e2f"
+      },
+      "retained_chains": 8640,
+      "source_commit": "ca326edbdcfed78c8fc4335069c079887d54f6c4",
+      "source_profiles": 456,
+      "source_witness_statuses": {
+        "capacity-infeasible": 6,
+        "source-feasible": 450
+      },
+      "supervision_conformance": {
+        "association_basis": "Union of individual closed intervals; intervening gaps are not automatically qualified",
+        "campaign_terminal": true,
+        "conformance": "Continuous host phase/campaign deadline enforcement cannot be certified during the recorded gaps",
+        "generator_sha256": "20d4973374e0b0fa16adbc62c59ff766dc752d25aacf80b067283dac35c7b47e",
+        "interval_boundary": "closed; UTC; parent intervals conservatively bound chains",
+        "measurement_values_changed": false,
+        "overlapping_cells": 98,
+        "overlapping_chains": 0,
+        "planned_cells": 3132,
+        "provenance_manifest_sha256": "ab5162fd369831ae8f0f1d90378b43202eb1979cf6ed10a25b1244fb8139b282",
+        "qualification_scope": "This incident only; outside-window does not certify other resource properties",
+        "retained_chains": 8640,
+        "schema_version": 1,
+        "terminal_cells": 3132,
+        "uncertainty_window_end_utc": "2026-10-15T13:46:46.010735+00:00",
+        "uncertainty_window_start_utc": "2026-10-15T13:20:00+00:00",
+        "uncertainty_windows": [
+          {
+            "active_cell": "inventory-n150-m1024-r2-rounded-fidelity--toqubo-default-binary",
+            "end": "2026-10-15T13:38:15.522005+00:00",
+            "recovery_file": "processes/supervisor-recovery-20261015.json",
+            "start": "2026-10-15T13:20:00+00:00"
+          },
+          {
+            "active_cell": "route_allocation-n200-m128-r3-unrounded-quadratic--toqubo-controlled-binary",
+            "end": "2026-10-15T13:46:46.010735+00:00",
+            "recovery_file": "processes/supervisor-handoff-20261015.json",
+            "start": "2026-10-15T13:46:45.676067+00:00"
+          }
+        ],
+        "window_basis": "Union of recorded conservative gaps: first begins one minute before the approximate last confirmed supervisor observation and ends at recovered lock ownership; second spans the exact controller-only handoff. Retained phase UTC and original campaign start preserve existing budgets.",
+        "window_record_sha256": "ab5162fd369831ae8f0f1d90378b43202eb1979cf6ed10a25b1244fb8139b282"
+      },
+      "terminal_cells": 3132,
+      "unaudited_chains": 0,
+      "verified_chains": 8640
+    }
+  },
+  "effective_controls_after": {
+    "cpu.max": "100000 100000",
+    "memory.current": "39403520",
+    "memory.events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+    "memory.max": "4294967296",
+    "memory.peak": "1441796096",
+    "memory.swap.current": "0",
+    "memory.swap.max": "0"
+  },
+  "effective_controls_before": {
+    "cpu.max": "100000 100000",
+    "memory.current": "23347200",
+    "memory.events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+    "memory.max": "4294967296",
+    "memory.peak": "23347200",
+    "memory.swap.current": "0",
+    "memory.swap.max": "0"
+  },
+  "finished_utc": "2026-10-16T00:35:36.564001+00:00",
+  "postprocessing_commit": "3db4e8a349adeebb62bf1f99351768072c27a3a1",
+  "producing_commit": "ca326edbdcfed78c8fc4335069c079887d54f6c4",
+  "stage": "view-report",
+  "started_utc": "2026-10-16T00:33:00.280051+00:00",
+  "status": "PASS"
+}
