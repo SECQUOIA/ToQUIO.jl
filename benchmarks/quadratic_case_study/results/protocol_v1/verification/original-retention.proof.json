@@ -1,0 +1,31 @@
+{
+  "baseline_inventory_sha256": "39d339dc64c0d82acee1721cf70eff9a6313a7a73b7a9e4c1e97cc369b61af91",
+  "complete_packet_members": 24614,
+  "index_sha256": "334753ba1491b0eede1e9097104e99f488c558e4b3e47098bc6c8cea669a3292",
+  "kind": "original-member-retention-index-comparison",
+  "numerical_measurements_repeated": false,
+  "observed_utc": "2026-10-16T00:24:59.262013+00:00",
+  "original_bytes": 41866173323,
+  "original_file_count": 24584,
+  "postprocessing_commit": "3db4e8a349adeebb62bf1f99351768072c27a3a1",
+  "relocations": {
+    "analysis-files.json": "analysis-history/efcc66430756a66f0ffddd58f144cfac74ac30ce/analysis-files.json",
+    "analysis-source/benchmarks/quadratic_case_study/analysis.py": "analysis-history/efcc66430756a66f0ffddd58f144cfac74ac30ce/analysis-source/benchmarks/quadratic_case_study/analysis.py",
+    "analysis-source/benchmarks/quadratic_case_study/campaign.py": "analysis-history/efcc66430756a66f0ffddd58f144cfac74ac30ce/analysis-source/benchmarks/quadratic_case_study/campaign.py",
+    "analysis-source/benchmarks/quadratic_case_study/compare.py": "analysis-history/efcc66430756a66f0ffddd58f144cfac74ac30ce/analysis-source/benchmarks/quadratic_case_study/compare.py",
+    "analysis-source/benchmarks/quadratic_case_study/freeze_analysis.py": "analysis-history/efcc66430756a66f0ffddd58f144cfac74ac30ce/analysis-source/benchmarks/quadratic_case_study/freeze_analysis.py",
+    "analysis-source/benchmarks/quadratic_case_study/pack.py": "analysis-history/efcc66430756a66f0ffddd58f144cfac74ac30ce/analysis-source/benchmarks/quadratic_case_study/pack.py",
+    "analysis-source/benchmarks/quadratic_case_study/packet_io.py": "analysis-history/efcc66430756a66f0ffddd58f144cfac74ac30ce/analysis-source/benchmarks/quadratic_case_study/packet_io.py",
+    "analysis-source/benchmarks/quadratic_case_study/plot-lock.txt": "analysis-history/efcc66430756a66f0ffddd58f144cfac74ac30ce/analysis-source/benchmarks/quadratic_case_study/plot-lock.txt",
+    "analysis-source/benchmarks/quadratic_case_study/plot-requirements.txt": "analysis-history/efcc66430756a66f0ffddd58f144cfac74ac30ce/analysis-source/benchmarks/quadratic_case_study/plot-requirements.txt",
+    "analysis-source/benchmarks/quadratic_case_study/plots.py": "analysis-history/efcc66430756a66f0ffddd58f144cfac74ac30ce/analysis-source/benchmarks/quadratic_case_study/plots.py",
+    "analysis-source/benchmarks/quadratic_case_study/report.py": "analysis-history/efcc66430756a66f0ffddd58f144cfac74ac30ce/analysis-source/benchmarks/quadratic_case_study/report.py",
+    "analysis-source/benchmarks/quadratic_case_study/resource_conformance.py": "analysis-history/efcc66430756a66f0ffddd58f144cfac74ac30ce/analysis-source/benchmarks/quadratic_case_study/resource_conformance.py",
+    "analysis-source/benchmarks/quadratic_case_study/supervision_conformance.py": "analysis-history/efcc66430756a66f0ffddd58f144cfac74ac30ce/analysis-source/benchmarks/quadratic_case_study/supervision_conformance.py",
+    "postprocessing-amendment.toml": "analysis-history/efcc66430756a66f0ffddd58f144cfac74ac30ce/postprocessing-amendment.toml",
+    "progress.toml": "processes/terminal-progress-before-packaging.toml"
+  },
+  "scope": "Every original member size/hash occurs in the complete index at its original or documented retained-history/progress location; compressed-stream integrity is independently checked by extraction",
+  "source_commit": "ca326edbdcfed78c8fc4335069c079887d54f6c4",
+  "status": "PASS"
+}

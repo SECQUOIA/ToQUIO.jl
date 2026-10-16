@@ -1,0 +1,114 @@
+schema_version = 1
+protocol_id = "fresh-quadratic-case-study-v1"
+status = "frozen"
+julia_version = "1.10.11"
+moi_version = "1.54.0"
+toqubo_revision = "69ac52592f4c47ed2168bf480c9947d1fcbbfc2c"
+data_seed_namespace = "toquio-fresh-quadratic-20261015-v1"
+source_instances = 360
+paired_route_profiles = 96
+structural_profiles = 456
+direct_baseline_profiles = 396
+arms = ["native", "radix4", "bounded4-cap64", "binary-radix2", "toqubo-controlled-binary", "toqubo-default-binary"]
+structural_cells = 2736
+coefficient_profiles = ["rounded-fidelity", "unrounded-quadratic-route-only"]
+primary_density = "nonzero-unordered-couplers-over-N-choose-2-after-fixed-shift-and-binary-square-folding"
+spectral_matrix = "canonical-symmetric-quadratic-energy-matrix-after-the-same-folding"
+spectral_interpretation = "coefficient-matrix-eigenvalue-spacing-not-an-optimization-or-quantum-gap"
+comparison_interpretation = "descriptive-fresh-instance-study-no-general-encoding-superiority"
+
+[resources]
+cpu_threads = 1
+blas_threads = 1
+memory_bytes = 12884901888
+swap_bytes = 0
+campaign_wall_seconds = 172800
+per_compilation_seconds = 1200
+per_spectral_seconds = 1800
+max_target_variables = 25000
+max_source_variables = 1024
+max_exact_source_states = 1000000
+max_exact_source_operations = 20000000
+max_exact_target_states = 1000000
+max_total_exact_target_states = 4000000
+artifact_bytes = 536870912
+artifact_bytes_scope = "compressed-public-raw-packet"
+parallel_heavy_workers = 1
+incomplete_cell = "retain-failure-refusal-or-censoring-no-silent-drop-or-automatic-rerun"
+
+[encoding]
+radix_levels = 4
+bounded_levels = 4
+bounded_max_weight = 64
+binary_levels = 2
+toqubo_default_encoding = "explicit-current-pinned-Binary"
+toqubo_controlled_input = "complete-native-ToQUIO-polynomial-no-additional-constraint-penalties"
+toqubo_default_input = "original-source-own-pinned-penalty-policy"
+toquio_penalties = "same-automatic-native-policy-across-all-four-ToQUIO-arms"
+arm_order = "deterministic-case-specific-shuffle-after-symmetric-manufactured-warmup"
+timing = "construction-separate-full-public-compilation-and-extraction-recorded"
+
+[baseline]
+preference = "existing-Gurobi-otherwise-SCIP-frozen-before-first-result"
+time_limit_seconds = 300.0
+threads = 1
+seed = 777
+relative_gap = 0.0
+absolute_gap = 0.0
+gurobi_nonconvex = 2
+source_integrality_audit_atol = 0.000001
+reference_claim = "numerical-global-solver-status-with-independent-original-source-audit"
+route_reference = "independent-nonnegative-monotonicity-certificate"
+
+[sampling]
+families = ["knapsack"]
+instances = 48
+batches_per_arm = 3
+independent_chains_per_batch = 10
+planned_chains = 8640
+proposals_per_chain = 4000
+reserved_proposals = 34560000
+max_seconds_per_chain = 2.0
+temperature_start = 2.0
+temperature_end = 0.01
+energy_scale = "max-one-conservative-absolute-coefficient-box-range-bound"
+initialization = "shared-uniform-native-source-coordinates-and-policy-specific-native-auxiliaries-then-canonical-lift"
+initialization_excludes_reference_witness = true
+seed_namespace = "fresh-quadratic-case-study-v1-knapsack-chains"
+proposal = "existing-bounded-Metropolis-site-sign-acceptance-kernel"
+terminal_feasibility = "original-source-feasibility-of-final-independent-chain-sample"
+any_hit = "original-source-feasible-initial-or-post-decision-chain-state"
+quality = "best-source-feasible-terminal-read-per-batch-with-separate-best-visited-diagnostic"
+ttf = "observed-first-source-feasible-proposal-and-seconds-with-no-hit-censoring"
+physical_provider = "pending-separate-hardware-authorization-no-live-jobs"
+
+[[families]]
+name = "facility"
+n = [5,10,20,25,30,50]
+m = [4,8,10,16]
+replicates = [1,2,3]
+direct_n = [5,10]
+direct_m = [4,8]
+profile = "rounded-fidelity-loose-declared-assignment-bounds"
+
+[[families]]
+name = "inventory"
+n = [10,20,40,50,70,100,150,200]
+m = [4,64,128,200,512,1024]
+replicates = [1,2,3]
+profile = "aggregate-demand-rounded-revenue-unrounded-holding"
+
+[[families]]
+name = "route_allocation"
+n = [10,20,40,50,70,100,150,200]
+m = [4,64,128,200]
+replicates = [1,2,3]
+profiles = ["rounded-fidelity", "unrounded-quadratic"]
+paired_profile_draws = true
+
+[[families]]
+name = "knapsack"
+n = [5,10,15,20]
+m = [5,10,15,20]
+replicates = [1,2,3]
+profile = "bounded-quadratic-half-total-weight-capacity"

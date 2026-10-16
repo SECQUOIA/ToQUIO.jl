@@ -1,0 +1,45 @@
+ERROR: LoadError: ArgumentError: Package MathOptInterface [b8f27783-ece8-5eb3-8dc8-9495eed66fee] is required but does not seem to be installed:
+ - Run `Pkg.instantiate()` to install all recorded dependencies.
+
+Stacktrace:
+  [1] _require(pkg::Base.PkgId, env::String)
+    @ Base ./loading.jl:2000
+  [2] __require_prelocked(uuidkey::Base.PkgId, env::String)
+    @ Base ./loading.jl:1886
+  [3] #invoke_in_world#3
+    @ ./essentials.jl:926 [inlined]
+  [4] invoke_in_world
+    @ ./essentials.jl:923 [inlined]
+  [5] _require_prelocked(uuidkey::Base.PkgId, env::String)
+    @ Base ./loading.jl:1877
+  [6] macro expansion
+    @ ./loading.jl:1864 [inlined]
+  [7] macro expansion
+    @ ./lock.jl:270 [inlined]
+  [8] __require(into::Module, mod::Symbol)
+    @ Base ./loading.jl:1827
+  [9] #invoke_in_world#3
+    @ ./essentials.jl:926 [inlined]
+ [10] invoke_in_world
+    @ ./essentials.jl:923 [inlined]
+ [11] require(into::Module, mod::Symbol)
+    @ Base ./loading.jl:1820
+ [12] include(fname::String)
+    @ Base.MainInclude ./client.jl:487
+ [13] top-level scope
+    @ /artifacts/view/source/benchmarks/quadratic_case_study/replay.jl:1
+in expression starting at /artifacts/view/source/benchmarks/quadratic_case_study/models.jl:3
+in expression starting at /artifacts/view/source/benchmarks/quadratic_case_study/replay.jl:1
+Traceback (most recent call last):
+  File "/stage.py", line 219, in <module>
+    execute(args.stage) if args.inside else launch(args.stage)
+    ~~~~~~~^^^^^^^^^^^^
+  File "/stage.py", line 164, in execute
+    subprocess.run(['julia', '--startup-file=no', '--project='+str(frozen),
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                    str(frozen/'replay.jl'), str(view), '6'], check=True)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/python/managed/cpython-3.13.5-linux-x86_64-gnu/lib/python3.13/subprocess.py", line 577, in run
+    raise CalledProcessError(retcode, process.args,
+                             output=stdout, stderr=stderr)
+subprocess.CalledProcessError: Command '['julia', '--startup-file=no', '--project=/artifacts/view/source/benchmarks/quadratic_case_study', '/artifacts/view/source/benchmarks/quadratic_case_study/replay.jl', '/artifacts/view', '6']' returned non-zero exit status 1.

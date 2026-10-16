@@ -1,0 +1,272 @@
+"""Associate one recorded resource deviation with immutable measurement intervals.
+
+Cell UTC intervals bound their chains conservatively; no chain UTC is inferred
+from its measured elapsed time. This tool changes no raw measurement or status.
+"""
+import argparse
+import csv
+import datetime as dt
+import hashlib
+import json
+import re
+import tomllib
+from pathlib import Path
+
+
+def digest(path):
+    h = hashlib.sha256()
+    with path.open('rb') as stream:
+        while block := stream.read(1024**2):
+            h.update(block)
+    return h.hexdigest()
+
+
+def utc(value):
+    parsed = dt.datetime.fromisoformat(value)
+    return (parsed.replace(tzinfo=dt.timezone.utc) if parsed.tzinfo is None
+            else parsed.astimezone(dt.timezone.utc))
+
+
+def scalar_header(path):
+    lines = []
+    with path.open('rb') as stream:
+        while line := stream.readline(65537):
+            if len(line) > 65536 or sum(map(len, lines)) + len(line) > 65536:
+                raise ValueError('Unexpected cell scalar-header size')
+            if line.lstrip().startswith(b'['):
+                break
+            lines.append(line)
+    raw = b''.join(lines)
+    return tomllib.loads(raw.decode()), hashlib.sha256(raw).hexdigest()
+
+
+def qualification(start, finish, window_start, window_end, *, terminal,
+                  label='effective-swap-limit-uncertain'):
+    if start and finish and utc(finish) < utc(start):
+        raise ValueError('Reversed cell interval')
+    if start and utc(start) > window_end:
+        return False, 'outside-recorded-uncertainty-window'
+    if finish and utc(finish) < window_start:
+        return False, 'outside-recorded-uncertainty-window'
+    if not start and not terminal:
+        return None, 'not-yet-measured'
+    return True, (label if start and finish
+                  else 'potential-overlap-missing-boundary')
+
+
+def write_csv(path, rows, fields):
+    temporary = path.with_name(path.name+'.tmp')
+    with temporary.open('w', newline='') as stream:
+        writer = csv.DictWriter(stream, fieldnames=fields)
+        writer.writeheader()
+        writer.writerows(rows)
+    temporary.replace(path)
+
+
+SWAP_SEMANTICS = 'https://www.kernel.org/doc/html/v6.6/admin-guide/cgroup-v2.html#memory-interface-files'
+
+
+def cumulative_swap_usage(root, run, incident, window_start, window_end):
+    """Verify a later zero-usage witness without clearing enforcement uncertainty."""
+    manifest = root/'processes/cumulative-swap-evidence.json'
+    observed = {str(p.relative_to(root)) for pattern in
+                ('cumulative-swap-observation-*.json', 'swap-counter-semantics-observation-*.json',
+                 'cumulative-swap-container-identity-*.json')
+                for p in (root/'processes').glob(pattern)}
+    if not manifest.exists():
+        if observed:
+            raise ValueError('Cumulative swap observations lack a bound manifest')
+        return None
+
+    def read(name):
+        path = root/name
+        if (Path(name).parent != Path('processes') or path.is_symlink() or
+                not path.is_file() or path.stat().st_size > 65536):
+            raise ValueError('Invalid cumulative swap evidence file')
+        return json.loads(path.read_text())
+
+    record = read('processes/cumulative-swap-evidence.json')
+    names = (record['observation_file'], record['semantics_file'], record['identity_file'])
+    if (record['schema_version'] != 1 or len(set(names)) != 3 or observed != set(names) or
+            record['source_commit'] != run['source_commit'] or
+            record['container'] != incident.get('container') or
+            record['container_id'] != incident.get('container_id') or
+            record['counter_semantics_url'] != SWAP_SEMANTICS):
+        raise ValueError('Cumulative swap evidence identity mismatch')
+    observation, semantics, identity_readback = (read(name) for name in names)
+    if (digest(root/names[0]) != record['observation_sha256'] or
+            digest(root/names[1]) != record['semantics_sha256'] or
+            digest(root/names[2]) != record['identity_sha256']):
+        raise ValueError('Changed cumulative swap observations')
+    identity = f"{record['container_id']} true {record['container_started_utc']}"
+    ledgers = [json.loads(p.read_text()) for p in (root/'processes').glob('[0-9][0-9][0-9][0-9].json')]
+    if (not re.fullmatch(r'[0-9a-f]{64}', record['container_id']) or
+            observation['identity_and_state'] != identity or
+            identity_readback['stdout'] != identity+'\n' or
+            any(data['schema_version'] != 1 or data['exit_code'] != 0 or data['stderr'] != '' or
+                data['container'] != record['container'] for data in (observation, semantics, identity_readback)) or
+            not any(p['container'] == record['container'] for p in ledgers)):
+        raise ValueError('Unbound cumulative swap container or unsuccessful observation')
+    times = [utc(data[key]) for data in (observation, semantics, identity_readback) for key in
+             ('observation_started_utc', 'observation_finished_utc')]
+    if (times != sorted(times) or utc(record['container_started_utc']) > utc(window_start) or
+            times[0] < utc(window_end)):
+        raise ValueError('Cumulative swap observation does not cover the uncertainty window')
+    expected = 'memory.swap.peak\n0\nmemory.swap.events\nhigh 0\nmax 0\nfail 0\n'
+    fields = semantics['stdout'].splitlines()
+    if (observation['stdout'] != expected or len(fields) != 6 or
+            fields[::2] != ['kernel_release', 'swap_peak_mode', 'fresh_read_only_swap_peak'] or
+            not re.fullmatch(r'6\.6\.[0-9A-Za-z.+_-]+', fields[1]) or fields[3::2] != ['444', '0']):
+        raise ValueError('Unsupported cumulative swap counter semantics or nonzero peak')
+    return dict(recorded_peak_bytes=0, through_utc=observation['observation_started_utc'],
+                kernel_release=fields[1], read_only_mode='444',
+                scope='Original container cgroup and descendants since cgroup creation; not host-wide or later unfinished campaign',
+                container=record['container'], container_id=record['container_id'],
+                container_started_utc=record['container_started_utc'],
+                evidence_manifest_sha256=digest(manifest), observation_sha256=digest(root/names[0]),
+                semantics_sha256=digest(root/names[1]), counter_semantics_url=SWAP_SEMANTICS,
+                identity_sha256=digest(root/names[2]),
+                continuous_limit_enforcement_certified=False)
+
+
+def build(root, incident, output, start, end, *, window_basis, window_sha256, active_cell,
+          windows=None, prefix='resource-conformance', field='resource_qualification',
+          label='effective-swap-limit-uncertain', evidence_key='incident_sha256',
+          swap_usage_evidence=None,
+          conformance='Effective no-swap enforcement cannot be certified throughout the uncertainty window'):
+    if utc(start) >= utc(end):
+        raise ValueError('Empty uncertainty window')
+    windows = windows or [dict(start=start, end=end, active_cell=active_cell)]
+    if any(utc(w['start']) >= utc(w['end']) for w in windows):
+        raise ValueError('Empty uncertainty window')
+    plan = json.loads((root/'plan.json').read_text())
+    terminal = {p.stem: p for p in (root/'cells').glob('*.toml')}
+    if not set(terminal) <= set(plan):
+        raise ValueError('Unplanned cell')
+    cells = []
+    by_id = {}
+    for identifier, planned in sorted(plan.items()):
+        if Path(identifier).name != identifier:
+            raise ValueError('Unsafe cell identity')
+        marker = root/'attempts'/(identifier+'.toml')
+        attempt = tomllib.loads(marker.read_text()) if marker.exists() else {}
+        if attempt and attempt['cell_id'] != identifier:
+            raise ValueError('Attempt identity mismatch')
+        header, header_hash = scalar_header(terminal[identifier]) if identifier in terminal else ({}, '')
+        if header and header['cell_id'] != identifier:
+            raise ValueError('Terminal identity mismatch')
+        beginning = attempt.get('started_utc', '')
+        finish = header.get('finished_utc', '')
+        associations = [qualification(beginning, finish, utc(w['start']), utc(w['end']),
+                                      terminal=identifier in terminal, label=label) for w in windows]
+        overlap, status = next((item for item in associations if item[0] is True), associations[0])
+        row = dict(cell_id=identifier, kind=planned['kind'],
+                   raw_status=header.get('status', 'not-terminal'),
+                   started_utc=beginning, finished_utc=finish,
+                   potential_overlap='' if overlap is None else str(overlap).lower(),
+                   **{field: status},
+                   attempt_sha256=digest(marker) if marker.exists() else '',
+                   terminal_scalar_header_sha256=header_hash)
+        cells.append(row)
+        by_id[identifier] = row
+    for window in windows:
+        identifier = window['active_cell']
+        if identifier not in by_id or qualification(
+                by_id[identifier]['started_utc'], by_id[identifier]['finished_utc'],
+                utc(window['start']), utc(window['end']), terminal=identifier in terminal,
+                label=label)[0] is not True:
+            raise ValueError('Resource window excludes the incident active cell')
+    chains = []
+    for path in sorted((root/'chains').glob('*.toml')):
+        match = re.fullmatch(r'(.+)--b([1-3])-r(10|[1-9])', path.stem)
+        if not match or match[1] not in by_id:
+            raise ValueError('Unplanned chain identity')
+        parent = by_id[match[1]]
+        chains.append(dict(chain_id=path.stem, parent_cell_id=match[1],
+                           interval_basis='conservative-parent-cell-UTC-interval',
+                           started_utc=parent['started_utc'], finished_utc=parent['finished_utc'],
+                           potential_overlap=parent['potential_overlap'],
+                           **{field: parent[field]},
+                           raw_chain_sha256=digest(path)))
+    summary = dict(schema_version=1, **{evidence_key: digest(incident)},
+                   generator_sha256=digest(Path(__file__)),
+                   uncertainty_window_start_utc=start, uncertainty_window_end_utc=end,
+                   interval_boundary='closed; UTC; parent intervals conservatively bound chains',
+                   window_basis=window_basis, window_record_sha256=window_sha256,
+                   planned_cells=len(plan), terminal_cells=len(terminal), retained_chains=len(chains),
+                   overlapping_cells=sum(r['potential_overlap']=='true' for r in cells),
+                   overlapping_chains=sum(r['potential_overlap']=='true' for r in chains),
+                   campaign_terminal=(root/'completion.json').exists(),
+                   measurement_values_changed=False,
+                   qualification_scope='This incident only; outside-window does not certify other resource properties',
+                   conformance=conformance)
+    if swap_usage_evidence is not None:
+        summary['cumulative_swap_usage'] = swap_usage_evidence
+    if len(windows) > 1:
+        summary['uncertainty_windows'] = windows
+        summary['association_basis'] = 'Union of individual closed intervals; intervening gaps are not automatically qualified'
+    if output.is_symlink():
+        raise ValueError('Unexpected resource report link')
+    output.mkdir(parents=True, exist_ok=True)
+    names = [prefix+'-'+name for name in ('cells.csv','chains.csv','summary.json')]
+    if any((output/name).is_symlink() or (output/(name+'.tmp')).is_symlink() for name in names):
+        raise ValueError('Unexpected resource report file link')
+    write_csv(output/(prefix+'-cells.csv'), cells, list(cells[0]))
+    write_csv(output/(prefix+'-chains.csv'), chains, list(chains[0]) if chains else
+              ['chain_id','parent_cell_id','interval_basis','started_utc','finished_utc',
+               'potential_overlap',field,'raw_chain_sha256'])
+    temporary = output/(prefix+'-summary.json.tmp')
+    temporary.write_text(json.dumps(summary, sort_keys=True, indent=2)+'\n')
+    temporary.replace(output/(prefix+'-summary.json'))
+    return summary
+
+
+def attach(root, output):
+    """Require a bound window for any retained deviation; rebuild its associations."""
+    window = root/'processes/resource-control-window.json'
+    incidents = {str(p.relative_to(root)) for p in
+                 (root/'processes').glob('resource-control-observation-*.json')}
+    if not window.exists():
+        if (incidents or (root/'processes/cumulative-swap-evidence.json').exists() or
+                any((root/'processes').glob('cumulative-swap-observation-*.json')) or
+                any((root/'processes').glob('cumulative-swap-container-identity-*.json')) or
+                any((root/'processes').glob('swap-counter-semantics-observation-*.json'))):
+            raise ValueError('Resource deviation is missing its uncertainty window')
+        if (output/'resource-conformance').exists():
+            raise ValueError('Existing report has resource provenance absent from this campaign')
+        return None
+    if window.is_symlink() or window.stat().st_size > 65536:
+        raise ValueError('Invalid resource uncertainty window')
+    record = json.loads(window.read_text())
+    name = record['incident_file']
+    if (record['schema_version'] != 1 or incidents != {name} or
+            Path(name).parent != Path('processes') or (root/name).is_symlink() or
+            (root/name).stat().st_size > 65536):
+        raise ValueError('Unexpected resource incident inventory')
+    run = tomllib.loads((root/'run.toml').read_text())
+    incident = json.loads((root/name).read_text())
+    if (digest(root/name) != record['incident_sha256'] or
+            record['source_commit'] != run['source_commit'] or
+            incident['source_commit'] != run['source_commit']):
+        raise ValueError('Resource incident identity mismatch')
+    prior = incident['prior_observation']
+    prior_utc = dt.datetime.strptime(prior['utc_approx'], '%Y-%m-%d %H:%M UTC').replace(tzinfo=dt.timezone.utc)
+    if (prior['memory_swap_max'] != '0' or incident['kernel_after']['memory_swap_max'] != '0' or
+            not isinstance(record['window_basis'], str) or not record['window_basis'].strip() or
+            utc(record['window_start_utc']) > prior_utc-dt.timedelta(minutes=1) or
+            utc(record['window_end_utc']) < utc(incident['recorded_at_utc'])):
+        raise ValueError('Resource window does not bound the recorded observations')
+    return build(root, root/name, output/'resource-conformance',
+                 record['window_start_utc'], record['window_end_utc'],
+                 window_basis=record['window_basis'], window_sha256=digest(window),
+                 active_cell=incident['active_cell'],
+                 swap_usage_evidence=cumulative_swap_usage(root, run, incident,
+                     record['window_start_utc'], record['window_end_utc']))
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('campaign', type=Path)
+    parser.add_argument('output', type=Path)
+    args = parser.parse_args()
+    print(json.dumps(attach(args.campaign, args.output), sort_keys=True))

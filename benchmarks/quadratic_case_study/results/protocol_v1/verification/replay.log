@@ -1,0 +1,2 @@
+Replayed 6 retained chains with actual completed proposal counts.
+{"status": "PASS", "stage": "replay", "proof": "/artifacts/replay.proof.json"}

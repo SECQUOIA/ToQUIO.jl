@@ -1,0 +1,34 @@
+{
+  "association_basis": "Union of individual closed intervals; intervening gaps are not automatically qualified",
+  "campaign_terminal": true,
+  "conformance": "Continuous host phase/campaign deadline enforcement cannot be certified during the recorded gaps",
+  "generator_sha256": "20d4973374e0b0fa16adbc62c59ff766dc752d25aacf80b067283dac35c7b47e",
+  "interval_boundary": "closed; UTC; parent intervals conservatively bound chains",
+  "measurement_values_changed": false,
+  "overlapping_cells": 98,
+  "overlapping_chains": 0,
+  "planned_cells": 3132,
+  "provenance_manifest_sha256": "ab5162fd369831ae8f0f1d90378b43202eb1979cf6ed10a25b1244fb8139b282",
+  "qualification_scope": "This incident only; outside-window does not certify other resource properties",
+  "retained_chains": 8640,
+  "schema_version": 1,
+  "terminal_cells": 3132,
+  "uncertainty_window_end_utc": "2026-10-15T13:46:46.010735+00:00",
+  "uncertainty_window_start_utc": "2026-10-15T13:20:00+00:00",
+  "uncertainty_windows": [
+    {
+      "active_cell": "inventory-n150-m1024-r2-rounded-fidelity--toqubo-default-binary",
+      "end": "2026-10-15T13:38:15.522005+00:00",
+      "recovery_file": "processes/supervisor-recovery-20261015.json",
+      "start": "2026-10-15T13:20:00+00:00"
+    },
+    {
+      "active_cell": "route_allocation-n200-m128-r3-unrounded-quadratic--toqubo-controlled-binary",
+      "end": "2026-10-15T13:46:46.010735+00:00",
+      "recovery_file": "processes/supervisor-handoff-20261015.json",
+      "start": "2026-10-15T13:46:45.676067+00:00"
+    }
+  ],
+  "window_basis": "Union of recorded conservative gaps: first begins one minute before the approximate last confirmed supervisor observation and ends at recovered lock ownership; second spans the exact controller-only handoff. Retained phase UTC and original campaign start preserve existing budgets.",
+  "window_record_sha256": "ab5162fd369831ae8f0f1d90378b43202eb1979cf6ed10a25b1244fb8139b282"
+}

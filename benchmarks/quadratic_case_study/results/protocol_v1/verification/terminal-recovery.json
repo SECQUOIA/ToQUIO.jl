@@ -1,0 +1,28 @@
+{
+  "completed": {
+    "bootstrap": "ec6aaf4023d2ce959fb0fcc7a3c5f679c9be089046b2c17e2837595fabaa1606",
+    "extract": "2c017d1e59fe83a2ee086cc3135531336670af306a7de952b81bce2e79b2cd07",
+    "pack": "afb65e329751e952c152eb96c0161649936775e11a75b42d7c65e8fdfb083c65",
+    "raw-plots": "98a2119354bee460aa79ec11736b4e5709f5fb850b077ec25a8b46c719bb502f",
+    "raw-report": "0a8018c648dc07f88f371de78e1f8eec81c4fc685623757bb58d37b074027959",
+    "replay": "f049be92cd11a00a1254b6c91d97e0ec906545644554b2ccdc11f2de3fd1ed6c",
+    "view-plots": "9695a2d7756c8e7b0848ebc9d8c2f510b54b978f59e9d6953e3d8ea7574a0eaa",
+    "view-report": "52a1a3acc078937e5bfc66b5a2609ce187395e870ee42ecdc57fa1556efdec53"
+  },
+  "correction": "Restore the exact original /depot:/base-depot:/host-depot search path; additional base and host package caches are read-only; no license file or provider access",
+  "exit_code": 0,
+  "kind": "replay-depot-environment-recovery",
+  "measurement_reruns": false,
+  "observed_utc": "2026-10-16T00:38:57.518895+00:00",
+  "original_runner_sha256": "22a7c542988805a12133b6320e1714b6842ef8909cb91ff8e2cb3012f611fb9f",
+  "phase": "terminal-postprocessing-pass",
+  "previous_pipeline_sha256": "04493aad26675c1250c90d5aed71f31e3247181dd711840d4b12d52846a52cc8",
+  "previous_replay_log_sha256": "62f35d63541a8de3978418fbd772c71270eb021ef13476312048a3a5dca7bafa",
+  "prior_terminal": {
+    "ExitCode": 1,
+    "OOMKilled": false,
+    "Running": false
+  },
+  "recovery_source_sha256": "470a7bcd0e08031e8a8e2d696432b95f23b0b4c86abd92d5d83ab222244a83a5",
+  "repacking": false
+}
