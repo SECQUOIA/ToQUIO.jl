@@ -1,0 +1,33 @@
+cff-version: 1.2.0
+title: "ToQUIO.jl: Quadratic Unconstrained Integer Optimization Reformulation"
+message: "If you use this software, please cite it using the metadata from this file."
+type: software
+authors:
+  - given-names: Pedro Maciel
+    family-names: Xavier
+    email: pedromxavier@purdue.edu
+    affiliation: Purdue University
+    orcid: 'https://orcid.org/0000-0002-0678-8742'
+  - given-names: Albert
+    family-names: Lee
+    email: lee4382@purdue.edu
+    affiliation: Purdue University
+  - given-names: David E.
+    family-names: Bernal Neira
+    email: dbernaln@purdue.edu
+    affiliation: Purdue University
+    orcid: 'https://orcid.org/0000-0002-8308-5016'
+repository-code: 'https://github.com/SECQUOIA/ToQUIO.jl'
+url: 'https://secquoia.github.io/ToQUIO.jl'
+abstract: >-
+  Reformulating optimization models in JuMP into Quadratic Unconstrained
+  Integer Optimization (QUIO) format.
+keywords:
+  - Julia
+  - JuMP
+  - MathOptInterface
+  - QUIO
+  - QUBO
+  - Integer Programming
+license: MPL-2.0
+version: 0.2.0

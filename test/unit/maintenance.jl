@@ -185,6 +185,7 @@ end
     @test compat["julia"] == first(SUPPORTED_JULIA_VERSIONS)
     @test compat["LinearAlgebra"] == "1"
     @test compat["MathOptInterface"] == "1.11"
+    @test isfile(joinpath(pkgdir(ToQUIO), "CITATION.cff"))
 end
 
 @testset "Release workflow policy" begin
