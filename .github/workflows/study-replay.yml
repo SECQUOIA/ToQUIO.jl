@@ -105,7 +105,7 @@ jobs:
             JULIA_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 JULIA_NUM_PRECOMPILE_TASKS=1 \
             timeout 300 "$runner_julia" --project=.frozen-study .frozen-study/benchmarks/report.jl "$study_temp/campaign" "$study_temp/report"
           python3 benchmarks/check_study_artifacts.py compare "$study_source" "$study_temp/report"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: failure()
         with:
           name: archive-reproduction-diagnostics
